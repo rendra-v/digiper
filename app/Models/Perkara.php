@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\PerkaraFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Perkara extends Model
 {
-    /** @use HasFactory<\Database\Factories\PerkaraFactory> */
+    /** @use HasFactory<PerkaraFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -37,7 +37,7 @@ class Perkara extends Model
 
     public function getUsiaPerkara(): ?int
     {
-        if (!$this->tanggal_putus) {
+        if (! $this->tanggal_putus) {
             return null;
         }
 
