@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Perkara;
-use App\Imports\PerkaraImport;
 use App\Http\Requests\StorePerkara;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 
 class PerkaraController extends Controller
 {
@@ -24,10 +22,18 @@ class PerkaraController extends Controller
     public function store(StorePerkara $request)
     {
         try {
-            Excel::import(new PerkaraImport(), $request->file('file'));
-            return redirect()->route('perkaras.index')->with('success', 'Data berhasil diunggah!');
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                // For now, just skip file handling
+                return redirect()->back()->with('error', 'File import belum diimplementasikan. Gunakan form manual.');
+            }
+
+            // Handle manual form submission
+            $data = $request->validated();
+            Perkara::create($data);
+            return redirect()->route('perkaras.index')->with('success', 'Perkara berhasil ditambahkan!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal mengimpor file: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
