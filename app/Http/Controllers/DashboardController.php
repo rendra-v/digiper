@@ -885,4 +885,101 @@ class DashboardController extends Controller
             ], 400);
         }
     }
+
+    public function deleteFile($id)
+    {
+        try {
+            $excelFile = ExcelFile::findOrFail($id);
+
+            // Delete file from storage
+            if (file_exists($excelFile->file_path)) {
+                unlink($excelFile->file_path);
+            }
+
+            // Delete from database
+            $excelFile->delete();
+
+            // If this was the current file, clear session
+            if (Session::get('current_file_id') === $id) {
+                Session::forget('current_file_id');
+                Session::forget('excel_file_name');
+                Session::forget('excel_file_path');
+                Session::forget('excel_sheets');
+                Session::forget('excel_period');
+            }
+
+            \Log::info('File deleted', [
+                'file_id' => $id,
+                'filename' => $excelFile->original_filename,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File berhasil dihapus',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Delete file error', [
+                'file_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 400);
+        }
+    }
+
+    public function renamePeriod(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'period' => 'required|string|max:100',
+            ], [
+                'period.required' => 'Periode harus diisi',
+                'period.max' => 'Periode maksimal 100 karakter',
+            ]);
+
+            $excelFile = ExcelFile::findOrFail($id);
+            $oldPeriod = $excelFile->period;
+            $newPeriod = $request->input('period');
+
+            $excelFile->update([
+                'period' => $newPeriod,
+            ]);
+
+            // If this was the current file, update session
+            if (Session::get('current_file_id') === $id) {
+                Session::put('excel_period', $newPeriod);
+            }
+
+            \Log::info('Period renamed', [
+                'file_id' => $id,
+                'old_period' => $oldPeriod,
+                'new_period' => $newPeriod,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Periode berhasil diubah',
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Rename period error', [
+                'file_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 400);
+        }
+    }
 }
