@@ -460,10 +460,12 @@ class DashboardController extends Controller
     {
         $highestRow = $worksheet->getHighestRow();
         $highestColumnLetter = $worksheet->getHighestColumn();
+        $rowsPerCategory = 500; // Reduced to 500 rows per category to prevent memory exhaustion during rendering
 
         \Log::info('parseDataPrintSheet started', [
             'rows' => $highestRow,
             'columns' => $highestColumnLetter,
+            'rowsPerCategory' => $rowsPerCategory,
         ]);
 
         // Helper to convert column index to letter (1=A, 26=Z, 27=AA, etc)
@@ -696,7 +698,10 @@ class DashboardController extends Controller
 
                 // Validate if this is a real data row (not TOTAL, not all empty/dashes)
                 if ($hasData && $isValidDataRow($rowData, $currentHeaders)) {
-                    $categories[$currentSection]['data'][] = $rowData;
+                    // Only store in memory if under limit (prevent memory exhaustion)
+                    if ($categories[$currentSection]['count'] < $rowsPerCategory) {
+                        $categories[$currentSection]['data'][] = $rowData;
+                    }
                     $categories[$currentSection]['count']++;
 
                     // Log first row for debugging
@@ -705,6 +710,15 @@ class DashboardController extends Controller
                             'section' => $currentSection,
                             'total_columns' => count($rowData),
                             'sample_values' => array_slice($rowData, 0, 5),
+                        ]);
+                    }
+
+                    // Log when hitting limit
+                    if ($categories[$currentSection]['count'] === $rowsPerCategory) {
+                        \Log::warning('Reached row limit for category', [
+                            'section' => $currentSection,
+                            'limit' => $rowsPerCategory,
+                            'totalInFile' => 'See count field for actual total',
                         ]);
                     }
                 }

@@ -106,6 +106,15 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    @if(count($category['data']) < $category['count'])
+                                    <tbody class="bg-amber-50 dark:bg-amber-950/20">
+                                        <tr>
+                                            <td colspan="{{ (isset($category['columns']) ? count($category['columns']) : 0) + 1 }}" class="px-6 py-3 text-center text-sm text-amber-700 dark:text-amber-300">
+                                                ℹ️ Menampilkan {{ count($category['data']) }} dari {{ $category['count'] }} data ({{ round((count($category['data']) / $category['count']) * 100) }}%)
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    @endif
                                     @if(isset($category['total']) && $category['total'] !== null)
                                     <tfoot class="bg-neutral-100 dark:bg-neutral-800/70 border-t-2 border-neutral-300 dark:border-neutral-700">
                                         <tr>
