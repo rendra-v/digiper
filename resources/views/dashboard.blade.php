@@ -52,7 +52,7 @@
                     <input 
                         type="file" 
                         @change="handleFileSelect($event)"
-                        accept=".xlsx,.xls,.csv"
+                        accept=".xlsx,.xls,.xlsm,.xlsb,.csv"
                         x-ref="fileInput"
                         class="hidden"
                         required

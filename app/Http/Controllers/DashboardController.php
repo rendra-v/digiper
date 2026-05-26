@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\ExcelFile;
 use App\Models\Perkara;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class DashboardController extends Controller
 {
+    private const APP_MAX_UPLOAD_KB = 512000; // 500MB
+
     public function index()
     {
         $excelFiles = ExcelFile::orderBy('created_at', 'desc')->get();
@@ -25,14 +30,24 @@ class DashboardController extends Controller
     public function uploadWithPeriod(Request $request)
     {
         try {
+            $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
+
+            $uploadedFile = $request->file('file');
+            if ($uploadedFile instanceof UploadedFile && ! $uploadedFile->isValid()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $this->getUploadErrorMessage($uploadedFile),
+                ], 422);
+            }
+
             // Validate file and period
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,csv|max:102400',
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
                 'period' => 'required|string|max:100',
             ], [
                 'file.required' => 'File harus diupload',
-                'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .csv)',
-                'file.max' => 'Ukuran file maksimal 100MB',
+                'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .xlsm, .xlsb, .csv)',
+                'file.max' => 'Ukuran file melebihi batas upload server',
                 'period.required' => 'Periode harus diisi',
             ]);
 
@@ -42,7 +57,7 @@ class DashboardController extends Controller
             // Store uploaded file
             $uploadDir = storage_path('app/uploads');
             if (! is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                File::ensureDirectoryExists($uploadDir);
             }
 
             $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
@@ -73,9 +88,14 @@ class DashboardController extends Controller
             ]);
 
         } catch (ValidationException $e) {
+            $firstError = collect($e->errors())->flatten()->first();
+            if (is_string($firstError) && Str::contains(Str::lower($firstError), 'failed to upload')) {
+                $firstError = 'Upload gagal di level server. Pastikan ukuran file tidak melebihi batas PHP (upload_max_filesize/post_max_size).';
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
+                'message' => 'Validasi gagal: '.$firstError,
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error', [
@@ -136,13 +156,23 @@ class DashboardController extends Controller
     public function upload(Request $request)
     {
         try {
+            $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
+
+            $uploadedFile = $request->file('file');
+            if ($uploadedFile instanceof UploadedFile && ! $uploadedFile->isValid()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $this->getUploadErrorMessage($uploadedFile),
+                ], 422);
+            }
+
             // Validate file
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,csv|max:102400', // 100MB max
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
             ], [
                 'file.required' => 'File harus diupload',
-                'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .csv)',
-                'file.max' => 'Ukuran file maksimal 100MB',
+                'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .xlsm, .xlsb, .csv)',
+                'file.max' => 'Ukuran file melebihi batas upload server',
             ]);
 
             $file = $request->file('file');
@@ -157,7 +187,7 @@ class DashboardController extends Controller
             // Store uploaded file temporarily in app/uploads directory
             $uploadDir = storage_path('app/uploads');
             if (! is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                File::ensureDirectoryExists($uploadDir);
             }
 
             // Generate unique filename and save directly
@@ -884,5 +914,48 @@ class DashboardController extends Controller
                 'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
+    }
+
+    private function getPhpUploadLimitKb(): int
+    {
+        $uploadKb = $this->iniSizeToKb((string) ini_get('upload_max_filesize'));
+        $postKb = $this->iniSizeToKb((string) ini_get('post_max_size'));
+
+        if ($uploadKb <= 0 || $postKb <= 0) {
+            return self::APP_MAX_UPLOAD_KB;
+        }
+
+        return min($uploadKb, $postKb);
+    }
+
+    private function iniSizeToKb(string $value): int
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($trimmed, -1));
+        $number = (float) $trimmed;
+
+        return match ($unit) {
+            'g' => (int) ($number * 1024 * 1024),
+            'm' => (int) ($number * 1024),
+            'k' => (int) $number,
+            default => (int) ($number / 1024),
+        };
+    }
+
+    private function getUploadErrorMessage(UploadedFile $file): string
+    {
+        return match ($file->getError()) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas upload server. Coba kecilkan file atau naikkan upload_max_filesize/post_max_size di konfigurasi PHP.',
+            UPLOAD_ERR_PARTIAL => 'Upload terputus sebelum selesai. Coba upload ulang.',
+            UPLOAD_ERR_NO_FILE => 'Tidak ada file yang dikirim.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary upload PHP tidak ditemukan.',
+            UPLOAD_ERR_CANT_WRITE => 'Server tidak bisa menulis file temporary.',
+            UPLOAD_ERR_EXTENSION => 'Upload diblokir oleh ekstensi PHP.',
+            default => 'Upload gagal karena kesalahan server.',
+        };
     }
 }
