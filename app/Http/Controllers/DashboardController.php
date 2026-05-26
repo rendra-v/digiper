@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class DashboardController extends Controller
@@ -479,6 +480,166 @@ class DashboardController extends Controller
                 'error' => 'Error membaca sheet: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    public function printRekapKeseluruhan()
+    {
+        try {
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-print', [
+                    'fileName' => $fileName,
+                    'sheetName' => null,
+                    'report' => [],
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $periodSheet = $spreadsheet->getSheetByName('Periode Laporan');
+            $recapDate = $periodSheet ? trim((string) $periodSheet->getCell('D7')->getFormattedValue()) : null;
+
+            $sheet = $spreadsheet->getSheetByName('Rekap Keseluruhan')
+                ?? $spreadsheet->getSheetByName('REKAP GABUNGAN');
+
+            if (! $sheet) {
+                return view('rekap-print', [
+                    'fileName' => $fileName,
+                    'sheetName' => null,
+                    'report' => [],
+                    'error' => 'Sheet rekap tidak ditemukan dalam file.',
+                ]);
+            }
+
+            $report = $this->buildRekapKeseluruhanReport($sheet);
+
+            $reportLabel = 'PERKARA ELEKTRONIK';
+            $summarySheet = $spreadsheet->getSheetByName('REKAP GABUNGAN');
+            if ($summarySheet) {
+                $summaryLabel = trim((string) $summarySheet->getCell('B10')->getFormattedValue());
+                if ($summaryLabel !== '') {
+                    $reportLabel = preg_replace('/\s*\([^)]*\)$/', '', $summaryLabel) ?: $summaryLabel;
+                }
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            return view('rekap-print', [
+                'fileName' => $fileName,
+                'sheetName' => $sheet->getTitle(),
+                'report' => $report,
+                'recapDate' => $recapDate,
+                'reportLabel' => $reportLabel,
+                'error' => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error generating recap print', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
+            return view('rekap-print', [
+                'fileName' => Session::get('excel_file_name'),
+                'sheetName' => null,
+                'report' => [],
+                'recapDate' => null,
+                'reportLabel' => 'PERKARA ELEKTRONIK',
+                'error' => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function buildRekapKeseluruhanReport($worksheet): array
+    {
+        $lastColumn = 'N';
+        $lastColumnIndex = Coordinate::columnIndexFromString($lastColumn);
+        $lastRow = min((int) $worksheet->getHighestRow(), 49);
+
+        $mergedRanges = [];
+        foreach ($worksheet->getMergeCells() as $range) {
+            [$startCell, $endCell] = explode(':', $range);
+            [$startColumn, $startRow] = $this->splitCellReference($startCell);
+            [$endColumn, $endRow] = $this->splitCellReference($endCell);
+
+            if ($startRow > $lastRow) {
+                continue;
+            }
+
+            $mergedRanges[$startCell] = [
+                'rowspan' => min($endRow, $lastRow) - $startRow + 1,
+                'colspan' => min($endColumn, $lastColumnIndex) - $startColumn + 1,
+            ];
+        }
+
+        $coveredCells = [];
+        foreach ($worksheet->getMergeCells() as $range) {
+            [$startCell, $endCell] = explode(':', $range);
+            [$startColumn, $startRow] = $this->splitCellReference($startCell);
+            [$endColumn, $endRow] = $this->splitCellReference($endCell);
+
+            if ($startRow > $lastRow) {
+                continue;
+            }
+
+            for ($row = $startRow; $row <= min($endRow, $lastRow); $row++) {
+                for ($column = $startColumn; $column <= min($endColumn, $lastColumnIndex); $column++) {
+                    $cellReference = Coordinate::stringFromColumnIndex($column) . $row;
+                    if ($cellReference !== $startCell) {
+                        $coveredCells[$cellReference] = true;
+                    }
+                }
+            }
+        }
+
+        $rows = [];
+        for ($row = 1; $row <= $lastRow; $row++) {
+            $cells = [];
+            for ($column = 1; $column <= $lastColumnIndex; $column++) {
+                $cellReference = Coordinate::stringFromColumnIndex($column) . $row;
+
+                if (isset($coveredCells[$cellReference])) {
+                    continue;
+                }
+
+                $cell = $worksheet->getCell($cellReference);
+                $value = trim((string) $cell->getFormattedValue());
+
+                $cells[] = [
+                    'reference' => $cellReference,
+                    'value' => $value,
+                    'rowspan' => $mergedRanges[$cellReference]['rowspan'] ?? 1,
+                    'colspan' => $mergedRanges[$cellReference]['colspan'] ?? 1,
+                ];
+            }
+
+            $rows[] = [
+                'number' => $row,
+                'cells' => $cells,
+            ];
+        }
+
+        return [
+            'rows' => $rows,
+            'lastColumn' => $lastColumn,
+            'lastRow' => $lastRow,
+        ];
+    }
+
+    private function splitCellReference(string $cellReference): array
+    {
+        preg_match('/^([A-Z]+)(\d+)$/', $cellReference, $matches);
+
+        return [
+            Coordinate::columnIndexFromString($matches[1]),
+            (int) $matches[2],
+        ];
     }
 
     private function parseDataPrintSheet($worksheet)
