@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
             // Validate file and period
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:' . $maxUploadKb,
                 'period' => 'required|string|max:100',
             ], [
                 'file.required' => 'File harus diupload',
@@ -61,8 +61,8 @@ class DashboardController extends Controller
                 File::ensureDirectoryExists($uploadDir);
             }
 
-            $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
-            $fullPath = $uploadDir.'/'.$filename;
+            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+            $fullPath = $uploadDir . '/' . $filename;
             $file->move($uploadDir, $filename);
 
             // Save to database
@@ -84,10 +84,9 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'File berhasil diupload untuk periode '.$period,
+                'message' => 'File berhasil diupload untuk periode ' . $period,
                 'file_id' => $excelFile->id,
             ]);
-
         } catch (ValidationException $e) {
             $firstError = collect($e->errors())->flatten()->first();
             if (is_string($firstError) && Str::contains(Str::lower($firstError), 'failed to upload')) {
@@ -96,7 +95,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: '.$firstError,
+                'message' => 'Validasi gagal: ' . $firstError,
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error', [
@@ -107,7 +106,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 400);
         }
     }
@@ -126,7 +125,6 @@ class DashboardController extends Controller
             $this->loadFileToSession($excelFile);
 
             return redirect('/data-print');
-
         } catch (\Exception $e) {
             return redirect('/dashboard')->with('error', 'File tidak dapat diakses');
         }
@@ -149,7 +147,6 @@ class DashboardController extends Controller
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
-
         } catch (\Exception $e) {
             \Log::error('Error loading file to session', ['error' => $e->getMessage()]);
             throw $e;
@@ -172,7 +169,7 @@ class DashboardController extends Controller
 
             // Validate file
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:' . $maxUploadKb,
             ], [
                 'file.required' => 'File harus diupload',
                 'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .xlsm, .xlsb, .csv)',
@@ -195,8 +192,8 @@ class DashboardController extends Controller
             }
 
             // Generate unique filename and save directly
-            $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
-            $fullPath = $uploadDir.'/'.$filename;
+            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+            $fullPath = $uploadDir . '/' . $filename;
             $file->move($uploadDir, $filename);
 
             // Load spreadsheet with optimizations from the uploaded file
@@ -232,7 +229,7 @@ class DashboardController extends Controller
             // Find header row (scan from row 1 to 10 to find actual headers)
             $headerRow = 1;
             for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A'.$row)->getValue();
+                $cellValue = $worksheet->getCell('A' . $row)->getValue();
                 // If this row starts with "No", "Nomor", or similar, it's the header
                 if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
                     $headerRow = $row;
@@ -245,7 +242,7 @@ class DashboardController extends Controller
             // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $cell = $worksheet->getCell($col.$headerRow);
+                $cell = $worksheet->getCell($col . $headerRow);
                 $headers[$col] = trim($cell->getValue() ?: $col);
             }
 
@@ -255,7 +252,7 @@ class DashboardController extends Controller
                 $hasData = false;
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cell = $worksheet->getCell($col.$row);
+                    $cell = $worksheet->getCell($col . $row);
                     $value = $cell->getValue();
 
                     // Use header names as keys
@@ -292,16 +289,15 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'File berhasil diupload! Total: '.count($data).' baris',
+                'message' => 'File berhasil diupload! Total: ' . count($data) . ' baris',
                 'count' => count($data),
             ]);
-
         } catch (ValidationException $e) {
             \Log::warning('Validation error', ['errors' => $e->errors()]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
+                'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first(),
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error', [
@@ -312,7 +308,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 400);
         }
     }
@@ -384,7 +380,7 @@ class DashboardController extends Controller
             return view('data-print', [
                 'categories' => [],
                 'fileName' => Session::get('excel_file_name'),
-                'error' => 'Error: '.$e->getMessage(),
+                'error' => 'Error: ' . $e->getMessage(),
             ]);
         }
     }
@@ -434,7 +430,7 @@ class DashboardController extends Controller
             for ($row = 1; $row <= min($highestRow, 10); $row++) {
                 $rowHasNO = false;
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cellValue = $getCellValue($worksheet->getCell($col.$row));
+                    $cellValue = $getCellValue($worksheet->getCell($col . $row));
                     if ($cellValue && strtoupper(trim($cellValue)) === 'NO') {
                         $rowHasNO = true;
                         break;
@@ -449,7 +445,7 @@ class DashboardController extends Controller
             // Get headers
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $headerValue = $getCellValue($worksheet->getCell($col.$headerRowNum));
+                $headerValue = $getCellValue($worksheet->getCell($col . $headerRowNum));
                 $headers[$col] = trim($headerValue ?: $col);
             }
 
@@ -460,7 +456,7 @@ class DashboardController extends Controller
                 $hasData = false;
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $value = $getCellValue($worksheet->getCell($col.$row));
+                    $value = $getCellValue($worksheet->getCell($col . $row));
                     $key = $headers[$col];
                     $rowData[$key] = $value;
 
@@ -481,13 +477,12 @@ class DashboardController extends Controller
                 'headers' => $headers,
                 'error' => null,
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error reading cek sheet', ['error' => $e->getMessage()]);
 
             return view('sheet-cek', [
                 'data' => [],
-                'error' => 'Error membaca sheet: '.$e->getMessage(),
+                'error' => 'Error membaca sheet: ' . $e->getMessage(),
             ]);
         }
     }
@@ -507,7 +502,7 @@ class DashboardController extends Controller
             $letter = '';
             while ($index > 0) {
                 $index--;
-                $letter = chr(65 + ($index % 26)).$letter;
+                $letter = chr(65 + ($index % 26)) . $letter;
                 $index = intdiv($index, 26);
             }
 
@@ -564,10 +559,12 @@ class DashboardController extends Controller
             }
 
             // Skip section headers and footers (contains "PERKARA", "TOTAL", "DATA", "~")
-            if (stripos($firstCellStr, 'PERKARA') !== false ||
+            if (
+                stripos($firstCellStr, 'PERKARA') !== false ||
                 stripos($firstCellStr, 'TOTAL') !== false ||
                 stripos($firstCellStr, 'DATA') !== false ||
-                strpos($firstCellStr, '~') !== false) {
+                strpos($firstCellStr, '~') !== false
+            ) {
                 return false;
             }
 
@@ -624,7 +621,7 @@ class DashboardController extends Controller
         $currentHeaders = [];
 
         for ($row = 1; $row <= $highestRow; $row++) {
-            $firstCell = trim($worksheet->getCell('A'.$row)->getValue() ?? '');
+            $firstCell = trim($worksheet->getCell('A' . $row)->getValue() ?? '');
 
             // Check if this is a section header
             $isSectionHeader = false;
@@ -651,7 +648,7 @@ class DashboardController extends Controller
                 // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
-                    $header = trim($worksheet->getCell($col.$row)->getValue() ?? '');
+                    $header = trim($worksheet->getCell($col . $row)->getValue() ?? '');
                     $currentHeaders[$col] = $header ?: $col;
                 }
 
@@ -687,7 +684,7 @@ class DashboardController extends Controller
                 // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
-                    $value = $getCellValue($worksheet->getCell($col.$row));
+                    $value = $getCellValue($worksheet->getCell($col . $row));
 
                     if ($value !== null && $value !== '') {
                         $hasData = true;
@@ -748,7 +745,7 @@ class DashboardController extends Controller
         }
 
         \Log::info('parseDataPrintSheet completed', [
-            'categories' => array_map(fn ($c) => ['id' => $c['id'], 'count' => $c['count']], array_values($categories)),
+            'categories' => array_map(fn($c) => ['id' => $c['id'], 'count' => $c['count']], array_values($categories)),
         ]);
 
         // Set total = count for categories that don't have an explicit total
@@ -864,7 +861,7 @@ class DashboardController extends Controller
             // Find header row
             $headerRow = 1;
             for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A'.$row)->getValue();
+                $cellValue = $worksheet->getCell('A' . $row)->getValue();
                 if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
                     $headerRow = $row;
                     break;
@@ -874,7 +871,7 @@ class DashboardController extends Controller
             // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $cell = $worksheet->getCell($col.$headerRow);
+                $cell = $worksheet->getCell($col . $headerRow);
                 $headers[$col] = trim($cell->getValue() ?: $col);
             }
 
@@ -885,7 +882,7 @@ class DashboardController extends Controller
                 $hasData = false;
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cell = $worksheet->getCell($col.$row);
+                    $cell = $worksheet->getCell($col . $row);
                     $value = $cell->getValue();
                     $key = $headers[$col] ?: $col;
                     $rowData[$key] = $value;
@@ -909,7 +906,6 @@ class DashboardController extends Controller
                 'data' => $data,
                 'count' => count($data),
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Get sheet error', [
                 'sheet' => $sheetName,
@@ -918,12 +914,11 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 400);
         }
     }
 
-<<<<<<< HEAD
     private function getPhpUploadLimitKb(): int
     {
         $uploadKb = $this->iniSizeToKb((string) ini_get('upload_max_filesize'));
@@ -965,7 +960,8 @@ class DashboardController extends Controller
             UPLOAD_ERR_EXTENSION => 'Upload diblokir oleh ekstensi PHP.',
             default => 'Upload gagal karena kesalahan server.',
         };
-=======
+    }
+
     public function deleteFile($id)
     {
         try {
@@ -997,7 +993,6 @@ class DashboardController extends Controller
                 'success' => true,
                 'message' => 'File berhasil dihapus',
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Delete file error', [
                 'file_id' => $id,
@@ -1006,7 +1001,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 400);
         }
     }
@@ -1044,11 +1039,11 @@ class DashboardController extends Controller
                 'success' => true,
                 'message' => 'Periode berhasil diubah',
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
+                'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first(),
+
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Rename period error', [
@@ -1058,9 +1053,8 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 400);
         }
->>>>>>> b509b9d6ca58fa4d2b455417d1386c217a2be7c4
     }
 }
