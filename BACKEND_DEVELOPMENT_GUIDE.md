@@ -46,6 +46,11 @@ DB_PASSWORD=
 herd database create digiper
 ```
 
+```powershell
+# Windows PowerShell equivalent
+Copy-Item .env.example .env
+```
+
 ### Initial Setup Commands
 
 ```bash
@@ -66,6 +71,19 @@ php artisan serve          # http://localhost:8000
 
 # Or use Herd
 herd open digiper.test
+```
+
+### Upload Directory Permissions (Windows)
+
+On Windows, `chmod` is not available in PowerShell. Use `icacls` instead:
+
+```powershell
+# Ensure upload directory exists
+if (-not (Test-Path 'storage/app/uploads')) { New-Item -ItemType Directory -Path 'storage/app/uploads' -Force }
+
+# Grant current user Modify permission recursively
+$principal = "$env:USERNAME`:(OI)(CI)M"
+icacls 'storage\app\uploads' /grant $principal /T
 ```
 
 ---
