@@ -30,6 +30,7 @@ class DashboardController extends Controller
     public function uploadWithPeriod(Request $request)
     {
         try {
+            ini_set('memory_limit', '512M');
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -114,6 +115,7 @@ class DashboardController extends Controller
     public function viewFile($id)
     {
         try {
+            ini_set('memory_limit', '512M');
             $excelFile = ExcelFile::findOrFail($id);
 
             if (! file_exists($excelFile->file_path)) {
@@ -133,6 +135,7 @@ class DashboardController extends Controller
     private function loadFileToSession($excelFile)
     {
         try {
+            ini_set('memory_limit', '512M');
             $reader = IOFactory::createReaderForFile($excelFile->file_path);
             $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($excelFile->file_path);
@@ -156,6 +159,7 @@ class DashboardController extends Controller
     public function upload(Request $request)
     {
         try {
+            ini_set('memory_limit', '512M');
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -327,6 +331,7 @@ class DashboardController extends Controller
     public function dataPrint()
     {
         try {
+            ini_set('memory_limit', '512M');
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -387,6 +392,7 @@ class DashboardController extends Controller
     public function sheetCek()
     {
         try {
+            ini_set('memory_limit', '512M');
             $filePath = Session::get('excel_file_path');
 
             if (! $filePath || ! file_exists($filePath)) {
@@ -828,6 +834,7 @@ class DashboardController extends Controller
     public function getSheet($sheetName)
     {
         try {
+            ini_set('memory_limit', '512M');
             $sheets = Session::get('excel_sheets', []);
             $filePath = Session::get('excel_file_path');
 
