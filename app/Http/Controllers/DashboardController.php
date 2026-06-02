@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class DashboardController extends Controller
@@ -31,7 +32,7 @@ class DashboardController extends Controller
     public function uploadWithPeriod(Request $request)
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -44,7 +45,7 @@ class DashboardController extends Controller
 
             // Validate file and period
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:' . $maxUploadKb,
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
                 'period' => 'required|string|max:100',
             ], [
                 'file.required' => 'File harus diupload',
@@ -62,8 +63,8 @@ class DashboardController extends Controller
                 File::ensureDirectoryExists($uploadDir);
             }
 
-            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-            $fullPath = $uploadDir . '/' . $filename;
+            $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+            $fullPath = $uploadDir.'/'.$filename;
             $file->move($uploadDir, $filename);
 
             // Save to database
@@ -85,7 +86,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'File berhasil diupload untuk periode ' . $period,
+                'message' => 'File berhasil diupload untuk periode '.$period,
                 'file_id' => $excelFile->id,
             ]);
         } catch (ValidationException $e) {
@@ -96,7 +97,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . $firstError,
+                'message' => 'Validasi gagal: '.$firstError,
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error', [
@@ -107,7 +108,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
     }
@@ -115,7 +116,7 @@ class DashboardController extends Controller
     public function viewFile($id)
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $excelFile = ExcelFile::findOrFail($id);
 
             if (! file_exists($excelFile->file_path)) {
@@ -134,7 +135,7 @@ class DashboardController extends Controller
     private function loadFileToSession($excelFile)
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $reader = IOFactory::createReaderForFile($excelFile->file_path);
             $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($excelFile->file_path);
@@ -157,7 +158,7 @@ class DashboardController extends Controller
     public function upload(Request $request)
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -170,7 +171,7 @@ class DashboardController extends Controller
 
             // Validate file
             $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:' . $maxUploadKb,
+                'file' => 'required|file|mimes:xlsx,xls,xlsm,xlsb,csv|max:'.$maxUploadKb,
             ], [
                 'file.required' => 'File harus diupload',
                 'file.mimes' => 'Format file harus Excel (.xlsx, .xls, .xlsm, .xlsb, .csv)',
@@ -193,8 +194,8 @@ class DashboardController extends Controller
             }
 
             // Generate unique filename and save directly
-            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-            $fullPath = $uploadDir . '/' . $filename;
+            $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+            $fullPath = $uploadDir.'/'.$filename;
             $file->move($uploadDir, $filename);
 
             // Load spreadsheet with optimizations from the uploaded file
@@ -230,7 +231,7 @@ class DashboardController extends Controller
             // Find header row (scan from row 1 to 10 to find actual headers)
             $headerRow = 1;
             for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A' . $row)->getValue();
+                $cellValue = $worksheet->getCell('A'.$row)->getValue();
                 // If this row starts with "No", "Nomor", or similar, it's the header
                 if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
                     $headerRow = $row;
@@ -243,7 +244,7 @@ class DashboardController extends Controller
             // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $cell = $worksheet->getCell($col . $headerRow);
+                $cell = $worksheet->getCell($col.$headerRow);
                 $headers[$col] = trim($cell->getValue() ?: $col);
             }
 
@@ -253,7 +254,7 @@ class DashboardController extends Controller
                 $hasData = false;
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cell = $worksheet->getCell($col . $row);
+                    $cell = $worksheet->getCell($col.$row);
                     $value = $cell->getValue();
 
                     // Use header names as keys
@@ -290,7 +291,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'File berhasil diupload! Total: ' . count($data) . ' baris',
+                'message' => 'File berhasil diupload! Total: '.count($data).' baris',
                 'count' => count($data),
             ]);
         } catch (ValidationException $e) {
@@ -298,7 +299,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first(),
+                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
             ], 422);
         } catch (\Exception $e) {
             \Log::error('Upload error', [
@@ -309,7 +310,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
     }
@@ -328,7 +329,8 @@ class DashboardController extends Controller
     public function dataPrint()
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
+
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -381,7 +383,7 @@ class DashboardController extends Controller
             return view('data-print', [
                 'categories' => [],
                 'fileName' => Session::get('excel_file_name'),
-                'error' => 'Error: ' . $e->getMessage(),
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -389,7 +391,7 @@ class DashboardController extends Controller
     public function sheetCek()
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $filePath = Session::get('excel_file_path');
 
             if (! $filePath || ! file_exists($filePath)) {
@@ -400,7 +402,7 @@ class DashboardController extends Controller
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false); // Need formulas for calculated values
             $spreadsheet = $reader->load($filePath);
 
             if (! $spreadsheet->sheetNameExists('cek')) {
@@ -415,10 +417,30 @@ class DashboardController extends Controller
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
 
-            // Helper to filter formula strings
+            \Log::info('sheetCek() starting', ['highestRow' => $highestRow, 'highestColumn' => $highestColumn]);
+
+            // Helper to get cell value - handle formulas properly
             $getCellValue = function ($cell) {
+                if ($cell === null) {
+                    return null;
+                }
+
+                try {
+                    // Try to get calculated value if cell has formula
+                    if ($cell->getDataType() === DataType::TYPE_FORMULA) {
+                        $calculatedValue = $cell->getCalculatedValue();
+                        if ($calculatedValue !== null && $calculatedValue !== '') {
+                            return $calculatedValue;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // If formula calculation fails, continue to raw value
+                }
+
+                // Get regular value
                 $value = $cell->getValue();
-                // Skip formula strings that appear as text (e.g., "=C6", "=D6")
+
+                // Skip formula strings that appear as text (formula failed to evaluate)
                 if (is_string($value) && strpos($value, '=') === 0) {
                     return null;
                 }
@@ -426,50 +448,154 @@ class DashboardController extends Controller
                 return $value;
             };
 
-            // Find header row (contains "NO" anywhere)
+            // Excluded columns
+            $excludedColumns = ['V', 'W']; // Only exclude V dan W (kolom R, S, T, U punya data penting)
+
+            // Find header row - scan first 15 rows for "NO" or "PERKARA" or similar header
             $headerRowNum = 1;
-            for ($row = 1; $row <= min($highestRow, 10); $row++) {
-                $rowHasNO = false;
+            for ($row = 1; $row <= min($highestRow, 15); $row++) {
+                $rowData = [];
+                $headerCount = 0;
+
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cellValue = $getCellValue($worksheet->getCell($col . $row));
-                    if ($cellValue && strtoupper(trim($cellValue)) === 'NO') {
-                        $rowHasNO = true;
-                        break;
+                    if (in_array($col, $excludedColumns)) {
+                        continue;
+                    }
+                    $cellValue = trim((string) ($getCellValue($worksheet->getCell($col.$row)) ?? ''));
+                    if ($cellValue !== '') {
+                        $rowData[$col] = $cellValue;
+                        $headerCount++;
                     }
                 }
-                if ($rowHasNO) {
+
+                // Header row usually has many non-empty cells and contains keywords like NO, PERKARA, BIAYA, etc
+                if ($headerCount >= 5) {
                     $headerRowNum = $row;
+                    \Log::info('Found potential header row', ['row' => $row, 'headerCount' => $headerCount, 'sample' => array_slice($rowData, 0, 5)]);
                     break;
                 }
             }
 
-            // Get headers
+            // Get all headers - include ALL columns A to highestColumn (except excluded ones)
+            // Columns without headers will be included if they have data
             $headers = [];
+
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $headerValue = $getCellValue($worksheet->getCell($col . $headerRowNum));
-                $headers[$col] = trim($headerValue ?: $col);
-            }
+                if (in_array($col, $excludedColumns)) {
+                    continue;
+                }
 
-            // Get data rows (starting after header row)
-            $dataStartRow = $headerRowNum + 1;
-            for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-                $rowData = [];
-                $hasData = false;
+                $headerValue = trim((string) ($getCellValue($worksheet->getCell($col.$headerRowNum)) ?? ''));
 
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $value = $getCellValue($worksheet->getCell($col . $row));
-                    $key = $headers[$col];
-                    $rowData[$key] = $value;
-
-                    if ($value !== null && $value !== '') {
-                        $hasData = true;
+                // Always include header, even if empty - use column letter as fallback
+                if ($headerValue !== '') {
+                    $headers[$col] = $headerValue;
+                } else {
+                    // Set names for columns without headers
+                    if ($col === 'R') {
+                        $headers[$col] = 'Penyerahan';
+                    } elseif ($col === 'S') {
+                        $headers[$col] = 'Honorarium';
+                    } elseif ($col === 'T') {
+                        $headers[$col] = 'Biaya';
+                    } elseif ($col === 'U') {
+                        $headers[$col] = 'Bersih';
+                    } else {
+                        $headers[$col] = $col;
                     }
                 }
+            }
 
-                if ($hasData) {
-                    $data[] = $rowData;
+            \Log::info('Headers parsed (all columns)', ['totalColumns' => count($headers), 'headerNames' => array_values($headers)]);
+
+            // Get data rows (starting after header row)
+            // Special handling: case rows (with NO) may be split across multiple rows
+            // Row with NO = case header row
+            // Following rows without NO = detail rows for that case
+            $dataStartRow = $headerRowNum + 1;
+            $validRowCount = 0;
+            $currentCaseRow = [];
+
+            for ($row = $dataStartRow; $row <= $highestRow; $row++) {
+                $rowData = [];
+
+                // Get all column values for this row
+                for ($col = 'A'; $col <= $highestColumn; $col++) {
+                    if (in_array($col, $excludedColumns)) {
+                        continue;
+                    }
+
+                    if (! isset($headers[$col])) {
+                        continue;
+                    }
+
+                    $value = $getCellValue($worksheet->getCell($col.$row));
+                    $key = $headers[$col];
+                    $rowData[$key] = $value;
+                }
+
+                // Check if this row is a "case header" (has NO value) or "detail" row
+                $hasNO = isset($rowData['NO']) && $rowData['NO'] !== null && $rowData['NO'] !== '';
+
+                if ($hasNO) {
+                    // Save previous case if exists
+                    if (! empty($currentCaseRow)) {
+                        $data[] = $currentCaseRow;
+                        $validRowCount++;
+                    }
+                    // Start new case
+                    $currentCaseRow = $rowData;
+                } else {
+                    // This is a detail row - merge with current case
+                    if (! empty($currentCaseRow)) {
+                        // Merge values from detail row into case row
+                        // Prefer non-null values from detail row, but keep case header values
+                        foreach ($rowData as $key => $value) {
+                            // Skip empty strings and null values from detail row
+                            if ($value !== null && $value !== '') {
+                                // Only override if current case doesn't have this value
+                                if (! isset($currentCaseRow[$key]) || $currentCaseRow[$key] === null || $currentCaseRow[$key] === '') {
+                                    $currentCaseRow[$key] = $value;
+                                }
+                            }
+                        }
+                    }
                 }
             }
+
+            // Don't forget the last case
+            if (! empty($currentCaseRow)) {
+                $data[] = $currentCaseRow;
+                $validRowCount++;
+            }
+
+            // Log sample rows
+            if (count($data) > 0) {
+                $row1Sample = array_slice($data[0], 0, 10);
+                \Log::info('Sample merged data row 1', [
+                    'data' => $row1Sample,
+                    'NO' => $data[0]['NO'] ?? null,
+                    'PERKARA' => $data[0]['PERKARA'] ?? null,
+                    'JUMLAH' => $data[0]['JUMLAH'] ?? null,
+                    'BIAYA' => $data[0]['BIAYA'] ?? null,
+                ]);
+            }
+            if (count($data) > 1) {
+                $row2Sample = array_slice($data[1], 0, 10);
+                \Log::info('Sample merged data row 2', [
+                    'data' => $row2Sample,
+                    'NO' => $data[1]['NO'] ?? null,
+                    'PERKARA' => $data[1]['PERKARA'] ?? null,
+                    'JUMLAH' => $data[1]['JUMLAH'] ?? null,
+                    'BIAYA' => $data[1]['BIAYA'] ?? null,
+                ]);
+            }
+
+            \Log::info('sheetCek() completed', [
+                'totalRowsRead' => $validRowCount,
+                'headerCount' => count($headers),
+                'headerNames' => array_values($headers),
+            ]);
 
             $spreadsheet->disconnectWorksheets();
 
@@ -479,11 +605,11 @@ class DashboardController extends Controller
                 'error' => null,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error reading cek sheet', ['error' => $e->getMessage()]);
+            \Log::error('Error reading cek sheet', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
             return view('sheet-cek', [
                 'data' => [],
-                'error' => 'Error membaca sheet: ' . $e->getMessage(),
+                'error' => 'Error membaca sheet: '.$e->getMessage(),
             ]);
         }
     }
@@ -491,6 +617,7 @@ class DashboardController extends Controller
     public function printRekapKeseluruhan()
     {
         try {
+            ini_set('memory_limit', '1024M');
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -557,7 +684,7 @@ class DashboardController extends Controller
                 'report' => [],
                 'recapDate' => null,
                 'reportLabel' => 'PERKARA ELEKTRONIK',
-                'error' => 'Error: ' . $e->getMessage(),
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -596,7 +723,7 @@ class DashboardController extends Controller
 
             for ($row = $startRow; $row <= min($endRow, $lastRow); $row++) {
                 for ($column = $startColumn; $column <= min($endColumn, $lastColumnIndex); $column++) {
-                    $cellReference = Coordinate::stringFromColumnIndex($column) . $row;
+                    $cellReference = Coordinate::stringFromColumnIndex($column).$row;
                     if ($cellReference !== $startCell) {
                         $coveredCells[$cellReference] = true;
                     }
@@ -608,7 +735,7 @@ class DashboardController extends Controller
         for ($row = 1; $row <= $lastRow; $row++) {
             $cells = [];
             for ($column = 1; $column <= $lastColumnIndex; $column++) {
-                $cellReference = Coordinate::stringFromColumnIndex($column) . $row;
+                $cellReference = Coordinate::stringFromColumnIndex($column).$row;
 
                 if (isset($coveredCells[$cellReference])) {
                     continue;
@@ -663,7 +790,7 @@ class DashboardController extends Controller
             $letter = '';
             while ($index > 0) {
                 $index--;
-                $letter = chr(65 + ($index % 26)) . $letter;
+                $letter = chr(65 + ($index % 26)).$letter;
                 $index = intdiv($index, 26);
             }
 
@@ -782,7 +909,7 @@ class DashboardController extends Controller
         $currentHeaders = [];
 
         for ($row = 1; $row <= $highestRow; $row++) {
-            $firstCell = trim($worksheet->getCell('A' . $row)->getValue() ?? '');
+            $firstCell = trim($worksheet->getCell('A'.$row)->getValue() ?? '');
 
             // Check if this is a section header
             $isSectionHeader = false;
@@ -809,7 +936,7 @@ class DashboardController extends Controller
                 // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
-                    $header = trim($worksheet->getCell($col . $row)->getValue() ?? '');
+                    $header = trim($worksheet->getCell($col.$row)->getValue() ?? '');
                     $currentHeaders[$col] = $header ?: $col;
                 }
 
@@ -845,7 +972,7 @@ class DashboardController extends Controller
                 // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
-                    $value = $getCellValue($worksheet->getCell($col . $row));
+                    $value = $getCellValue($worksheet->getCell($col.$row));
 
                     if ($value !== null && $value !== '') {
                         $hasData = true;
@@ -906,7 +1033,7 @@ class DashboardController extends Controller
         }
 
         \Log::info('parseDataPrintSheet completed', [
-            'categories' => array_map(fn($c) => ['id' => $c['id'], 'count' => $c['count']], array_values($categories)),
+            'categories' => array_map(fn ($c) => ['id' => $c['id'], 'count' => $c['count']], array_values($categories)),
         ]);
 
         // Set total = count for categories that don't have an explicit total
@@ -992,7 +1119,7 @@ class DashboardController extends Controller
     public function getSheet($sheetName)
     {
         try {
-            ini_set('memory_limit', '512M');
+            ini_set('memory_limit', '1024M');
             $sheets = Session::get('excel_sheets', []);
             $filePath = Session::get('excel_file_path');
 
@@ -1022,7 +1149,7 @@ class DashboardController extends Controller
             // Find header row
             $headerRow = 1;
             for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A' . $row)->getValue();
+                $cellValue = $worksheet->getCell('A'.$row)->getValue();
                 if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
                     $headerRow = $row;
                     break;
@@ -1032,7 +1159,7 @@ class DashboardController extends Controller
             // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $cell = $worksheet->getCell($col . $headerRow);
+                $cell = $worksheet->getCell($col.$headerRow);
                 $headers[$col] = trim($cell->getValue() ?: $col);
             }
 
@@ -1043,7 +1170,7 @@ class DashboardController extends Controller
                 $hasData = false;
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cell = $worksheet->getCell($col . $row);
+                    $cell = $worksheet->getCell($col.$row);
                     $value = $cell->getValue();
                     $key = $headers[$col] ?: $col;
                     $rowData[$key] = $value;
@@ -1075,7 +1202,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
     }
@@ -1162,7 +1289,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
     }
@@ -1203,7 +1330,7 @@ class DashboardController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first(),
+                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
 
             ], 422);
         } catch (\Exception $e) {
@@ -1214,7 +1341,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
     }

@@ -30,11 +30,19 @@
     @if(count($data) > 0)
         <!-- Table Section -->
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+            <!-- Title Header from Excel -->
+            <div class="px-8 py-6 bg-neutral-50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-800">
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-100">REKAP TOTAL PENYERAHAN KE MASING - MASING PANMUD</h3>
+                    <p class="text-base font-semibold text-neutral-700 dark:text-neutral-300">HONORARIUM BIAYA PENYELESAIAN PERKARA</p>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400">PERIODE BULAN DESEMBER 2025 s/D FEBRUARI 2026</p>
+                </div>
+            </div>
+
             <!-- Table Header -->
-            <div class="px-8 py-6 border-b border-neutral-200 dark:border-neutral-800">
+            <div class="px-8 py-4 border-b border-neutral-200 dark:border-neutral-800">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold">Data Sheet Cek</h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{{ count($data) }} baris data</p>
                     </div>
                 </div>
@@ -42,22 +50,30 @@
 
             <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-neutral-50 dark:bg-neutral-800/50">
-                        <tr class="border-b border-neutral-200 dark:border-neutral-800">
-                            <th class="px-8 py-4 text-left font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">No</th>
+                <table class="w-full text-xs border-collapse">
+                    <thead class="bg-neutral-100 dark:bg-neutral-800 sticky top-0">
+                        <tr class="border-b-2 border-neutral-300 dark:border-neutral-700">
+                            <th class="px-4 py-3 text-center font-bold text-neutral-700 dark:text-neutral-300 border-r border-neutral-200 dark:border-neutral-700 w-12">No</th>
                             @foreach($headers as $headerKey => $headerName)
-                                <th class="px-8 py-4 text-left font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide text-xs">{{ $headerName }}</th>
+                                <th class="px-4 py-3 text-center font-bold text-neutral-700 dark:text-neutral-300 border-r border-neutral-200 dark:border-neutral-700 whitespace-nowrap {{ in_array($headerName, ['JUMLAH', 'BIAYA', 'TIM', '5 MAJELIS', 'KEPANITERAAN', 'PEMILAH', 'Total', 'PAJAK', 'TOTAL', 'Penyerahan', 'Honorarium', 'Biaya', 'Bersih']) ? 'text-right' : '' }}">
+                                    {{ $headerName }}
+                                </th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($data as $idx => $row)
-                            <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-150">
-                                <td class="px-8 py-4 text-sm text-neutral-600 dark:text-neutral-400 font-medium">{{ $idx + 1 }}</td>
+                            <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50 dark:hover:bg-neutral-800/50 transition-colors duration-100">
+                                <td class="px-4 py-2 text-center text-neutral-600 dark:text-neutral-400 font-medium border-r border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50">{{ $idx + 1 }}</td>
                                 @foreach($headers as $headerKey => $headerName)
-                                    <td class="px-8 py-4 text-sm text-neutral-900 dark:text-neutral-100">
-                                        {{ $row[$headerName] ?? '-' }}
+                                    <td class="px-4 py-2 text-neutral-900 dark:text-neutral-100 border-r border-neutral-200 dark:border-neutral-700 {{ in_array($headerName, ['JUMLAH', 'BIAYA', 'TIM', '5 MAJELIS', 'KEPANITERAAN', 'PEMILAH', 'Total', 'PAJAK', 'TOTAL', 'Penyerahan', 'Honorarium', 'Biaya', 'Bersih']) ? 'text-right' : '' }}">
+                                        @if(($row[$headerName] ?? null) === null || ($row[$headerName] ?? null) === '')
+                                            -
+                                        @elseif(is_numeric($row[$headerName]))
+                                            {{ number_format($row[$headerName], 0, ',', '.') }}
+                                        @else
+                                            {{ $row[$headerName] }}
+                                        @endif
                                     </td>
                                 @endforeach
                             </tr>
