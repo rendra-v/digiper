@@ -347,7 +347,7 @@ class DashboardController extends Controller
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
@@ -397,7 +397,7 @@ class DashboardController extends Controller
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
 
             if (! $spreadsheet->sheetNameExists('cek')) {
@@ -412,24 +412,34 @@ class DashboardController extends Controller
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
 
-            // Helper to filter formula strings
+            // Helper to get calculated cell value
             $getCellValue = function ($cell) {
-                $value = $cell->getValue();
-                // Skip formula strings that appear as text (e.g., "=C6", "=D6")
-                if (is_string($value) && strpos($value, '=') === 0) {
-                    return null;
-                }
+                try {
+                    $value = $cell->getCalculatedValue();
+                    // If it's still a formula (e.g. calculation failed or returned the formula itself)
+                    if (is_string($value) && strpos($value, '=') === 0) {
+                        return null;
+                    }
 
-                return $value;
+                    return $value;
+                } catch (\Exception $e) {
+                    // Fallback to raw value if calculation fails, but hide if it's a formula string
+                    $val = $cell->getValue();
+                    if (is_string($val) && strpos($val, '=') === 0) {
+                        return null;
+                    }
+
+                    return $val;
+                }
             };
 
             // Find header row (contains "NO" anywhere)
             $headerRowNum = 1;
-            for ($row = 1; $row <= min($highestRow, 10); $row++) {
+            for ($row = 1; $row <= min($highestRow, 30); $row++) {
                 $rowHasNO = false;
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cellValue = $getCellValue($worksheet->getCell($col.$row));
-                    if ($cellValue && strtoupper(trim($cellValue)) === 'NO') {
+                    $val = $getCellValue($worksheet->getCell($col.$row));
+                    if ($val && (strtoupper(trim((string)$val)) === 'NO' || stripos(trim((string)$val), 'nomor') !== false)) {
                         $rowHasNO = true;
                         break;
                     }
@@ -440,39 +450,209 @@ class DashboardController extends Controller
                 }
             }
 
-            // Get headers
+            // Get headers (only those that have a non-empty value, plus explicit G/H)
             $headers = [];
-            for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $headerValue = $getCellValue($worksheet->getCell($col.$headerRowNum));
-                $headers[$col] = trim($headerValue ?: $col);
+            $foundPajak = false;
+            $totalAfterPajakCount = 0;
+            $colToKey = [];
+            
+            // Loop through a fixed range of columns to ensure we catch G and H
+            for ($colIndex = 2; $colIndex <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn); $colIndex++) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                $cell = $worksheet->getCell($col.$headerRowNum);
+                $headerValue = $getCellValue($cell);
+                
+                $name = $headerValue ? trim((string)$headerValue) : '';
+                $key = $name;
+
+                // Force mapping for G and H if they are empty
+                if ($col === 'G' && $name === '') {
+                    $name = ' '; // Use space to pass non-empty check
+                    $key = 'DPP';
+                } elseif ($col === 'H' && $name === '') {
+                    $name = '  '; // Use space
+                    $key = 'KETERANGAN';
+                }
+
+                if ($name !== '') {
+                    if (strtoupper(trim($name)) === 'PAJAK') {
+                        $foundPajak = true;
+                    } elseif ($foundPajak && strtoupper(trim($name)) === 'TOTAL') {
+                        $totalAfterPajakCount++;
+                        if ($totalAfterPajakCount === 1) $key = 'TOTAL_1';
+                        elseif ($totalAfterPajakCount === 2) $key = 'TOTAL_2';
+                        elseif ($totalAfterPajakCount === 3) $key = 'TOTAL_3';
+                    }
+                    
+                    $headers[$col] = $name; // Display name
+                    $colToKey[$col] = $key; // Internal key
+                }
+            }
+
+            // Merged cells info for rowspan - Apply to ALL columns
+            $mergedCells = $worksheet->getMergeCells();
+            $rowspanMap = []; // [col][row] => rowspan
+            $skipMap = [];    // [col][row] => true
+            
+            foreach ($mergedCells as $range) {
+                if (strpos($range, ':') !== false) {
+                    list($start, $end) = explode(':', $range);
+                    $startCol = preg_replace('/[0-9]/', '', $start);
+                    $startRow = (int)preg_replace('/[A-Z]/', '', $start);
+                    $endCol = preg_replace('/[0-9]/', '', $end);
+                    $endRow = (int)preg_replace('/[A-Z]/', '', $end);
+                    
+                    if ($startCol === $endCol) { // Vertical merge
+                        $rowspan = $endRow - $startRow + 1;
+                        $rowspanMap[$startCol][$startRow] = $rowspan;
+                        for ($r = $startRow + 1; $r <= $endRow; $r++) {
+                            $skipMap[$startCol][$r] = true;
+                        }
+                    }
+                }
             }
 
             // Get data rows (starting after header row)
             $dataStartRow = $headerRowNum + 1;
-            for ($row = $dataStartRow; $row <= $highestRow; $row++) {
+            $maxRowsToProcess = min(50000, $highestRow); // Limit to prevent timeout
+            
+            $rows = [];
+            for ($row = $dataStartRow; $row <= $maxRowsToProcess; $row++) {
                 $rowData = [];
                 $hasData = false;
+                $isOpeningKasasi = false;
+                $onlyFilledUpToTim = true;
+                $foundTim = false;
+                $rowspans = [];
 
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $value = $getCellValue($worksheet->getCell($col.$row));
-                    $key = $headers[$col];
+                foreach ($colToKey as $col => $key) {
+                    $cell = $worksheet->getCell($col.$row);
+                    
+                    if (isset($skipMap[$col][$row])) {
+                        $rowData[$key] = 'SKIP_OR_NULL';
+                        $hasData = true;
+                        continue;
+                    }
+                    
+                    $value = $getCellValue($cell);
                     $rowData[$key] = $value;
+                    
+                    if (isset($rowspanMap[$col][$row])) {
+                        $rowspans[$key] = $rowspanMap[$col][$row];
+                    }
 
                     if ($value !== null && $value !== '') {
                         $hasData = true;
+                        if ($key === 'BIAYA' && (int)$value === 250000) $isOpeningKasasi = true;
+                        if ($key === 'TIM') $foundTim = true;
+                        if ($foundTim && !in_array($key, ['TIM', 'TOTAL_1', 'TOTAL_2', 'TOTAL_3'])) $onlyFilledUpToTim = false;
                     }
                 }
 
                 if ($hasData) {
-                    $data[] = $rowData;
+                    // Instruction 2: Empty totals for Opening Kasasi or only filled up to TIM
+                    // BUT: TOTAL_3 might be needed on the opening row as per user's latest logic
+                    if ($isOpeningKasasi || ($foundTim && $onlyFilledUpToTim)) {
+                        $rowData['TOTAL_1'] = null;
+                        $rowData['TOTAL_2'] = null;
+                        // Keep TOTAL_3 if it has a value from Excel or is a merge start
+                        if (!isset($rowspans['TOTAL_3'])) {
+                            $rowData['TOTAL_3'] = null;
+                        }
+                    }
+                    
+                    // Instruction 3: TOTAL_1 only if Pajak exists
+                    if (isset($rowData['PAJAK']) && ($rowData['PAJAK'] === null || $rowData['PAJAK'] === '')) {
+                        $rowData['TOTAL_1'] = null;
+                        unset($rowspans['TOTAL_1']);
+                    }
+
+                    $rowData['_rowspans'] = $rowspans;
+                    $rowData['_original_row'] = $row;
+                    $rows[] = $rowData;
+                }
+            }
+
+            // SMART CALCULATION: Sum up totals if empty based on hierarchy
+            // 1. Calculate TOTAL_2 from TOTAL_1
+            for ($idx = 0; $idx < count($rows); $idx++) {
+                $r = &$rows[$idx];
+                if (isset($r['_rowspans']['TOTAL_2']) && ($r['TOTAL_2'] === null || $r['TOTAL_2'] === '')) {
+                    $sum = 0;
+                    $span = $r['_rowspans']['TOTAL_2'];
+                    for ($i = 0; $i < $span && ($idx + $i) < count($rows); $i++) {
+                        $comp = $rows[$idx + $i]['TOTAL_1'];
+                        if (is_numeric($comp)) {
+                            $sum += (float)$comp;
+                        }
+                    }
+                    if ($sum > 0) {
+                        $r['TOTAL_2'] = $sum;
+                    }
+                }
+            }
+            unset($r);
+
+            // 2. Calculate TOTAL_3 from TOTAL_2
+            for ($idx = 0; $idx < count($rows); $idx++) {
+                $r = &$rows[$idx];
+                if (isset($r['_rowspans']['TOTAL_3']) && ($r['TOTAL_3'] === null || $r['TOTAL_3'] === '')) {
+                    $sum = 0;
+                    $span = $r['_rowspans']['TOTAL_3'];
+                    for ($i = 0; $i < $span && ($idx + $i) < count($rows); $i++) {
+                        $comp = $rows[$idx + $i]['TOTAL_2'];
+                        // Only add if it's not SKIP_OR_NULL and is numeric
+                        if ($comp !== 'SKIP_OR_NULL' && is_numeric($comp)) {
+                            $sum += (float)$comp;
+                        }
+                    }
+                    if ($sum > 0) {
+                        $r['TOTAL_3'] = $sum;
+                    }
+                }
+            }
+            unset($r);
+
+            $data = $rows;
+            
+            // Extract footer/signature rows (rows that look like signatures or dates)
+            $tableData = [];
+            $footerData = [];
+            foreach ($rows as $row) {
+                $isFooter = false;
+                $rowText = '';
+                foreach ($row as $k => $v) {
+                    if ($k !== '_rowspans' && $k !== '_original_row' && $v !== 'SKIP_OR_NULL') {
+                        $rowText .= ' ' . (string)$v;
+                    }
+                }
+                
+                if (stripos($rowText, 'BENDAHARA') !== false || 
+                    stripos($rowText, 'MENGETAHUI') !== false || 
+                    stripos($rowText, 'PETUGAS') !== false ||
+                    stripos($rowText, 'KUASA PENGELOLA') !== false ||
+                    stripos($rowText, 'Jakarta,') !== false ||
+                    stripos($rowText, 'ASEP NURSOBAH') !== false ||
+                    stripos($rowText, 'FARIDA') !== false ||
+                    stripos($rowText, 'KRIS NUGROHO') !== false ||
+                    preg_match('/[A-Z]{2,}\s?,\s?S\.H\./', $rowText)) {
+                    $isFooter = true;
+                }
+                
+                if ($isFooter) {
+                    $footerData[] = $row;
+                } else {
+                    $tableData[] = $row;
                 }
             }
 
             $spreadsheet->disconnectWorksheets();
 
             return view('sheet-cek', [
-                'data' => $data,
+                'data' => $tableData,
+                'footer' => $footerData,
                 'headers' => $headers,
+                'colToKey' => $colToKey,
                 'error' => null,
             ]);
 
@@ -520,21 +700,25 @@ class DashboardController extends Controller
             return $index;
         };
 
-        // Helper to get cell value and filter out formula strings like "=C6" and error values
+        // Helper to get calculated cell value
         $getCellValue = function ($cell) {
-            $value = $cell->getValue();
+            try {
+                $value = $cell->getCalculatedValue();
+                // If it's still a formula (e.g. calculation failed or returned the formula itself)
+                if (is_string($value) && strpos($value, '=') === 0) {
+                    return null;
+                }
 
-            // Skip formula strings that appear as text (e.g., "=C6", "=D6")
-            if (is_string($value) && strpos($value, '=') === 0) {
-                return null;
+                return $value;
+            } catch (\Exception $e) {
+                // Fallback to raw value if calculation fails
+                $val = $cell->getValue();
+                if (is_string($val) && strpos($val, '=') === 0) {
+                    return null;
+                }
+
+                return $val;
             }
-
-            // Skip error values (#REF!, #VALUE!, etc)
-            if (is_string($value) && strpos($value, '#') === 0) {
-                return null;
-            }
-
-            return $value;
         };
 
         // Helper to check if row is a valid data row (not a TOTAL or section footer)
@@ -618,8 +802,9 @@ class DashboardController extends Controller
         $currentSection = null;
         $currentHeaderRow = null;
         $currentHeaders = [];
+        $maxRowsToProcess = min(50000, $highestRow); // Limit to prevent timeout
 
-        for ($row = 1; $row <= $highestRow; $row++) {
+        for ($row = 1; $row <= $maxRowsToProcess; $row++) {
             $firstCell = trim($worksheet->getCell('A'.$row)->getValue() ?? '');
 
             // Check if this is a section header
@@ -860,7 +1045,7 @@ class DashboardController extends Controller
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
             $worksheet = $spreadsheet->getSheetByName($sheetName);
 
@@ -868,21 +1053,44 @@ class DashboardController extends Controller
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
 
+            // Helper to get calculated cell value
+            $getCellValue = function ($cell) {
+                try {
+                    $value = $cell->getCalculatedValue();
+                    if (is_string($value) && strpos($value, '=') === 0) {
+                        return null;
+                    }
+                    return $value;
+                } catch (\Exception $e) {
+                    $val = $cell->getValue();
+                    if (is_string($val) && strpos($val, '=') === 0) {
+                        return null;
+                    }
+                    return $val;
+                }
+            };
+
             // Find header row
             $headerRow = 1;
-            for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A'.$row)->getValue();
-                if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
-                    $headerRow = $row;
-                    break;
+            for ($row = 1; $row <= min(20, $highestRow); $row++) {
+                $foundNo = false;
+                for ($col = 'A'; $col <= $highestColumn; $col++) {
+                    $val = $getCellValue($worksheet->getCell($col.$row));
+                    if ($val && (strtoupper(trim((string)$val)) === 'NO' || stripos(trim((string)$val), 'nomor') !== false)) {
+                        $headerRow = $row;
+                        $foundNo = true;
+                        break;
+                    }
                 }
+                if ($foundNo) break;
             }
 
             // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
                 $cell = $worksheet->getCell($col.$headerRow);
-                $headers[$col] = trim($cell->getValue() ?: $col);
+                $headerValue = $getCellValue($cell);
+                $headers[$col] = trim($headerValue ?: $col);
             }
 
             // Read data rows
@@ -893,7 +1101,7 @@ class DashboardController extends Controller
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
                     $cell = $worksheet->getCell($col.$row);
-                    $value = $cell->getValue();
+                    $value = $getCellValue($cell);
                     $key = $headers[$col] ?: $col;
                     $rowData[$key] = $value;
 
@@ -930,7 +1138,6 @@ class DashboardController extends Controller
         }
     }
 
-<<<<<<< HEAD
     private function getPhpUploadLimitKb(): int
     {
         $uploadKb = $this->iniSizeToKb((string) ini_get('upload_max_filesize'));
@@ -972,7 +1179,8 @@ class DashboardController extends Controller
             UPLOAD_ERR_EXTENSION => 'Upload diblokir oleh ekstensi PHP.',
             default => 'Upload gagal karena kesalahan server.',
         };
-=======
+    }
+
     public function deleteFile($id)
     {
         try {
@@ -1068,6 +1276,6 @@ class DashboardController extends Controller
                 'message' => 'Error: '.$e->getMessage(),
             ], 400);
         }
->>>>>>> b509b9d6ca58fa4d2b455417d1386c217a2be7c4
     }
 }
+

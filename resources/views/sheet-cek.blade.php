@@ -45,7 +45,6 @@
                 <table class="w-full text-sm">
                     <thead class="bg-neutral-50 dark:bg-neutral-800/50">
                         <tr class="border-b border-neutral-200 dark:border-neutral-800">
-                            <th class="px-8 py-4 text-left font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">No</th>
                             @foreach($headers as $headerKey => $headerName)
                                 <th class="px-8 py-4 text-left font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide text-xs">{{ $headerName }}</th>
                             @endforeach
@@ -54,10 +53,28 @@
                     <tbody>
                         @forelse($data as $idx => $row)
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-150">
-                                <td class="px-8 py-4 text-sm text-neutral-600 dark:text-neutral-400 font-medium">{{ $idx + 1 }}</td>
-                                @foreach($headers as $headerKey => $headerName)
-                                    <td class="px-8 py-4 text-sm text-neutral-900 dark:text-neutral-100">
-                                        {{ $row[$headerName] ?? '-' }}
+                                @foreach($headers as $colLetter => $headerName)
+                                    @php 
+                                        $key = $colToKey[$colLetter] ?? $headerName;
+                                        $value = $row[$key] ?? null;
+                                        $rowspan = $row['_rowspans'][$key] ?? 1;
+                                    @endphp
+                                    
+                                    @if($value === 'SKIP_OR_NULL')
+                                        @continue
+                                    @endif
+                                    
+                                    <td class="px-8 py-4 text-sm text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800"
+                                        @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
+                                        @if(is_numeric($value))
+                                            @if((float)$value === 0.0)
+                                                -
+                                            @else
+                                                {{ number_format((float)$value, 0, ',', '.') }}
+                                            @endif
+                                        @else
+                                            {{ $value ?? '-' }}
+                                        @endif
                                     </td>
                                 @endforeach
                             </tr>
@@ -79,6 +96,74 @@
                 </p>
             </div>
         </div>
+
+        <!-- Professional Footer / Signatures -->
+        @if(isset($footer) && count($footer) > 0)
+            <div class="mt-16 mb-24 px-8">
+                @php
+                    $fullText = '';
+                    foreach($footer as $fRow) {
+                        foreach($fRow as $k => $v) {
+                            if($k !== '_rowspans' && $k !== '_original_row' && $v && $v !== 'SKIP_OR_NULL') {
+                                $fullText .= ' ' . $v;
+                            }
+                        }
+                    }
+
+                    // Extract Date
+                    $date = '';
+                    if (preg_match('/(Jakarta,\s*\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/', $fullText, $matches)) {
+                        $date = $matches[1];
+                    }
+
+                    // Extract People
+                    // Bendahara
+                    $bendaharaName = '';
+                    if (preg_match('/FARIDA,\s*SH/', $fullText, $m)) $bendaharaName = 'FARIDA, S.H.';
+                    
+                    // Mengetahui
+                    $mengetahuiName = '';
+                    if (preg_match('/ASEP NURSOBAH,\s*S\.Ag\.,\s*M\.H\./', $fullText, $m)) $mengetahuiName = 'ASEP NURSOBAH, S.Ag., M.H.';
+                    
+                    // PPK
+                    $ppkName = '';
+                    if (preg_match('/ST\.\s*KRIS NUGROHO,\s*S\.H\.,\s*M\.H\./', $fullText, $m)) $ppkName = 'ST. KRIS NUGROHO, S.H., M.H.';
+                @endphp
+
+                <div class="flex flex-col items-end mb-12">
+                    <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200">{{ $date ?: 'Jakarta, 05 Maret 2026' }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                    <!-- Column 1: Bendahara -->
+                    <div class="flex flex-col justify-between h-48">
+                        <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">Bendahara Biaya Proses</p>
+                        <div class="mt-auto">
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $bendaharaName ?: 'FARIDA, S.H.' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Mengetahui -->
+                    <div class="flex flex-col justify-between h-48">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500 mb-1">Mengetahui</p>
+                            <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Kuasa Pengelola Biaya Proses</p>
+                        </div>
+                        <div class="mt-auto">
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $mengetahuiName ?: 'ASEP NURSOBAH, S.Ag., M.H.' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: PPK -->
+                    <div class="flex flex-col justify-between h-48">
+                        <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">Petugas Pembuat Komitmen Biaya Proses</p>
+                        <div class="mt-auto">
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $ppkName ?: 'ST. KRIS NUGROHO, S.H., M.H.' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
         <!-- Empty State -->
         <div class="text-center py-24">
