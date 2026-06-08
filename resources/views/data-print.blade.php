@@ -70,7 +70,8 @@
                                 <div
                                     class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500 dark:text-neutral-400">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                            d="m6 9 6 6 6-6" />
                                     </svg>
                                 </div>
                             </div>
@@ -80,7 +81,8 @@
                             class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                    d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z" />
                             </svg>
                             Print PDF
@@ -135,7 +137,11 @@
                                 ];
 
                                 $visibleColumns = collect($category['columns'] ?? [])
-                                    ->filter(fn ($colName) => $colName && $colName !== 'No' && ! in_array($colName, $excludedColumns, true))
+                                    ->filter(
+                                        fn($colName) => $colName &&
+                                            $colName !== 'No' &&
+                                            !in_array($colName, $excludedColumns, true),
+                                    )
                                     ->values();
                             @endphp
 

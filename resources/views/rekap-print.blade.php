@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -176,6 +177,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="page">
         @if ($error)
@@ -186,9 +188,11 @@
             @php
                 $rows = collect($report['rows'] ?? [])->keyBy('number');
 
-                $getCellValue = function (int $rowNumber, string $reference, string $default = '-') use ($rows): string {
+                $getCellValue = function (int $rowNumber, string $reference, string $default = '-') use (
+                    $rows,
+                ): string {
                     $row = $rows->get($rowNumber);
-                    if (! $row) {
+                    if (!$row) {
                         return $default;
                     }
 
@@ -245,7 +249,13 @@
                                     if ($rowNumber <= 8) {
                                         $cellClasses[] = 'center';
                                         $cellClasses[] = 'bold';
-                                    } elseif (in_array(substr($cell['reference'], 0, 1), ['A', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'], true)) {
+                                    } elseif (
+                                        in_array(
+                                            substr($cell['reference'], 0, 1),
+                                            ['A', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'],
+                                            true,
+                                        )
+                                    ) {
                                         $cellClasses[] = 'center';
                                     } else {
                                         $cellClasses[] = 'left';
@@ -255,11 +265,8 @@
                                         $cellClasses[] = 'light';
                                     }
                                 @endphp
-                                <td
-                                    rowspan="{{ $cell['rowspan'] }}"
-                                    colspan="{{ $cell['colspan'] }}"
-                                    class="{{ implode(' ', $cellClasses) }}"
-                                >
+                                <td rowspan="{{ $cell['rowspan'] }}" colspan="{{ $cell['colspan'] }}"
+                                    class="{{ implode(' ', $cellClasses) }}">
                                     {{ $value }}
                                 </td>
                             @endforeach
@@ -315,4 +322,5 @@
         });
     </script>
 </body>
+
 </html>
