@@ -351,7 +351,7 @@ class DashboardController extends Controller
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
@@ -395,10 +395,10 @@ class DashboardController extends Controller
             $filePath = Session::get('excel_file_path');
 
             if (! $filePath || ! file_exists($filePath)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File tidak ditemukan',
-                ], 404);
+                return view('sheet-cek', [
+                    'data' => [],
+                    'error' => 'File tidak ditemukan',
+                ]);
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
@@ -413,11 +413,8 @@ class DashboardController extends Controller
             }
 
             $worksheet = $spreadsheet->getSheetByName('cek');
-            $data = [];
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
-
-            \Log::info('sheetCek() starting', ['highestRow' => $highestRow, 'highestColumn' => $highestColumn]);
 
             // Helper to get cell value - handle formulas properly
             $getCellValue = function ($cell) {
@@ -449,163 +446,209 @@ class DashboardController extends Controller
             };
 
             // Excluded columns
-            $excludedColumns = ['V', 'W']; // Only exclude V dan W (kolom R, S, T, U punya data penting)
+            $excludedColumns = ['V', 'W']; 
 
-            // Find header row - scan first 15 rows for "NO" or "PERKARA" or similar header
+            // Find header row - scan first 30 rows
             $headerRowNum = 1;
-            for ($row = 1; $row <= min($highestRow, 15); $row++) {
-                $rowData = [];
+            for ($row = 1; $row <= min($highestRow, 30); $row++) {
                 $headerCount = 0;
-
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    if (in_array($col, $excludedColumns)) {
-                        continue;
+                    if (in_array($col, $excludedColumns)) continue;
+                    $val = $getCellValue($worksheet->getCell($col.$row));
+                    if ($val && (strtoupper(trim((string)$val)) === 'NO' || stripos(trim((string)$val), 'nomor') !== false)) {
+                        $headerRowNum = $row;
+                        break 2;
                     }
-                    $cellValue = trim((string) ($getCellValue($worksheet->getCell($col.$row)) ?? ''));
-                    if ($cellValue !== '') {
-                        $rowData[$col] = $cellValue;
-                        $headerCount++;
-                    }
-                }
-
-                // Header row usually has many non-empty cells and contains keywords like NO, PERKARA, BIAYA, etc
-                if ($headerCount >= 5) {
-                    $headerRowNum = $row;
-                    \Log::info('Found potential header row', ['row' => $row, 'headerCount' => $headerCount, 'sample' => array_slice($rowData, 0, 5)]);
-                    break;
                 }
             }
 
-            // Get all headers - include ALL columns A to highestColumn (except excluded ones)
-            // Columns without headers will be included if they have data
+            // Get headers (only those that have a non-empty value, plus explicit G/H)
             $headers = [];
+            $foundPajak = false;
+            $totalAfterPajakCount = 0;
+            $colToKey = [];
+            
+            for ($colIndex = 1; $colIndex <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn); $colIndex++) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                if (in_array($col, $excludedColumns)) continue;
 
-            for ($col = 'A'; $col <= $highestColumn; $col++) {
-                if (in_array($col, $excludedColumns)) {
-                    continue;
+                $cell = $worksheet->getCell($col.$headerRowNum);
+                $headerValue = $getCellValue($cell);
+                
+                $name = $headerValue ? trim((string)$headerValue) : '';
+                $key = $name;
+
+                // Force mapping for G and H if they are empty
+                if ($col === 'G' && $name === '') {
+                    $name = ' '; 
+                    $key = 'DPP';
+                } elseif ($col === 'H' && $name === '') {
+                    $name = '  '; 
+                    $key = 'KETERANGAN';
                 }
 
-                $headerValue = trim((string) ($getCellValue($worksheet->getCell($col.$headerRowNum)) ?? ''));
-
-                // Always include header, even if empty - use column letter as fallback
-                if ($headerValue !== '') {
-                    $headers[$col] = $headerValue;
-                } else {
-                    // Set names for columns without headers
-                    if ($col === 'R') {
-                        $headers[$col] = 'Penyerahan';
-                    } elseif ($col === 'S') {
-                        $headers[$col] = 'Honorarium';
-                    } elseif ($col === 'T') {
-                        $headers[$col] = 'Biaya';
-                    } elseif ($col === 'U') {
-                        $headers[$col] = 'Bersih';
-                    } else {
-                        $headers[$col] = $col;
+                if ($name !== '') {
+                    if (strtoupper(trim($name)) === 'PAJAK') {
+                        $foundPajak = true;
+                    } elseif ($foundPajak && strtoupper(trim($name)) === 'TOTAL') {
+                        $totalAfterPajakCount++;
+                        if ($totalAfterPajakCount === 1) $key = 'TOTAL_1';
+                        elseif ($totalAfterPajakCount === 2) $key = 'TOTAL_2';
+                        elseif ($totalAfterPajakCount === 3) $key = 'TOTAL_3';
                     }
+                    
+                    $headers[$col] = $name; 
+                    $colToKey[$col] = $key; 
                 }
             }
 
-            \Log::info('Headers parsed (all columns)', ['totalColumns' => count($headers), 'headerNames' => array_values($headers)]);
-
-            // Get data rows (starting after header row)
-            // Special handling: case rows (with NO) may be split across multiple rows
-            // Row with NO = case header row
-            // Following rows without NO = detail rows for that case
-            $dataStartRow = $headerRowNum + 1;
-            $validRowCount = 0;
-            $currentCaseRow = [];
-
-            for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-                $rowData = [];
-
-                // Get all column values for this row
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    if (in_array($col, $excludedColumns)) {
-                        continue;
-                    }
-
-                    if (! isset($headers[$col])) {
-                        continue;
-                    }
-
-                    $value = $getCellValue($worksheet->getCell($col.$row));
-                    $key = $headers[$col];
-                    $rowData[$key] = $value;
-                }
-
-                // Check if this row is a "case header" (has NO value) or "detail" row
-                $hasNO = isset($rowData['NO']) && $rowData['NO'] !== null && $rowData['NO'] !== '';
-
-                if ($hasNO) {
-                    // Save previous case if exists
-                    if (! empty($currentCaseRow)) {
-                        $data[] = $currentCaseRow;
-                        $validRowCount++;
-                    }
-                    // Start new case
-                    $currentCaseRow = $rowData;
-                } else {
-                    // This is a detail row - merge with current case
-                    if (! empty($currentCaseRow)) {
-                        // Merge values from detail row into case row
-                        // Prefer non-null values from detail row, but keep case header values
-                        foreach ($rowData as $key => $value) {
-                            // Skip empty strings and null values from detail row
-                            if ($value !== null && $value !== '') {
-                                // Only override if current case doesn't have this value
-                                if (! isset($currentCaseRow[$key]) || $currentCaseRow[$key] === null || $currentCaseRow[$key] === '') {
-                                    $currentCaseRow[$key] = $value;
-                                }
-                            }
+            // Merged cells info for rowspan
+            $mergedCells = $worksheet->getMergeCells();
+            $rowspanMap = []; 
+            $skipMap = [];    
+            
+            foreach ($mergedCells as $range) {
+                if (strpos($range, ':') !== false) {
+                    list($start, $end) = explode(':', $range);
+                    $startCol = preg_replace('/[0-9]/', '', $start);
+                    $startRow = (int)preg_replace('/[A-Z]/', '', $start);
+                    $endCol = preg_replace('/[0-9]/', '', $end);
+                    $endRow = (int)preg_replace('/[A-Z]/', '', $end);
+                    
+                    if ($startCol === $endCol) { 
+                        $rowspan = $endRow - $startRow + 1;
+                        $rowspanMap[$startCol][$startRow] = $rowspan;
+                        for ($r = $startRow + 1; $r <= $endRow; $r++) {
+                            $skipMap[$startCol][$r] = true;
                         }
                     }
                 }
             }
 
-            // Don't forget the last case
-            if (! empty($currentCaseRow)) {
-                $data[] = $currentCaseRow;
-                $validRowCount++;
+            $dataStartRow = $headerRowNum + 1;
+            $maxRowsToProcess = min(50000, $highestRow); 
+            
+            $rows = [];
+            for ($row = $dataStartRow; $row <= $maxRowsToProcess; $row++) {
+                $rowData = [];
+                $hasData = false;
+                $isOpeningKasasi = false;
+                $onlyFilledUpToTim = true;
+                $foundTim = false;
+                $rowspans = [];
+
+                foreach ($colToKey as $col => $key) {
+                    $cell = $worksheet->getCell($col.$row);
+                    
+                    if (isset($skipMap[$col][$row])) {
+                        $rowData[$key] = 'SKIP_OR_NULL';
+                        $hasData = true;
+                        continue;
+                    }
+                    
+                    $value = $getCellValue($cell);
+                    $rowData[$key] = $value;
+                    
+                    if (isset($rowspanMap[$col][$row])) {
+                        $rowspans[$key] = $rowspanMap[$col][$row];
+                    }
+
+                    if ($value !== null && $value !== '') {
+                        $hasData = true;
+                        if ($key === 'BIAYA' && (int)$value === 250000) $isOpeningKasasi = true;
+                        if ($key === 'TIM') $foundTim = true;
+                        if ($foundTim && !in_array($key, ['TIM', 'TOTAL_1', 'TOTAL_2', 'TOTAL_3'])) $onlyFilledUpToTim = false;
+                    }
+                }
+
+                if ($hasData) {
+                    if ($isOpeningKasasi || ($foundTim && $onlyFilledUpToTim)) {
+                        $rowData['TOTAL_1'] = null;
+                        $rowData['TOTAL_2'] = null;
+                        if (!isset($rowspans['TOTAL_3'])) {
+                            $rowData['TOTAL_3'] = null;
+                        }
+                    }
+                    
+                    if (isset($rowData['PAJAK']) && ($rowData['PAJAK'] === null || $rowData['PAJAK'] === '')) {
+                        $rowData['TOTAL_1'] = null;
+                        unset($rowspans['TOTAL_1']);
+                    }
+
+                    $rowData['_rowspans'] = $rowspans;
+                    $rowData['_original_row'] = $row;
+                    $rows[] = $rowData;
+                }
             }
 
-            // Log sample rows
-            if (count($data) > 0) {
-                $row1Sample = array_slice($data[0], 0, 10);
-                \Log::info('Sample merged data row 1', [
-                    'data' => $row1Sample,
-                    'NO' => $data[0]['NO'] ?? null,
-                    'PERKARA' => $data[0]['PERKARA'] ?? null,
-                    'JUMLAH' => $data[0]['JUMLAH'] ?? null,
-                    'BIAYA' => $data[0]['BIAYA'] ?? null,
-                ]);
+            // SMART CALCULATION
+            for ($idx = 0; $idx < count($rows); $idx++) {
+                $r = &$rows[$idx];
+                if (isset($r['_rowspans']['TOTAL_2']) && ($r['TOTAL_2'] === null || $r['TOTAL_2'] === '')) {
+                    $sum = 0;
+                    $span = $r['_rowspans']['TOTAL_2'];
+                    for ($i = 0; $i < $span && ($idx + $i) < count($rows); $i++) {
+                        $comp = $rows[$idx + $i]['TOTAL_1'];
+                        if (is_numeric($comp)) $sum += (float)$comp;
+                    }
+                    if ($sum > 0) $r['TOTAL_2'] = $sum;
+                }
             }
-            if (count($data) > 1) {
-                $row2Sample = array_slice($data[1], 0, 10);
-                \Log::info('Sample merged data row 2', [
-                    'data' => $row2Sample,
-                    'NO' => $data[1]['NO'] ?? null,
-                    'PERKARA' => $data[1]['PERKARA'] ?? null,
-                    'JUMLAH' => $data[1]['JUMLAH'] ?? null,
-                    'BIAYA' => $data[1]['BIAYA'] ?? null,
-                ]);
-            }
+            unset($r);
 
-            \Log::info('sheetCek() completed', [
-                'totalRowsRead' => $validRowCount,
-                'headerCount' => count($headers),
-                'headerNames' => array_values($headers),
-            ]);
+            for ($idx = 0; $idx < count($rows); $idx++) {
+                $r = &$rows[$idx];
+                if (isset($r['_rowspans']['TOTAL_3']) && ($r['TOTAL_3'] === null || $r['TOTAL_3'] === '')) {
+                    $sum = 0;
+                    $span = $r['_rowspans']['TOTAL_3'];
+                    for ($i = 0; $i < $span && ($idx + $i) < count($rows); $i++) {
+                        $comp = $rows[$idx + $i]['TOTAL_2'];
+                        if ($comp !== 'SKIP_OR_NULL' && is_numeric($comp)) $sum += (float)$comp;
+                    }
+                    if ($sum > 0) $r['TOTAL_3'] = $sum;
+                }
+            }
+            unset($r);
+
+            // Extract footer/signature
+            $tableData = [];
+            $footerData = [];
+            foreach ($rows as $row) {
+                $isFooter = false;
+                $rowText = '';
+                foreach ($row as $k => $v) {
+                    if ($k !== '_rowspans' && $k !== '_original_row' && $v !== 'SKIP_OR_NULL') {
+                        $rowText .= ' ' . (string)$v;
+                    }
+                }
+                
+                if (stripos($rowText, 'BENDAHARA') !== false || 
+                    stripos($rowText, 'MENGETAHUI') !== false || 
+                    stripos($rowText, 'PETUGAS') !== false ||
+                    stripos($rowText, 'KUASA PENGELOLA') !== false ||
+                    stripos($rowText, 'Jakarta,') !== false ||
+                    stripos($rowText, 'ASEP NURSOBAH') !== false ||
+                    stripos($rowText, 'FARIDA') !== false ||
+                    stripos($rowText, 'KRIS NUGROHO') !== false ||
+                    preg_match('/[A-Z]{2,}\s?,\s?S\.H\./', $rowText)) {
+                    $isFooter = true;
+                }
+                
+                if ($isFooter) $footerData[] = $row;
+                else $tableData[] = $row;
+            }
 
             $spreadsheet->disconnectWorksheets();
 
             return view('sheet-cek', [
-                'data' => $data,
+                'data' => $tableData,
+                'footer' => $footerData,
                 'headers' => $headers,
+                'colToKey' => $colToKey,
                 'error' => null,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error reading cek sheet', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            \Log::error('Error reading cek sheet', ['error' => $e->getMessage()]);
 
             return view('sheet-cek', [
                 'data' => [],
@@ -779,13 +822,8 @@ class DashboardController extends Controller
     {
         $highestRow = $worksheet->getHighestRow();
         $highestColumnLetter = $worksheet->getHighestColumn();
+        $rowsPerCategory = 500; 
 
-        \Log::info('parseDataPrintSheet started', [
-            'rows' => $highestRow,
-            'columns' => $highestColumnLetter,
-        ]);
-
-        // Helper to convert column index to letter (1=A, 26=Z, 27=AA, etc)
         $indexToColumn = function ($index) {
             $letter = '';
             while ($index > 0) {
@@ -793,40 +831,30 @@ class DashboardController extends Controller
                 $letter = chr(65 + ($index % 26)).$letter;
                 $index = intdiv($index, 26);
             }
-
             return $letter;
         };
 
-        // Helper to convert column letter to index (A=1, Z=26, AA=27, etc)
         $columnToIndex = function ($col) {
             $index = 0;
             for ($i = 0; $i < strlen($col); $i++) {
                 $index = $index * 26 + (ord($col[$i]) - ord('A') + 1);
             }
-
             return $index;
         };
 
-        // Helper to get cell value and filter out formula strings like "=C6" and error values
         $getCellValue = function ($cell) {
-            $value = $cell->getValue();
-
-            // Skip formula strings that appear as text (e.g., "=C6", "=D6")
-            if (is_string($value) && strpos($value, '=') === 0) {
-                return null;
+            try {
+                $value = $cell->getCalculatedValue();
+                if (is_string($value) && strpos($value, '=') === 0) return null;
+                return $value;
+            } catch (\Exception $e) {
+                $val = $cell->getValue();
+                if (is_string($val) && strpos($val, '=') === 0) return null;
+                return $val;
             }
-
-            // Skip error values (#REF!, #VALUE!, etc)
-            if (is_string($value) && strpos($value, '#') === 0) {
-                return null;
-            }
-
-            return $value;
         };
 
-        // Helper to check if row is a valid data row (not a TOTAL or section footer)
         $isValidDataRow = function ($rowData, $currentHeaders) {
-            // Get first cell value (NO column)
             $firstCell = null;
             foreach ($currentHeaders as $col => $header) {
                 if ($header === 'No' && isset($rowData[$header])) {
@@ -834,48 +862,21 @@ class DashboardController extends Controller
                     break;
                 }
             }
-
-            if (! $firstCell) {
-                return false; // No first cell means it's not a valid data row
-            }
-
+            if (! $firstCell) return false; 
             $firstCellStr = trim((string) $firstCell);
-
-            // Skip header rows (contains "No", "NO", "Number", etc)
-            if (strtoupper($firstCellStr) === 'NO' || strtoupper($firstCellStr) === 'NUMBER') {
-                return false;
-            }
-
-            // Skip section headers and footers (contains "PERKARA", "TOTAL", "DATA", "~")
-            if (
-                stripos($firstCellStr, 'PERKARA') !== false ||
-                stripos($firstCellStr, 'TOTAL') !== false ||
-                stripos($firstCellStr, 'DATA') !== false ||
-                strpos($firstCellStr, '~') !== false
-            ) {
-                return false;
-            }
-
-            // Skip if first cell is not numeric (should be a row number)
-            if (! is_numeric($firstCellStr) && ! ctype_digit($firstCellStr)) {
-                return false;
-            }
-
-            // Skip if all meaningful values are just "-" or empty
+            if (strtoupper($firstCellStr) === 'NO' || strtoupper($firstCellStr) === 'NUMBER') return false;
+            if (stripos($firstCellStr, 'PERKARA') !== false || stripos($firstCellStr, 'TOTAL') !== false || stripos($firstCellStr, 'DATA') !== false || strpos($firstCellStr, '~') !== false) return false;
+            if (! is_numeric($firstCellStr) && ! ctype_digit($firstCellStr)) return false;
             $meaningfulCount = 0;
             foreach ($rowData as $value) {
                 $val = trim((string) $value);
-                if ($val !== '' && $val !== '-' && $val !== '~') {
-                    $meaningfulCount++;
-                }
+                if ($val !== '' && $val !== '-' && $val !== '~') $meaningfulCount++;
             }
-
-            return $meaningfulCount > 1; // At least 2 meaningful columns
+            return $meaningfulCount > 1; 
         };
 
         $highestColumnIndex = $columnToIndex($highestColumnLetter);
 
-        // Define categories dengan section headers
         $categoryDefinitions = [
             'DATA PERKARA KASASI PERDATA UMUM' => 'kasasi-pdt-umum',
             'DATA PERKARA PENINJAUAN KEMBALI PERDATA UMUM' => 'pk-pdt-umum',
@@ -890,7 +891,6 @@ class DashboardController extends Controller
             'DATA PERKARA PENINJAUAN KEMBALI  PAJAK (PK-PJK)' => 'pk-pajak',
         ];
 
-        // Initialize categories
         $categories = [];
         foreach ($categoryDefinitions as $title => $id) {
             $categories[$id] = [
@@ -899,144 +899,76 @@ class DashboardController extends Controller
                 'data' => [],
                 'count' => 0,
                 'columns' => [],
-                'total' => null, // Store total value from Excel
+                'total' => null, 
             ];
         }
 
-        // Find section breaks and parse data
         $currentSection = null;
         $currentHeaderRow = null;
         $currentHeaders = [];
+        $maxRowsToProcess = min(50000, $highestRow); 
 
-        for ($row = 1; $row <= $highestRow; $row++) {
+        for ($row = 1; $row <= $maxRowsToProcess; $row++) {
             $firstCell = trim($worksheet->getCell('A'.$row)->getValue() ?? '');
-
-            // Check if this is a section header
             $isSectionHeader = false;
             foreach ($categoryDefinitions as $sectionTitle => $sectionId) {
                 if (stripos($firstCell, $sectionTitle) !== false) {
                     $currentSection = $sectionId;
                     $isSectionHeader = true;
-                    \Log::info('Found section header', ['section' => $currentSection, 'row' => $row]);
                     break;
                 }
             }
-
             if ($isSectionHeader) {
                 $currentHeaderRow = null;
-
                 continue;
             }
-
-            // Check if this is a header row (contains "No" in first column)
             if ($currentSection && $firstCell === 'No' && $currentHeaderRow === null) {
                 $currentHeaderRow = $row;
                 $currentHeaders = [];
-
-                // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
                     $header = trim($worksheet->getCell($col.$row)->getValue() ?? '');
                     $currentHeaders[$col] = $header ?: $col;
                 }
-
-                // DEBUG: Count actual headers
-                $headerCount = 0;
-                $headerList = [];
-                foreach ($currentHeaders as $col => $headerName) {
-                    if ($headerName && $headerName !== $col) {
-                        $headerCount++;
-                        $headerList[] = $headerName;
-                    }
-                }
-
-                \Log::info('Found header row', [
-                    'section' => $currentSection,
-                    'row' => $row,
-                    'total_headers' => $headerCount,
-                    'sample_headers' => array_slice($headerList, 0, 10),
-                ]);
-
                 if ($currentSection) {
                     $categories[$currentSection]['columns'] = $currentHeaders;
                 }
-
                 continue;
             }
-
-            // Parse data rows
             if ($currentSection && $currentHeaderRow !== null && $row > $currentHeaderRow) {
                 $rowData = [];
                 $hasData = false;
-
-                // Iterate through all columns using numeric indices
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
                     $value = $getCellValue($worksheet->getCell($col.$row));
-
-                    if ($value !== null && $value !== '') {
-                        $hasData = true;
-                    }
-
+                    if ($value !== null && $value !== '') $hasData = true;
                     $key = $currentHeaders[$col] ?? $col;
                     $rowData[$key] = $value;
                 }
-
-                // Check if this is a TOTAL row (store total value, don't include in data)
                 if ($hasData) {
-                    $firstCell = $rowData['No'] ?? null;
-                    if ($firstCell && stripos(trim((string) $firstCell), 'TOTAL') !== false) {
-                        // Extract total value from the second column (usually JUMLAH)
+                    $firstCellVal = $rowData['No'] ?? null;
+                    if ($firstCellVal && stripos(trim((string) $firstCellVal), 'TOTAL') !== false) {
                         $secondCol = null;
-                        $colIndex = 0;
-                        foreach ($currentHeaders as $col => $header) {
-                            $colIndex++;
-                            if ($colIndex === 2) { // Usually second column has the total
-                                $secondCol = $header;
-                                break;
-                            }
+                        $cIdx = 0;
+                        foreach ($currentHeaders as $c => $h) {
+                            $cIdx++;
+                            if ($cIdx === 2) { $secondCol = $h; break; }
                         }
-
                         if ($secondCol && isset($rowData[$secondCol])) {
-                            $totalValue = $rowData[$secondCol];
-                            if ($totalValue !== null && $totalValue !== '') {
-                                $categories[$currentSection]['total'] = $totalValue;
-                                \Log::info('Found TOTAL row', [
-                                    'section' => $currentSection,
-                                    'row' => $row,
-                                    'firstCell' => $firstCell,
-                                    'total' => $totalValue,
-                                    'secondCol' => $secondCol,
-                                ]);
-                            }
+                            $categories[$currentSection]['total'] = $rowData[$secondCol];
                         }
-
-                        continue; // Skip adding TOTAL to data rows
+                        continue; 
                     }
                 }
-
-                // Validate if this is a real data row (not TOTAL, not all empty/dashes)
                 if ($hasData && $isValidDataRow($rowData, $currentHeaders)) {
-                    $categories[$currentSection]['data'][] = $rowData;
-                    $categories[$currentSection]['count']++;
-
-                    // Log first row for debugging
-                    if ($categories[$currentSection]['count'] === 1) {
-                        \Log::info('First data row parsed', [
-                            'section' => $currentSection,
-                            'total_columns' => count($rowData),
-                            'sample_values' => array_slice($rowData, 0, 5),
-                        ]);
+                    if ($categories[$currentSection]['count'] < $rowsPerCategory) {
+                        $categories[$currentSection]['data'][] = $rowData;
                     }
+                    $categories[$currentSection]['count']++;
                 }
             }
         }
 
-        \Log::info('parseDataPrintSheet completed', [
-            'categories' => array_map(fn ($c) => ['id' => $c['id'], 'count' => $c['count']], array_values($categories)),
-        ]);
-
-        // Set total = count for categories that don't have an explicit total
         foreach ($categories as &$category) {
             if ($category['count'] > 0 && ($category['total'] === null || $category['total'] === '')) {
                 $category['total'] = $category['count'];
@@ -1044,76 +976,6 @@ class DashboardController extends Controller
         }
 
         return array_values($categories);
-    }
-
-    private function parseDataPrintCategories($data)
-    {
-        // Struktur kategori perkara berdasarkan analisis file
-        $categories = [
-            [
-                'id' => 'kasasi-pdt-umum',
-                'name' => 'DATA PERKARA KASASI PERDATA UMUM',
-                'key' => 'Kasasi PDT Umum',
-            ],
-            [
-                'id' => 'pk-pdt-umum',
-                'name' => 'DATA PERKARA PENINJAUAN KEMBALI PERDATA UMUM',
-                'key' => 'PK PDT Umum',
-            ],
-            [
-                'id' => 'kasasi-pdt-khusus',
-                'name' => 'DATA PERKARA KASASI PERDATA KHUSUS',
-                'key' => 'Kasasi PDT Khusus',
-            ],
-            [
-                'id' => 'pk-pdt-khusus',
-                'name' => 'DATA PERKARA PENINJAUAN KEMBALI PERDATA KHUSUS',
-                'key' => 'PK PDT Khusus',
-            ],
-            [
-                'id' => 'kasasi-pdt-agama',
-                'name' => 'DATA PERKARA KASASI  PERDATA AGAMA',
-                'key' => 'Kasasi PDT Agama',
-            ],
-            [
-                'id' => 'pk-pdt-agama',
-                'name' => 'DATA PERKARA PENINJAUAN KEMBALI  PERDATA AGAMA',
-                'key' => 'PK PDT Agama',
-            ],
-            [
-                'id' => 'kasasi-tun',
-                'name' => 'DATA PERKARA KASASI  TATA USAHA NEGARA (K-TUN)',
-                'key' => 'Kasasi TUN',
-            ],
-            [
-                'id' => 'phum',
-                'name' => 'DATA PERKARA PERMOHONAN HAK UJI MATERIL (P-HUM)',
-                'key' => 'P-HUM',
-            ],
-            [
-                'id' => 'pkhs',
-                'name' => 'DATA PERKARA PERMOHONAN HAK UJI PENDAPAT (P-KHS)',
-                'key' => 'P-KHS',
-            ],
-            [
-                'id' => 'pk-tun',
-                'name' => 'DATA PERKARA PENINJAUAN KEMBALI  TATA USAHA NEGARA (PK-TUN)',
-                'key' => 'PK-TUN',
-            ],
-            [
-                'id' => 'pk-pajak',
-                'name' => 'DATA PERKARA PENINJAUAN KEMBALI  PAJAK (PK-PJK)',
-                'key' => 'PK-PJK',
-            ],
-        ];
-
-        // Format data dengan kategori
-        foreach ($categories as &$category) {
-            $category['data'] = [];
-            $category['count'] = 0;
-        }
-
-        return $categories;
     }
 
     public function getSheet($sheetName)
@@ -1124,21 +986,15 @@ class DashboardController extends Controller
             $filePath = Session::get('excel_file_path');
 
             if (! in_array($sheetName, $sheets)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sheet tidak ditemukan',
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'Sheet tidak ditemukan'], 404);
             }
 
             if (! $filePath || ! file_exists($filePath)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File tidak ditemukan di storage',
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'File tidak ditemukan'], 404);
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
             $worksheet = $spreadsheet->getSheetByName($sheetName);
 
@@ -1146,64 +1002,54 @@ class DashboardController extends Controller
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
 
-            // Find header row
-            $headerRow = 1;
-            for ($row = 1; $row <= min(10, $highestRow); $row++) {
-                $cellValue = $worksheet->getCell('A'.$row)->getValue();
-                if (strtoupper($cellValue) === 'NO' || stripos($cellValue, 'nomor') !== false) {
-                    $headerRow = $row;
-                    break;
+            $getCellValue = function ($cell) {
+                try {
+                    $value = $cell->getCalculatedValue();
+                    if (is_string($value) && strpos($value, '=') === 0) return null;
+                    return $value;
+                } catch (\Exception $e) {
+                    $val = $cell->getValue();
+                    if (is_string($val) && strpos($val, '=') === 0) return null;
+                    return $val;
                 }
+            };
+
+            $headerRow = 1;
+            for ($row = 1; $row <= min(20, $highestRow); $row++) {
+                $foundNo = false;
+                for ($col = 'A'; $col <= $highestColumn; $col++) {
+                    $val = $getCellValue($worksheet->getCell($col.$row));
+                    if ($val && (strtoupper(trim((string)$val)) === 'NO' || stripos(trim((string)$val), 'nomor') !== false)) {
+                        $headerRow = $row;
+                        $foundNo = true;
+                        break;
+                    }
+                }
+                if ($foundNo) break;
             }
 
-            // Get header row
             $headers = [];
             for ($col = 'A'; $col <= $highestColumn; $col++) {
                 $cell = $worksheet->getCell($col.$headerRow);
-                $headers[$col] = trim($cell->getValue() ?: $col);
+                $headers[$col] = trim($getCellValue($cell) ?: $col);
             }
 
-            // Read data rows
             $maxRows = min($highestRow, 50000);
             for ($row = $headerRow + 1; $row <= $maxRows; $row++) {
                 $rowData = [];
                 $hasData = false;
-
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $cell = $worksheet->getCell($col.$row);
-                    $value = $cell->getValue();
-                    $key = $headers[$col] ?: $col;
-                    $rowData[$key] = $value;
-
-                    if ($value !== null && $value !== '') {
-                        $hasData = true;
-                    }
+                    $value = $getCellValue($worksheet->getCell($col.$row));
+                    $rowData[$headers[$col] ?: $col] = $value;
+                    if ($value !== null && $value !== '') $hasData = true;
                 }
-
-                if ($hasData) {
-                    $data[] = $rowData;
-                }
+                if ($hasData) $data[] = $rowData;
             }
 
             $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-
-            return response()->json([
-                'success' => true,
-                'sheet' => $sheetName,
-                'data' => $data,
-                'count' => count($data),
-            ]);
+            return response()->json(['success' => true, 'sheet' => $sheetName, 'data' => $data, 'count' => count($data)]);
         } catch (\Exception $e) {
-            \Log::error('Get sheet error', [
-                'sheet' => $sheetName,
-                'message' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 400);
         }
     }
 
@@ -1211,24 +1057,16 @@ class DashboardController extends Controller
     {
         $uploadKb = $this->iniSizeToKb((string) ini_get('upload_max_filesize'));
         $postKb = $this->iniSizeToKb((string) ini_get('post_max_size'));
-
-        if ($uploadKb <= 0 || $postKb <= 0) {
-            return self::APP_MAX_UPLOAD_KB;
-        }
-
+        if ($uploadKb <= 0 || $postKb <= 0) return self::APP_MAX_UPLOAD_KB;
         return min($uploadKb, $postKb);
     }
 
     private function iniSizeToKb(string $value): int
     {
         $trimmed = trim($value);
-        if ($trimmed === '') {
-            return 0;
-        }
-
+        if ($trimmed === '') return 0;
         $unit = strtolower(substr($trimmed, -1));
         $number = (float) $trimmed;
-
         return match ($unit) {
             'g' => (int) ($number * 1024 * 1024),
             'm' => (int) ($number * 1024),
@@ -1240,13 +1078,10 @@ class DashboardController extends Controller
     private function getUploadErrorMessage(UploadedFile $file): string
     {
         return match ($file->getError()) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas upload server. Coba kecilkan file atau naikkan upload_max_filesize/post_max_size di konfigurasi PHP.',
-            UPLOAD_ERR_PARTIAL => 'Upload terputus sebelum selesai. Coba upload ulang.',
-            UPLOAD_ERR_NO_FILE => 'Tidak ada file yang dikirim.',
-            UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary upload PHP tidak ditemukan.',
-            UPLOAD_ERR_CANT_WRITE => 'Server tidak bisa menulis file temporary.',
-            UPLOAD_ERR_EXTENSION => 'Upload diblokir oleh ekstensi PHP.',
-            default => 'Upload gagal karena kesalahan server.',
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas upload server.',
+            UPLOAD_ERR_PARTIAL => 'Upload terputus.',
+            UPLOAD_ERR_NO_FILE => 'Tidak ada file.',
+            default => 'Upload gagal.',
         };
     }
 
@@ -1254,95 +1089,27 @@ class DashboardController extends Controller
     {
         try {
             $excelFile = ExcelFile::findOrFail($id);
-
-            // Delete file from storage
-            if (file_exists($excelFile->file_path)) {
-                unlink($excelFile->file_path);
-            }
-
-            // Delete from database
+            if (file_exists($excelFile->file_path)) unlink($excelFile->file_path);
             $excelFile->delete();
-
-            // If this was the current file, clear session
             if (Session::get('current_file_id') === $id) {
-                Session::forget('current_file_id');
-                Session::forget('excel_file_name');
-                Session::forget('excel_file_path');
-                Session::forget('excel_sheets');
-                Session::forget('excel_period');
+                Session::forget(['current_file_id', 'excel_file_name', 'excel_file_path', 'excel_sheets', 'excel_period']);
             }
-
-            \Log::info('File deleted', [
-                'file_id' => $id,
-                'filename' => $excelFile->original_filename,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'File berhasil dihapus',
-            ]);
+            return response()->json(['success' => true, 'message' => 'File berhasil dihapus']);
         } catch (\Exception $e) {
-            \Log::error('Delete file error', [
-                'file_id' => $id,
-                'message' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 400);
         }
     }
 
     public function renamePeriod(Request $request, $id)
     {
         try {
-            $request->validate([
-                'period' => 'required|string|max:100',
-            ], [
-                'period.required' => 'Periode harus diisi',
-                'period.max' => 'Periode maksimal 100 karakter',
-            ]);
-
+            $request->validate(['period' => 'required|string|max:100']);
             $excelFile = ExcelFile::findOrFail($id);
-            $oldPeriod = $excelFile->period;
-            $newPeriod = $request->input('period');
-
-            $excelFile->update([
-                'period' => $newPeriod,
-            ]);
-
-            // If this was the current file, update session
-            if (Session::get('current_file_id') === $id) {
-                Session::put('excel_period', $newPeriod);
-            }
-
-            \Log::info('Period renamed', [
-                'file_id' => $id,
-                'old_period' => $oldPeriod,
-                'new_period' => $newPeriod,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Periode berhasil diubah',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first(),
-
-            ], 422);
+            $excelFile->update(['period' => $request->input('period')]);
+            if (Session::get('current_file_id') === $id) Session::put('excel_period', $request->input('period'));
+            return response()->json(['success' => true, 'message' => 'Periode berhasil diubah']);
         } catch (\Exception $e) {
-            \Log::error('Rename period error', [
-                'file_id' => $id,
-                'message' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 400);
         }
     }
 }

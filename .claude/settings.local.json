@@ -1,6 +1,18 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__laravel-boost__application-info",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Herd\\\\digiper\" -Depth 1)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Herd\\\\digiper\\\\routes\"; Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Herd\\\\digiper\\\\database\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)",
+      "Bash(php artisan *)",
+      "PowerShell(php artisan test --compact 2>&1)",
+      "PowerShell(php artisan migrate:status 2>&1)",
+      "PowerShell(php artisan migrate --no-interaction 2>&1)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "laravel-boost"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

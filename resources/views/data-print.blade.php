@@ -103,37 +103,9 @@
 
                             @php
                                 $excludedColumns = [
-                                    'U',
-                                    'V',
-                                    'QTY',
-                                    'P1',
-                                    'P2',
-                                    'P3',
-                                    'P4',
-                                    'P5',
-                                    'PP',
-                                    'cek bulan',
-                                    'cek umur',
-                                    'panmud',
-                                    'Jenis Perkara',
-                                    'Jenis Permohonan',
-                                    'klasifikasi',
-                                    'MJELIS',
-                                    'AK',
-                                    'AL',
-                                    'X',
-                                    'Y',
-                                    'Z',
-                                    'AA',
-                                    'AB',
-                                    'AC',
-                                    'AD',
-                                    '=R1744',
-                                    '=H1744',
-                                    '=C1744',
-                                    '=D1744',
-                                    '=S1744',
-                                    'AJ',
+                                    'U', 'V', 'QTY', 'P1', 'P2', 'P3', 'P4', 'P5', 'PP', 'cek bulan', 'cek umur', 
+                                    'panmud', 'Jenis Perkara', 'Jenis Permohonan', 'klasifikasi', 'MJELIS', 
+                                    'AK', 'AL', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AJ',
                                 ];
 
                                 $visibleColumns = collect($category['columns'] ?? [])
@@ -151,22 +123,17 @@
                                     <table class="w-full text-sm">
                                         <thead class="bg-neutral-50 dark:bg-neutral-800/50">
                                             <tr class="border-b border-neutral-200 dark:border-neutral-800">
-                                                <th
-                                                    class="px-6 py-3 text-left font-semibold text-neutral-700 dark:text-neutral-300 text-xs">
-                                                    No</th>
+                                                <th class="px-6 py-3 text-left font-semibold text-neutral-700 dark:text-neutral-300 text-xs">No</th>
                                                 @foreach ($visibleColumns as $colName)
-                                                    <th
-                                                        class="px-6 py-3 text-left font-semibold text-neutral-700 dark:text-neutral-300 text-xs uppercase tracking-wide">
+                                                    <th class="px-6 py-3 text-left font-semibold text-neutral-700 dark:text-neutral-300 text-xs uppercase tracking-wide">
                                                         {{ $colName }}</th>
                                                 @endforeach
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @forelse($category['data'] as $rowIdx => $row)
-                                                <tr
-                                                    class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-150">
-                                                    <td
-                                                        class="px-6 py-3 text-sm text-neutral-600 dark:text-neutral-400 font-medium">
+                                                <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-150">
+                                                    <td class="px-6 py-3 text-sm text-neutral-600 dark:text-neutral-400 font-medium">
                                                         {{ $rowIdx + 1 }}</td>
                                                     @foreach ($visibleColumns as $colName)
                                                         <td class="px-6 py-3 text-sm text-neutral-900 dark:text-neutral-100 truncate"
@@ -184,17 +151,22 @@
                                                 </tr>
                                             @endforelse
                                         </tbody>
-                                        @if (isset($category['total']) && $category['total'] !== null)
-                                            <tfoot
-                                                class="bg-neutral-100 dark:bg-neutral-800/70 border-t-2 border-neutral-300 dark:border-neutral-700">
+                                        @if (count($category['data']) < $category['count'])
+                                            <tbody class="bg-amber-50 dark:bg-amber-950/20">
                                                 <tr>
-                                                    <td
-                                                        class="px-6 py-3 text-sm font-bold text-neutral-700 dark:text-neutral-300">
-                                                        TOTAL</td>
+                                                    <td colspan="{{ $visibleColumns->count() + 1 }}" class="px-6 py-3 text-center text-sm text-amber-700 dark:text-amber-300">
+                                                        ℹ️ Menampilkan {{ count($category['data']) }} dari {{ $category['count'] }} data ({{ round((count($category['data']) / $category['count']) * 100) }}%)
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        @endif
+                                        @if (isset($category['total']) && $category['total'] !== null)
+                                            <tfoot class="bg-neutral-100 dark:bg-neutral-800/70 border-t-2 border-neutral-300 dark:border-neutral-700">
+                                                <tr>
+                                                    <td class="px-6 py-3 text-sm font-bold text-neutral-700 dark:text-neutral-300">TOTAL</td>
                                                     @php $isFirstColumn = true; @endphp
                                                     @foreach ($visibleColumns as $colName)
-                                                        <td
-                                                            class="px-6 py-3 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                                        <td class="px-6 py-3 text-sm font-bold text-neutral-900 dark:text-neutral-100">
                                                             @if ($isFirstColumn)
                                                                 {{ $category['total'] }}
                                                                 @php $isFirstColumn = false; @endphp
@@ -209,8 +181,7 @@
                                     </table>
                                 </div>
                             @else
-                                <div
-                                    class="text-center py-12 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                <div class="text-center py-12 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-800">
                                     <p class="text-neutral-500 dark:text-neutral-400">Belum ada data untuk kategori ini</p>
                                 </div>
                             @endif
@@ -227,8 +198,7 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Belum ada data</p>
-                <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel terlebih dahulu di
-                    Dashboard</p>
+                <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel terlebih dahulu di Dashboard</p>
                 <a href="{{ route('dashboard') }}"
                     class="inline-block mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
                     Ke Dashboard
