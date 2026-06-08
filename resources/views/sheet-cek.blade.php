@@ -30,11 +30,19 @@
     @if(count($data) > 0)
         <!-- Table Section -->
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-            <!-- Table Header -->
-            <div class="px-8 py-6 border-b border-neutral-200 dark:border-neutral-800">
+            <!-- Title Header from Excel -->
+            <div class="px-8 py-6 bg-neutral-50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-800">
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-100">REKAP TOTAL PENYERAHAN KE MASING - MASING PANMUD</h3>
+                    <p class="text-base font-semibold text-neutral-700 dark:text-neutral-300">HONORARIUM BIAYA PENYELESAIAN PERKARA</p>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400">PERIODE BULAN DESEMBER 2025 s/D FEBRUARI 2026</p>
+                </div>
+            </div>
+
+            <!-- Table Header Info -->
+            <div class="px-8 py-4 border-b border-neutral-200 dark:border-neutral-800">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold">Data Sheet Cek</h3>
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{{ count($data) }} baris data</p>
                     </div>
                 </div>
@@ -42,11 +50,13 @@
 
             <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-neutral-50 dark:bg-neutral-800/50">
+                <table class="w-full text-sm border-collapse">
+                    <thead class="bg-neutral-50 dark:bg-neutral-800/50 sticky top-0">
                         <tr class="border-b border-neutral-200 dark:border-neutral-800">
-                            @foreach($headers as $headerKey => $headerName)
-                                <th class="px-8 py-4 text-left font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide text-xs">{{ $headerName }}</th>
+                            @foreach($headers as $colLetter => $headerName)
+                                <th class="px-4 py-3 text-center font-bold text-neutral-700 dark:text-neutral-300 border-r border-neutral-200 dark:border-neutral-700 whitespace-nowrap text-xs">
+                                    {{ $headerName }}
+                                </th>
                             @endforeach
                         </tr>
                     </thead>
@@ -64,7 +74,7 @@
                                         @continue
                                     @endif
                                     
-                                    <td class="px-8 py-4 text-sm text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800"
+                                    <td class="px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800 {{ in_array($headerName, ['JUMLAH', 'BIAYA', 'TIM', '5 MAJELIS', 'KEPANITERAAN', 'PEMILAH', 'Total', 'PAJAK', 'TOTAL', 'Penyerahan', 'Honorarium', 'Biaya', 'Bersih']) ? 'text-right' : '' }}"
                                         @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
                                         @if(is_numeric($value))
                                             @if((float)$value === 0.0)
@@ -80,7 +90,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ count($headers) + 1 }}" class="px-8 py-8 text-center text-neutral-500 dark:text-neutral-400">
+                                <td colspan="{{ count($headers) }}" class="px-8 py-8 text-center text-neutral-500 dark:text-neutral-400">
                                     Tidak ada data
                                 </td>
                             </tr>
