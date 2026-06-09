@@ -19,6 +19,8 @@ Route::get('/sheet/{name}', [DashboardController::class, 'getSheet'])->name('she
 Route::get('/data-print', [DashboardController::class, 'dataPrint'])->name('data-print');
 Route::get('/data-print/print', [DashboardController::class, 'printRekapKeseluruhan'])->name('data-print.print');
 Route::get('/sheet-cek', [DashboardController::class, 'sheetCek'])->name('sheet-cek');
+Route::get('/rekap-keseluruhan', [DashboardController::class, 'rekapKeseluruhan'])->name('rekap-keseluruhan');
+Route::get('/rekap-keseluruhan/print', [DashboardController::class, 'rekapKeseluruhanPrint'])->name('rekap-keseluruhan.print');
 
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);

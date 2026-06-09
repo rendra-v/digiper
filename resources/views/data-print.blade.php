@@ -21,10 +21,6 @@
                     class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                     Kembali
                 </a>
-                <a href="{{ route('sheet-cek') }}"
-                    class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium">
-                    Lihat Sheet Cek →
-                </a>
             </div>
         </div>
 
@@ -50,43 +46,74 @@
             <!-- Categories Tabs -->
             <div
                 class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-                <!-- Category Selector -->
+                <!-- Category Selector + Nav Dropdown -->
                 <div class="border-b border-neutral-200 dark:border-neutral-800 p-4">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div class="w-full lg:max-w-xl">
-                            <label for="category-select"
-                                class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Pilih kategori perkara
-                            </label>
-                            <div class="relative">
-                                <select id="category-select" x-model.number="activeCategory"
-                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-3 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                                    @foreach ($categories as $idx => $category)
-                                        <option value="{{ $idx }}">
-                                            {{ $category['title'] ?? 'N/A' }} ({{ $category['count'] ?? 0 }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <div
-                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500 dark:text-neutral-400">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="m6 9 6 6 6-6" />
-                                    </svg>
+
+                        {{-- ── Kiri: dua dropdown berdampingan ── --}}
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end w-full lg:flex-1">
+
+                            {{-- Dropdown 1: Pilih Kategori Perkara --}}
+                            <div class="flex-1 min-w-0">
+                                <label for="category-select"
+                                    class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Pilih kategori perkara
+                                </label>
+                                <div class="relative">
+                                    <select id="category-select" x-model.number="activeCategory"
+                                        class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-3 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                        @foreach ($categories as $idx => $category)
+                                            <option value="{{ $idx }}">
+                                                {{ $category['title'] ?? 'N/A' }} ({{ $category['count'] ?? 0 }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500 dark:text-neutral-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
+
+                            {{-- Divider vertikal --}}
+                            <div class="hidden sm:block self-stretch w-px bg-neutral-200 dark:bg-neutral-700 mb-0.5"></div>
+
+                            {{-- Dropdown 2: Navigasi ke Halaman Lain --}}
+                            <div class="sm:w-60">
+                                <label for="nav-page-select"
+                                    class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Lihat halaman lain
+                                </label>
+                                <div class="relative">
+                                    <select id="nav-page-select"
+                                        onchange="if(this.value) window.location.href = this.value"
+                                        class="w-full appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-3 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                                        <option value="" disabled selected>— Pilih halaman —</option>
+                                        <option value="{{ route('sheet-cek') }}">📋&nbsp; Lihat Sheet Cek</option>
+                                        <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-600 dark:text-emerald-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
+                        {{-- ── Kanan: Print PDF ── --}}
                         <a href="{{ route('data-print.print') }}" target="_blank" rel="noopener"
-                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700">
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 flex-shrink-0">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z" />
                             </svg>
                             Print PDF
                         </a>
+
                     </div>
                 </div>
 

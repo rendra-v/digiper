@@ -1085,6 +1085,164 @@ class DashboardController extends Controller
         };
     }
 
+    public function rekapKeseluruhan()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-keseluruhan', [
+                    'fileName'  => null,
+                    'tableData' => [],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $sheet = $spreadsheet->getSheetByName('Rekap Keseluruhan')
+                ?? $spreadsheet->getSheetByName('REKAP GABUNGAN')
+                ?? $spreadsheet->getSheetByName('rekap keseluruhan');
+
+            if (! $sheet) {
+                $spreadsheet->disconnectWorksheets();
+                return view('rekap-keseluruhan', [
+                    'fileName'  => $fileName,
+                    'tableData' => [],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'Sheet "Rekap Keseluruhan" tidak ditemukan dalam file.',
+                ]);
+            }
+
+            $report = $this->buildRekapKeseluruhanReport($sheet);
+
+            // Get title lines
+            $rows = collect($report['rows'])->keyBy('number');
+            $getCellVal = function (int $rowNum, string $ref, string $default = '') use ($rows) {
+                $row  = $rows->get($rowNum);
+                $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
+                return $cell['value'] ?? $default;
+            };
+
+            $title1 = $getCellVal(2, 'A2', 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS');
+            $title2 = $getCellVal(3, 'A3', 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK');
+
+            $periodSheet = $spreadsheet->getSheetByName('Periode Laporan');
+            $recapDate   = $periodSheet ? trim((string) $periodSheet->getCell('D7')->getFormattedValue()) : 'Jakarta, 05 Maret 2026';
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            return view('rekap-keseluruhan', [
+                'fileName'  => $fileName,
+                'report'    => $report,
+                'title1'    => $title1,
+                'title2'    => $title2,
+                'recapDate' => $recapDate,
+                'error'     => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in rekapKeseluruhan', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+            ]);
+            return view('rekap-keseluruhan', [
+                'fileName'  => Session::get('excel_file_name'),
+                'tableData' => [],
+                'title1'    => '',
+                'title2'    => '',
+                'recapDate' => '',
+                'error'     => 'Error: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    public function rekapKeseluruhanPrint()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-keseluruhan-print', [
+                    'fileName'  => null,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'File tidak ditemukan.',
+                ]);
+            }
+
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $sheet = $spreadsheet->getSheetByName('Rekap Keseluruhan')
+                ?? $spreadsheet->getSheetByName('REKAP GABUNGAN')
+                ?? $spreadsheet->getSheetByName('rekap keseluruhan');
+
+            if (! $sheet) {
+                $spreadsheet->disconnectWorksheets();
+                return view('rekap-keseluruhan-print', [
+                    'fileName'  => $fileName,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'Sheet "Rekap Keseluruhan" tidak ditemukan.',
+                ]);
+            }
+
+            $report = $this->buildRekapKeseluruhanReport($sheet);
+
+            $rows = collect($report['rows'])->keyBy('number');
+            $getCellVal = function (int $rowNum, string $ref, string $default = '') use ($rows) {
+                $row  = $rows->get($rowNum);
+                $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
+                return $cell['value'] ?? $default;
+            };
+
+            $title1 = $getCellVal(2, 'A2', 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS');
+            $title2 = $getCellVal(3, 'A3', 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK');
+
+            $periodSheet = $spreadsheet->getSheetByName('Periode Laporan');
+            $recapDate   = $periodSheet ? trim((string) $periodSheet->getCell('D7')->getFormattedValue()) : 'Jakarta, 05 Maret 2026';
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            return view('rekap-keseluruhan-print', [
+                'fileName'  => $fileName,
+                'report'    => $report,
+                'title1'    => $title1,
+                'title2'    => $title2,
+                'recapDate' => $recapDate,
+                'error'     => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in rekapKeseluruhanPrint', ['error' => $e->getMessage()]);
+            return view('rekap-keseluruhan-print', [
+                'fileName'  => Session::get('excel_file_name'),
+                'report'    => ['rows' => []],
+                'title1'    => '',
+                'title2'    => '',
+                'recapDate' => '',
+                'error'     => 'Error: '.$e->getMessage(),
+            ]);
+        }
+    }
+
     public function deleteFile($id)
     {
         try {
