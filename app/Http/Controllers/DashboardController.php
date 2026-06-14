@@ -33,6 +33,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -116,15 +118,22 @@ class DashboardController extends Controller
     public function viewFile($id)
     {
         try {
-            ini_set('memory_limit', '1024M');
             $excelFile = ExcelFile::findOrFail($id);
 
             if (! file_exists($excelFile->file_path)) {
                 return redirect('/dashboard')->with('error', 'File tidak ditemukan');
             }
 
+            // Hapus cache lama jika file berbeda
+            $oldPath = Session::get('excel_file_path', '');
+            if ($oldPath !== $excelFile->file_path) {
+                $this->invalidateSessionCache();
+            }
+
             Session::put('current_file_id', $excelFile->id);
-            $this->loadFileToSession($excelFile);
+            Session::put('excel_file_name', $excelFile->original_filename);
+            Session::put('excel_file_path', $excelFile->file_path);
+            Session::put('excel_period', $excelFile->period);
 
             return redirect('/data-print');
         } catch (\Exception $e) {
@@ -136,11 +145,16 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $reader = IOFactory::createReaderForFile($excelFile->file_path);
             $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($excelFile->file_path);
 
             $sheetNames = $spreadsheet->getSheetNames();
+
+            // Hapus cache lama sebelum set file baru
+            $this->invalidateSessionCache();
 
             Session::put('excel_file_name', $excelFile->original_filename);
             Session::put('excel_file_path', $excelFile->file_path);
@@ -159,6 +173,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $maxUploadKb = min(self::APP_MAX_UPLOAD_KB, $this->getPhpUploadLimitKb());
 
             $uploadedFile = $request->file('file');
@@ -330,60 +346,82 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
 
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
-            // DEBUG: Log session values
             \Log::info('dataPrint() called', [
-                'filePath' => $filePath,
-                'fileName' => $fileName,
+                'filePath'  => $filePath,
+                'fileName'  => $fileName,
                 'fileExists' => $filePath ? file_exists($filePath) : 'no filePath',
-                'allSessionKeys' => array_keys(Session::all()),
             ]);
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('data-print', [
                     'categories' => [],
-                    'fileName' => null,
-                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'fileName'   => null,
+                    'error'      => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
+            // Ambil dari cache session jika tersedia
+            $cacheKey = $this->getCacheKey($filePath, 'data_print');
+            $cached   = Session::get($cacheKey);
+
+            if ($cached !== null) {
+                \Log::info('dataPrint() - loaded from session cache');
+                return view('data-print', [
+                    'categories' => $cached['categories'],
+                    'fileName'   => $fileName,
+                    'error'      => null,
+                ]);
+            }
+
+            \Log::info('dataPrint() - loading from file (no cache)');
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(false);
+            $reader->setReadDataOnly(true);
+            // Hanya load sheet "Data Print" saja, jangan load seluruh workbook
+            if (method_exists($reader, 'setLoadSheetsOnly')) {
+                $reader->setLoadSheetsOnly(['Data Print']);
+            }
             $spreadsheet = $reader->load($filePath);
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
+                $spreadsheet->disconnectWorksheets();
                 return view('data-print', [
                     'categories' => [],
-                    'fileName' => $fileName,
-                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'fileName'   => $fileName,
+                    'error'      => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]);
             }
 
-            $worksheet = $spreadsheet->getSheetByName('Data Print');
+            $worksheet  = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
+            // Simpan ke session cache
+            Session::put($cacheKey, compact('categories'));
+
             return view('data-print', [
                 'categories' => $categories,
-                'fileName' => $fileName,
-                'error' => null,
+                'fileName'   => $fileName,
+                'error'      => null,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in dataPrint', [
                 'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
+                'line'  => $e->getLine(),
+                'file'  => $e->getFile(),
             ]);
 
             return view('data-print', [
                 'categories' => [],
-                'fileName' => Session::get('excel_file_name'),
-                'error' => 'Error: '.$e->getMessage(),
+                'fileName'   => Session::get('excel_file_name'),
+                'error'      => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -392,6 +430,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $filePath = Session::get('excel_file_path');
 
             if (! $filePath || ! file_exists($filePath)) {
@@ -661,6 +701,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -843,15 +885,12 @@ class DashboardController extends Controller
         };
 
         $getCellValue = function ($cell) {
-            try {
-                $value = $cell->getCalculatedValue();
-                if (is_string($value) && strpos($value, '=') === 0) return null;
-                return $value;
-            } catch (\Exception $e) {
-                $val = $cell->getValue();
-                if (is_string($val) && strpos($val, '=') === 0) return null;
-                return $val;
-            }
+            // Gunakan getValue() langsung (bukan getCalculatedValue) karena
+            // sheet Data Print berisi data mentah, bukan formula kompleks.
+            // getCalculatedValue() sangat lambat karena menghitung semua formula.
+            $val = $cell->getValue();
+            if (is_string($val) && strpos($val, '=') === 0) return null;
+            return $val;
         };
 
         $isValidDataRow = function ($rowData, $currentHeaders) {
@@ -982,6 +1021,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $sheets = Session::get('excel_sheets', []);
             $filePath = Session::get('excel_file_path');
 
@@ -1085,10 +1126,41 @@ class DashboardController extends Controller
         };
     }
 
+    /**
+     * Generate cache key unik berdasarkan file path dan nama halaman.
+     */
+    private function getCacheKey(string $filePath, string $page): string
+    {
+        return 'excel_cache_' . md5($filePath) . '_' . $page;
+    }
+
+    /**
+     * Hapus semua cache session Excel (dipanggil saat file baru diload).
+     */
+    private function invalidateSessionCache(): void
+    {
+        $pages = ['data_print', 'sheet_cek', 'rekap_keseluruhan', 'rekap_keseluruhan_print', 'rekap_keseluruhan_2'];
+        // Hapus berdasarkan file path lama
+        $oldPath = Session::get('excel_file_path', '');
+        if ($oldPath) {
+            foreach ($pages as $page) {
+                Session::forget($this->getCacheKey($oldPath, $page));
+            }
+        }
+        // Hapus semua key excel_cache_* untuk berjaga-jaga
+        foreach (array_keys(Session::all()) as $key) {
+            if (str_starts_with($key, 'excel_cache_')) {
+                Session::forget($key);
+            }
+        }
+    }
+
     public function rekapKeseluruhan()
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -1103,6 +1175,23 @@ class DashboardController extends Controller
                 ]);
             }
 
+            // Ambil dari cache session jika tersedia
+            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan');
+            $cached   = Session::get($cacheKey);
+
+            if ($cached !== null) {
+                \Log::info('rekapKeseluruhan() - loaded from session cache');
+                return view('rekap-keseluruhan', [
+                    'fileName'  => $fileName,
+                    'report'    => $cached['report'],
+                    'title1'    => $cached['title1'],
+                    'title2'    => $cached['title2'],
+                    'recapDate' => $cached['recapDate'],
+                    'error'     => null,
+                ]);
+            }
+
+            \Log::info('rekapKeseluruhan() - loading from file (no cache)');
             $reader = IOFactory::createReaderForFile($filePath);
             $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
@@ -1142,6 +1231,9 @@ class DashboardController extends Controller
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
+            // Simpan ke session cache
+            Session::put($cacheKey, compact('report', 'title1', 'title2', 'recapDate'));
+
             return view('rekap-keseluruhan', [
                 'fileName'  => $fileName,
                 'report'    => $report,
@@ -1170,6 +1262,8 @@ class DashboardController extends Controller
     {
         try {
             ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
@@ -1184,6 +1278,23 @@ class DashboardController extends Controller
                 ]);
             }
 
+            // Ambil dari cache session jika tersedia (reuse cache rekap_keseluruhan)
+            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan');
+            $cached   = Session::get($cacheKey);
+
+            if ($cached !== null) {
+                \Log::info('rekapKeseluruhanPrint() - loaded from session cache');
+                return view('rekap-keseluruhan-print', [
+                    'fileName'  => $fileName,
+                    'report'    => $cached['report'],
+                    'title1'    => $cached['title1'],
+                    'title2'    => $cached['title2'],
+                    'recapDate' => $cached['recapDate'],
+                    'error'     => null,
+                ]);
+            }
+
+            \Log::info('rekapKeseluruhanPrint() - loading from file (no cache)');
             $reader = IOFactory::createReaderForFile($filePath);
             $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
@@ -1222,6 +1333,9 @@ class DashboardController extends Controller
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
+            // Simpan ke session cache (berbagi dengan rekapKeseluruhan)
+            Session::put($cacheKey, compact('report', 'title1', 'title2', 'recapDate'));
+
             return view('rekap-keseluruhan-print', [
                 'fileName'  => $fileName,
                 'report'    => $report,
@@ -1241,6 +1355,303 @@ class DashboardController extends Controller
                 'error'     => 'Error: '.$e->getMessage(),
             ]);
         }
+    }
+
+    public function rekapKeseluruhan2()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-keseluruhan-2', [
+                    'fileName'  => null,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            // Reuse cache rekap_keseluruhan untuk title/recapDate
+            $cacheKey  = $this->getCacheKey($filePath, 'rekap_keseluruhan');
+            $cacheKey2 = $this->getCacheKey($filePath, 'rekap_keseluruhan_2');
+            $cached2   = Session::get($cacheKey2);
+
+            if ($cached2 !== null) {
+                \Log::info('rekapKeseluruhan2() - loaded from session cache');
+                $cached = Session::get($cacheKey);
+                return view('rekap-keseluruhan-2', [
+                    'fileName'  => $fileName,
+                    'report'    => $cached2['report'],
+                    'title1'    => $cached['title1'] ?? '',
+                    'title2'    => $cached['title2'] ?? '',
+                    'recapDate' => $cached['recapDate'] ?? '',
+                    'error'     => null,
+                ]);
+            }
+
+            \Log::info('rekapKeseluruhan2() - loading from file (no cache)');
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $sheet = $spreadsheet->getSheetByName('Rekap Keseluruhan')
+                ?? $spreadsheet->getSheetByName('REKAP GABUNGAN')
+                ?? $spreadsheet->getSheetByName('rekap keseluruhan');
+
+            if (! $sheet) {
+                $spreadsheet->disconnectWorksheets();
+                return view('rekap-keseluruhan-2', [
+                    'fileName'  => $fileName,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'Sheet "Rekap Keseluruhan" tidak ditemukan dalam file.',
+                ]);
+            }
+
+            $report = $this->buildRekapKananReport($sheet);
+
+            // Get title & recapDate dari cache halaman 1 jika ada, else load ulang
+            $cached = Session::get($cacheKey);
+            if ($cached !== null) {
+                $title1    = $cached['title1'];
+                $title2    = $cached['title2'];
+                $recapDate = $cached['recapDate'];
+            } else {
+                $rows = collect($report['rows'])->keyBy('number');
+                $getCellVal = function (int $rowNum, string $ref, string $default = '') use ($rows) {
+                    $row  = $rows->get($rowNum);
+                    $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
+                    return $cell['value'] ?? $default;
+                };
+                $title1    = $getCellVal(2, 'A2', 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS');
+                $title2    = $getCellVal(3, 'A3', 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK');
+                $periodSheet = $spreadsheet->getSheetByName('Periode Laporan');
+                $recapDate   = $periodSheet ? trim((string) $periodSheet->getCell('D7')->getFormattedValue()) : 'Jakarta, 05 Maret 2026';
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            Session::put($cacheKey2, compact('report'));
+
+            return view('rekap-keseluruhan-2', [
+                'fileName'  => $fileName,
+                'report'    => $report,
+                'title1'    => $title1,
+                'title2'    => $title2,
+                'recapDate' => $recapDate,
+                'error'     => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in rekapKeseluruhan2', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+            ]);
+            return view('rekap-keseluruhan-2', [
+                'fileName'  => Session::get('excel_file_name'),
+                'report'    => ['rows' => []],
+                'title1'    => '',
+                'title2'    => '',
+                'recapDate' => '',
+                'error'     => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function rekapKeseluruhan2Print()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-keseluruhan-2-print', [
+                    'fileName'  => null,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'File tidak ditemukan.',
+                ]);
+            }
+
+            $cacheKey  = $this->getCacheKey($filePath, 'rekap_keseluruhan');
+            $cacheKey2 = $this->getCacheKey($filePath, 'rekap_keseluruhan_2');
+            $cached2   = Session::get($cacheKey2);
+
+            if ($cached2 !== null) {
+                \Log::info('rekapKeseluruhan2Print() - loaded from session cache');
+                $cached = Session::get($cacheKey);
+                return view('rekap-keseluruhan-2-print', [
+                    'fileName'  => $fileName,
+                    'report'    => $cached2['report'],
+                    'title1'    => $cached['title1'] ?? '',
+                    'title2'    => $cached['title2'] ?? '',
+                    'recapDate' => $cached['recapDate'] ?? '',
+                    'error'     => null,
+                ]);
+            }
+
+            \Log::info('rekapKeseluruhan2Print() - loading from file (no cache)');
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $sheet = $spreadsheet->getSheetByName('Rekap Keseluruhan')
+                ?? $spreadsheet->getSheetByName('REKAP GABUNGAN')
+                ?? $spreadsheet->getSheetByName('rekap keseluruhan');
+
+            if (! $sheet) {
+                $spreadsheet->disconnectWorksheets();
+                return view('rekap-keseluruhan-2-print', [
+                    'fileName'  => $fileName,
+                    'report'    => ['rows' => []],
+                    'title1'    => '',
+                    'title2'    => '',
+                    'recapDate' => '',
+                    'error'     => 'Sheet tidak ditemukan.',
+                ]);
+            }
+
+            $report = $this->buildRekapKananReport($sheet);
+
+            $cached = Session::get($cacheKey);
+            if ($cached !== null) {
+                $title1    = $cached['title1'];
+                $title2    = $cached['title2'];
+                $recapDate = $cached['recapDate'];
+            } else {
+                $rows = collect($report['rows'])->keyBy('number');
+                $getCellVal = function (int $rowNum, string $ref, string $default = '') use ($rows) {
+                    $row  = $rows->get($rowNum);
+                    $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
+                    return $cell['value'] ?? $default;
+                };
+                $title1    = $getCellVal(2, 'A2', 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS');
+                $title2    = $getCellVal(3, 'A3', 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK');
+                $periodSheet = $spreadsheet->getSheetByName('Periode Laporan');
+                $recapDate   = $periodSheet ? trim((string) $periodSheet->getCell('D7')->getFormattedValue()) : 'Jakarta, 05 Maret 2026';
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            Session::put($cacheKey2, compact('report'));
+
+            return view('rekap-keseluruhan-2-print', [
+                'fileName'  => $fileName,
+                'report'    => $report,
+                'title1'    => $title1,
+                'title2'    => $title2,
+                'recapDate' => $recapDate,
+                'error'     => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in rekapKeseluruhan2Print', ['error' => $e->getMessage()]);
+            return view('rekap-keseluruhan-2-print', [
+                'fileName'  => Session::get('excel_file_name'),
+                'report'    => ['rows' => []],
+                'title1'    => '',
+                'title2'    => '',
+                'recapDate' => '',
+                'error'     => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Build tabel kanan atas dari sheet Rekap Keseluruhan.
+     * Membaca kolom Q(17)–AY(51), baris 4–38.
+     * Struktur: NO | PERUNTUKAN | % | 10×(BIAYA|JML|SUB TOTAL) | TOTAL
+     */
+    private function buildRekapKananReport($worksheet): array
+    {
+        // Kolom Q=17 s/d AY=51, baris 4–38
+        $startColIdx = Coordinate::columnIndexFromString('Q'); // 17
+        $endColIdx   = Coordinate::columnIndexFromString('AY'); // 51
+        $startRow    = 4;
+        $endRow      = 38;
+
+        // Kumpulkan merged ranges dalam area ini
+        $mergedRanges = [];
+        $coveredCells = [];
+
+        foreach ($worksheet->getMergeCells() as $range) {
+            [$startCell, $endCell] = explode(':', $range);
+            [$sc, $sr] = $this->splitCellReference($startCell);
+            [$ec, $er] = $this->splitCellReference($endCell);
+
+            // Filter hanya yang overlap dengan area kanan (Q-AY, baris 4-38)
+            if ($ec < $startColIdx || $sc > $endColIdx) continue;
+            if ($er < $startRow    || $sr > $endRow)    continue;
+
+            // Clamp ke area
+            $clampedEc = min($ec, $endColIdx);
+            $clampedEr = min($er, $endRow);
+            $clampedSc = max($sc, $startColIdx);
+            $clampedSr = max($sr, $startRow);
+
+            $mergedRanges[$startCell] = [
+                'rowspan' => $clampedEr - $sr + 1,
+                'colspan' => $clampedEc - $sc + 1,
+            ];
+
+            // Tandai covered cells (kecuali start cell sendiri)
+            for ($r = $sr; $r <= $clampedEr; $r++) {
+                for ($c = $sc; $c <= $clampedEc; $c++) {
+                    $ref = Coordinate::stringFromColumnIndex($c) . $r;
+                    if ($ref !== $startCell) {
+                        $coveredCells[$ref] = true;
+                    }
+                }
+            }
+        }
+
+        $rows = [];
+        for ($row = $startRow; $row <= $endRow; $row++) {
+            $cells = [];
+            for ($colIdx = $startColIdx; $colIdx <= $endColIdx; $colIdx++) {
+                $cellRef = Coordinate::stringFromColumnIndex($colIdx) . $row;
+
+                if (isset($coveredCells[$cellRef])) {
+                    continue;
+                }
+
+                $cell  = $worksheet->getCell($cellRef);
+                $value = trim((string) $cell->getFormattedValue());
+
+                $cells[] = [
+                    'reference' => $cellRef,
+                    'value'     => $value,
+                    'rowspan'   => $mergedRanges[$cellRef]['rowspan'] ?? 1,
+                    'colspan'   => $mergedRanges[$cellRef]['colspan'] ?? 1,
+                ];
+            }
+
+            $rows[] = [
+                'number' => $row,
+                'cells'  => $cells,
+            ];
+        }
+
+        return [
+            'rows'      => $rows,
+            'startCol'  => 'Q',
+            'endCol'    => 'AY',
+            'startRow'  => $startRow,
+            'endRow'    => $endRow,
+        ];
     }
 
     public function deleteFile($id)

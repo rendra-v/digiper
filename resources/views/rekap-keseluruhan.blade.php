@@ -16,24 +16,33 @@
                 @endif
             </p>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('sheet-cek') }}"
-               class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
-                ← Kembali ke Sheet Cek
-            </a>
-            <a href="{{ route('dashboard') }}"
-               class="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-lg transition-colors duration-200">
-                Dashboard
-            </a>
-            <a href="{{ route('rekap-keseluruhan.print') }}"
-               target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
+        <div class="flex flex-col items-end gap-2">
+            <div class="flex gap-3">
+                <a href="{{ route('sheet-cek') }}"
+                   class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
+                    ← Kembali ke Sheet Cek
+                </a>
+                <a href="{{ route('dashboard') }}"
+                   class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
+                    Dashboard
+                </a>
+                <a href="{{ route('rekap-keseluruhan.print') }}"
+                   target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
+                    </svg>
+                    Print PDF
+                </a>
+            </div>
+            <a href="{{ route('rekap-keseluruhan-2') }}"
+               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
+                Selanjutnya
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-                Print PDF
             </a>
         </div>
     </div>
@@ -65,7 +74,7 @@
         @endphp
 
         {{-- ─── Title ─── --}}
-        <div class="mb-5 text-center">
+        <div class="mb-2 text-center">
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
                 {{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS' }}
             </p>
@@ -75,6 +84,7 @@
         </div>
 
         {{-- ─── Table ─── --}}
+
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 {{--
