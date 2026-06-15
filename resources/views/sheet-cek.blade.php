@@ -10,11 +10,34 @@
             <h2 class="text-4xl font-semibold tracking-tight mb-3">Sheet Cek</h2>
             <p class="text-neutral-500 dark:text-neutral-400">Verifikasi dan pengecekan data perkara</p>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('data-print') }}" class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
-                ← Kembali
-            </a>
-            <a href="{{ route('dashboard') }}" class="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-lg transition-colors duration-200">
+        <div class="flex items-end gap-3">
+
+            {{-- Dropdown: Lihat Halaman Lain --}}
+            <div>
+                <label for="nav-page-select-cek" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Lihat halaman lain
+                </label>
+                <div class="relative flex items-center gap-2">
+                    <div class="relative">
+                        <select id="nav-page-select-cek"
+                            onchange="if(this.value) window.location.href = this.value"
+                            class="appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                            <option value="" disabled selected>— Pilih halaman —</option>
+                            <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
+                            <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                            <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
+                            <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ route('dashboard') }}" class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                 Dashboard
             </a>
         </div>

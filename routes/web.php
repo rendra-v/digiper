@@ -23,6 +23,8 @@ Route::get('/rekap-keseluruhan', [DashboardController::class, 'rekapKeseluruhan'
 Route::get('/rekap-keseluruhan/print', [DashboardController::class, 'rekapKeseluruhanPrint'])->name('rekap-keseluruhan.print');
 Route::get('/rekap-keseluruhan-2', [DashboardController::class, 'rekapKeseluruhan2'])->name('rekap-keseluruhan-2');
 Route::get('/rekap-keseluruhan-2/print', [DashboardController::class, 'rekapKeseluruhan2Print'])->name('rekap-keseluruhan-2.print');
+Route::get('/honorarium', [DashboardController::class, 'honorarium'])->name('honorarium');
+Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])->name('honorarium.print');
 
 
 // Legacy routes

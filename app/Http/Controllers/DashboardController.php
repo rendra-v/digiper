@@ -1654,6 +1654,268 @@ class DashboardController extends Controller
         ];
     }
 
+    public function honorarium()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (!$filePath || !file_exists($filePath)) {
+                return view('honorarium', [
+                    'fileName'   => null,
+                    'sheets'     => [],
+                    'activeSheet'=> null,
+                    'error'      => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            // Cek cache
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium');
+            $cached   = Session::get($cacheKey);
+            if ($cached !== null) {
+                \Log::info('honorarium() - loaded from session cache');
+                return view('honorarium', array_merge($cached, [
+                    'fileName' => $fileName,
+                    'error'    => null,
+                ]));
+            }
+
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+
+            $allSheetNames = $spreadsheet->getSheetNames();
+
+            // Cari sheet yang mengandung kata honorarium/honor
+            $honorSheets = array_values(array_filter($allSheetNames, function ($name) {
+                $lower = strtolower($name);
+                return str_contains($lower, 'honor') || str_contains($lower, 'honorarium');
+            }));
+
+            // Jika tidak ada, ambil semua sheet kecuali yang sudah dipakai
+            if (empty($honorSheets)) {
+                $usedSheets = ['Data Print', 'cek', 'Rekap Keseluruhan', 'REKAP GABUNGAN', 'rekap keseluruhan', 'Periode Laporan'];
+                $honorSheets = array_values(array_filter($allSheetNames, fn($n) => !in_array($n, $usedSheets)));
+            }
+
+            $sheets = [];
+            foreach ($honorSheets as $sheetName) {
+                $ws = $spreadsheet->getSheetByName($sheetName);
+                if (!$ws) continue;
+
+                $parsed = $this->parseHonorariumSheet($ws, $sheetName);
+                if ($parsed !== null) {
+                    $sheets[] = $parsed;
+                }
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            // Jika tidak ada sheet honorarium yang valid, tampilkan pesan
+            if (empty($sheets)) {
+                return view('honorarium', [
+                    'fileName'    => $fileName,
+                    'sheets'      => [],
+                    'activeSheet' => null,
+                    'error'       => 'Sheet honorarium tidak ditemukan dalam file. Pastikan file memiliki sheet dengan nama mengandung kata "honor".',
+                ]);
+            }
+
+            Session::put($cacheKey, compact('sheets'));
+
+            return view('honorarium', [
+                'fileName'    => $fileName,
+                'sheets'      => $sheets,
+                'activeSheet' => 0,
+                'error'       => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in honorarium', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
+            return view('honorarium', [
+                'fileName'    => Session::get('excel_file_name'),
+                'sheets'      => [],
+                'activeSheet' => null,
+                'error'       => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function honorariumPrint()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (!$filePath || !file_exists($filePath)) {
+                return view('honorarium-print', [
+                    'fileName' => null,
+                    'sheets'   => [],
+                    'error'    => 'File tidak ditemukan.',
+                ]);
+            }
+
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium');
+            $cached   = Session::get($cacheKey);
+            if ($cached !== null) {
+                return view('honorarium-print', array_merge($cached, [
+                    'fileName' => $fileName,
+                    'error'    => null,
+                ]));
+            }
+
+            // Reuse logic from honorarium()
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+            $allSheetNames = $spreadsheet->getSheetNames();
+
+            $honorSheets = array_values(array_filter($allSheetNames, function ($name) {
+                $lower = strtolower($name);
+                return str_contains($lower, 'honor') || str_contains($lower, 'honorarium');
+            }));
+            if (empty($honorSheets)) {
+                $usedSheets = ['Data Print', 'cek', 'Rekap Keseluruhan', 'REKAP GABUNGAN', 'rekap keseluruhan', 'Periode Laporan'];
+                $honorSheets = array_values(array_filter($allSheetNames, fn($n) => !in_array($n, $usedSheets)));
+            }
+
+            $sheets = [];
+            foreach ($honorSheets as $sheetName) {
+                $ws = $spreadsheet->getSheetByName($sheetName);
+                if (!$ws) continue;
+                $parsed = $this->parseHonorariumSheet($ws, $sheetName);
+                if ($parsed !== null) $sheets[] = $parsed;
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            Session::put($cacheKey, compact('sheets'));
+
+            return view('honorarium-print', [
+                'fileName' => $fileName,
+                'sheets'   => $sheets,
+                'error'    => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error in honorariumPrint', ['error' => $e->getMessage()]);
+            return view('honorarium-print', [
+                'fileName' => Session::get('excel_file_name'),
+                'sheets'   => [],
+                'error'    => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Parse sebuah sheet honorarium.
+     * Mencari baris header (mengandung kolom NO/NAMA/JABATAN atau serupa),
+     * lalu membaca data dan mengembalikan array terstruktur.
+     */
+    private function parseHonorariumSheet($worksheet, string $sheetName): ?array
+    {
+        $highestRow    = $worksheet->getHighestRow();
+        $highestColumn = $worksheet->getHighestColumn();
+        $highestColIdx = Coordinate::columnIndexFromString($highestColumn);
+
+        // Ambil judul (beberapa baris pertama sebelum header)
+        $titleLines = [];
+        $headerRow  = null;
+
+        for ($r = 1; $r <= min($highestRow, 20); $r++) {
+            $rowHasNo   = false;
+            $rowHasNama = false;
+            $rowText    = '';
+
+            for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
+                $ref = Coordinate::stringFromColumnIndex($c) . $r;
+                $val = trim((string) $worksheet->getCell($ref)->getFormattedValue());
+                if ($val === '') continue;
+                $upper = strtoupper($val);
+                $rowText .= ' ' . $val;
+                if ($upper === 'NO' || $upper === 'NO.' || $upper === 'NOMOR') $rowHasNo = true;
+                if (str_contains($upper, 'NAMA')) $rowHasNama = true;
+            }
+
+            if ($rowHasNo && $rowHasNama) {
+                $headerRow = $r;
+                break;
+            }
+
+            $text = trim($rowText);
+            if ($text !== '') {
+                $titleLines[] = $text;
+            }
+        }
+
+        if ($headerRow === null) return null;
+
+        // Baca kolom header
+        $headers = [];
+        for ($c = 1; $c <= $highestColIdx; $c++) {
+            $ref = Coordinate::stringFromColumnIndex($c) . $headerRow;
+            // Cek merged cells — bisa saja header ada di baris headerRow-1 juga
+            $val = trim((string) $worksheet->getCell($ref)->getFormattedValue());
+            // Juga cek baris di atasnya jika kosong (untuk header bertingkat)
+            if ($val === '' && $headerRow > 1) {
+                $refAbove = Coordinate::stringFromColumnIndex($c) . ($headerRow - 1);
+                $valAbove = trim((string) $worksheet->getCell($refAbove)->getFormattedValue());
+                if ($valAbove !== '') $val = $valAbove;
+            }
+            $headers[$c] = $val !== '' ? $val : Coordinate::stringFromColumnIndex($c);
+        }
+
+        // Baca data
+        $rows = [];
+        for ($r = $headerRow + 1; $r <= $highestRow; $r++) {
+            $rowData = [];
+            $hasData = false;
+            $firstVal = trim((string) $worksheet->getCell('A' . $r)->getFormattedValue());
+
+            // Stop jika baris ini mengandung teks tanda tangan / footer
+            if (stripos($firstVal, 'Jakarta') !== false
+                || stripos($firstVal, 'Mengetahui') !== false
+                || stripos($firstVal, 'PANITERA') !== false
+            ) {
+                break;
+            }
+
+            for ($c = 1; $c <= $highestColIdx; $c++) {
+                $ref = Coordinate::stringFromColumnIndex($c) . $r;
+                $val = trim((string) $worksheet->getCell($ref)->getFormattedValue());
+                $key = $headers[$c] ?? Coordinate::stringFromColumnIndex($c);
+                $rowData[$key] = $val;
+                if ($val !== '') $hasData = true;
+            }
+
+            if ($hasData) {
+                // Skip baris total/sub-total yang tidak bernomor
+                $noVal = trim((string) ($rowData[$headers[1] ?? 'A'] ?? ''));
+                if ($noVal !== '' && !is_numeric($noVal) && strtoupper($noVal) !== 'NO') {
+                    // Ini baris sub-total/jumlah, tetap tampilkan
+                }
+                $rows[] = $rowData;
+            }
+        }
+
+        if (empty($rows)) return null;
+
+        return [
+            'sheetName' => $sheetName,
+            'title'     => implode("\n", array_slice($titleLines, 0, 5)),
+            'headers'   => $headers,
+            'rows'      => $rows,
+        ];
+    }
+
     public function deleteFile($id)
     {
         try {
