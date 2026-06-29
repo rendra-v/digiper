@@ -30,7 +30,8 @@
                         <option value="" disabled selected>— Pilih halaman —</option>
                         <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
                         <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
-                        <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                        <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan 1</option>
+                        <option value="{{ route('rekap-keseluruhan-3') }}">📋&nbsp; Rekap Keseluruhan 3</option>
                         <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
@@ -54,6 +55,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
                 </svg>
                 Print PDF
+            </a>
+            <a href="{{ route('rekap-keseluruhan-3') }}"
+               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
+                Selanjutnya
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </a>
         </div>
     </div>

@@ -32,6 +32,7 @@
                             <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
                             <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
+                            <option value="{{ route('rekap-keseluruhan-3') }}">📋&nbsp; Rekap Keseluruhan 3</option>
                             <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
