@@ -104,7 +104,16 @@
 
             $isHeaderRowFn = function(int $rowNum) use ($headerRow): bool {
                 if ($headerRow === null) return false;
-                return $rowNum >= ($headerRow - 4) && $rowNum <= $headerRow;
+                // Extend to headerRow+1 untuk menangkap baris subheader BIAYA|JML|SUB TOTAL
+                return $rowNum >= ($headerRow - 4) && $rowNum <= ($headerRow + 1);
+            };
+
+            // Cek apakah baris punya minimal satu sel tidak kosong
+            $rowHasContentFn = function(array $cells): bool {
+                foreach ($cells as $cell) {
+                    if (trim($cell['value']) !== '') return true;
+                }
+                return false;
             };
 
             $isTotalRowFn = function(array $cells): bool {
@@ -132,26 +141,128 @@
         {{-- ─── Table ─── --}}
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-xs border-collapse">
-                    <tbody>
-                        @foreach($report['rows'] as $row)
-                            @php
-                                $rowNum   = $row['number'];
-                                $cells    = $row['cells'];
-                                $isHeader = $isHeaderRowFn($rowNum);
+                @php
+                    // ── Pre-separation: pisahkan baris header dan baris data ──
+                    $theadRows = [];
+                    $tbodyRows = [];
+                    foreach ($report['rows'] as $_row) {
+                        $_isHdr = $isHeaderRowFn($_row['number']);
+                        if ($_isHdr) {
+                            if ($rowHasContentFn($_row['cells'])) {
+                                $theadRows[] = $_row;
+                            }
+                        } else {
+                            if ($_row['hasData'] ?? true) {
+                                $tbodyRows[] = $_row;
+                            }
+                        }
+                    }
 
-                                // Skip baris kosong berdasarkan raw value (dari controller)
-                                if (!$isHeader && !($row['hasData'] ?? true)) continue;
-
-                                $isTotal  = ! $isHeader && $isTotalRowFn($cells);
-
-                                if ($isHeader) {
-                                    $trBg = 'bg-sky-100 dark:bg-sky-900/40';
-                                } elseif ($isTotal) {
-                                    $trBg = 'bg-neutral-100 dark:bg-neutral-800/60';
-                                } else {
-                                    $trBg = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
+                    // ── Filter $tbodyRows: buang baris yang hanya berisi keyword subheader ──
+                    // Ini menangani kasus di mana baris BIAYA/JML/SUB TOTAL "lolos" ke tbody
+                    // (misalnya karena ada 2 baris subheader di Excel, atau isHeaderRowFn terlalu sempit).
+                    $_tbodySubhdrKeywords = ['BIAYA','JML','SUB TOTAL','BRUTO','NETTO','PPH','PPh','TOTAL'];
+                    $_isSubhdrOnlyRow = function(array $cells) use ($_tbodySubhdrKeywords): bool {
+                        $nonEmptyCount = 0;
+                        $subhdrCount   = 0;
+                        foreach ($cells as $cell) {
+                            $v = trim($cell['value']);
+                            if ($v === '' || $v === '-' || $v === '0') continue;
+                            $nonEmptyCount++;
+                            $upper = strtoupper($v);
+                            foreach ($_tbodySubhdrKeywords as $_kw) {
+                                if (str_contains($upper, strtoupper($_kw))) {
+                                    $subhdrCount++;
+                                    break;
                                 }
+                            }
+                        }
+                        // Baris dianggap "subheader only" jika semua sel non-kosong adalah keyword subheader
+                        return $nonEmptyCount > 0 && $subhdrCount === $nonEmptyCount;
+                    };
+                    $tbodyRows = array_values(array_filter(
+                        $tbodyRows,
+                        function ($_row) use ($_isSubhdrOnlyRow) {
+                            return !$_isSubhdrOnlyRow($_row['cells']);
+                        }
+                    ));
+
+                    // ── Ekstrak nama kategori dari theadRows[0] untuk thead statis ──
+                    // Ambil semua sel dengan colspan >= 3 (= nama grup perkara / TOTAL)
+                    $_categories = []; // [['label' => string, 'isTotal' => bool]]
+                    if (count($theadRows) >= 1) {
+                        foreach ($theadRows[0]['cells'] as $_c) {
+                            if (($_c['colspan'] ?? 1) >= 3) {
+                                $isTotal = strtoupper(trim($_c['value'])) === 'TOTAL'
+                                    || (($_c['colspan'] ?? 1) >= 4);
+                                $_categories[] = [
+                                    'label'   => $_c['value'],
+                                    'colspan' => $_c['colspan'],
+                                    'isTotal' => $isTotal,
+                                ];
+                            }
+                        }
+                    }
+
+                    // Fallback: jika tidak ditemukan dari theadRows, gunakan nama default
+                    if (empty($_categories)) {
+                        $_categories = [
+                            ['label' => 'KASASI PDT, PDTSUS, AG (Rp400.000)', 'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'KASASI TUN (Rp400.000)',              'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'KASASI NIAGA (Rp5.000.000)',          'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK PDT (Rp2.000.000)',                'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'P - HUM/KHS (TUN) (Rp1.000.000)',    'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK - PAJAK (Rp2.000.000)',            'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK - PDT KHUSUS (Rp2.000.000)',       'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK - AGAMA (Rp2.000.000)',            'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK - TUN (Rp2.000.000)',              'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'PK NIAGA (Rp10.000.000)',             'colspan' => 3, 'isTotal' => false],
+                            ['label' => 'TOTAL',                               'colspan' => 4, 'isTotal' => true],
+                        ];
+                    }
+
+                    $_thBase = 'border border-neutral-300 dark:border-neutral-600 text-xs font-bold text-neutral-800 dark:text-neutral-200 text-center align-middle whitespace-nowrap';
+                @endphp
+                <table class="w-full text-xs border-collapse">
+
+                    {{-- ▸ HEADER STATIS: identik dengan struktur Excel referensi --}}
+                    <thead>
+                        {{-- Baris 1: NO | PERUNTUKAN | % | Nama Kategori × N | TOTAL --}}
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
+                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">NO</th>
+                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">PERUNTUKAN</th>
+                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">%</th>
+                            @foreach($_categories as $_cat)
+                                <th colspan="{{ $_cat['colspan'] }}"
+                                    class="{{ $_thBase }} px-2 py-2">{{ $_cat['label'] }}</th>
+                            @endforeach
+                        </tr>
+                        {{-- Baris 2: BIAYA|JML|SUB TOTAL per kategori, BRUTO|PPh15%|PPh5%|NETTO untuk TOTAL --}}
+                        <tr class="bg-sky-50 dark:bg-sky-950/40 border-b border-neutral-300 dark:border-neutral-700">
+                            @foreach($_categories as $_cat)
+                                @if($_cat['isTotal'])
+                                    <th class="{{ $_thBase }} px-1.5 py-1">BRUTO</th>
+                                    <th class="{{ $_thBase }} px-1.5 py-1">PPh 15%</th>
+                                    <th class="{{ $_thBase }} px-1.5 py-1">PPh 5%</th>
+                                    <th class="{{ $_thBase }} px-1.5 py-1">NETTO</th>
+                                @else
+                                    <th class="{{ $_thBase }} px-1.5 py-1">BIAYA</th>
+                                    <th class="{{ $_thBase }} px-1.5 py-1">JML</th>
+                                    <th class="{{ $_thBase }} px-1.5 py-1">SUB TOTAL</th>
+                                @endif
+                            @endforeach
+                        </tr>
+                    </thead>
+
+                    {{-- ▸ BODY: baris data --}}
+                    <tbody>
+                        @foreach($tbodyRows as $row)
+                            @php
+                                $cells   = $row['cells'];
+                                $isTotal = $isTotalRowFn($cells);
+                                $trBg    = $isTotal
+                                    ? 'bg-neutral-100 dark:bg-neutral-800/60'
+                                    : 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
                             @endphp
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
                                 @foreach($cells as $cell)
@@ -160,10 +271,8 @@
                                         $colLtr = preg_replace('/\d+/', '', $cell['reference']);
                                         $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
 
-                                        // Alignment: header=center, kolom No=center, kolom Nama=left, sisanya=right
-                                        if ($isHeader) {
-                                            $align = 'text-center';
-                                        } elseif ($colNum === $colNoAbs) {
+                                        // Alignment: NO=center, Nama/Peruntukan=left, numerik=right
+                                        if ($colNum === $colNoAbs) {
                                             $align = 'text-center';
                                         } elseif ($colNum === $colNamaAbs) {
                                             $align = 'text-left';
@@ -173,7 +282,7 @@
 
                                         // Format angka pada kolom numerik (kolom ke-3 dan seterusnya)
                                         $display   = $val;
-                                        $isNumeric = ($colNum > $colNamaAbs) && ! $isHeader;
+                                        $isNumeric = ($colNum > $colNamaAbs);
                                         if ($isNumeric) {
                                             $stripped = str_replace([',', '.'], '', $val);
                                             if (is_numeric($stripped) && (float) $stripped != 0) {
@@ -183,12 +292,10 @@
                                             }
                                         }
 
-                                        $tdClass  = 'border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-xs '.$align;
-                                        $tdClass .= $isHeader
-                                            ? ' font-bold text-neutral-800 dark:text-neutral-200'
-                                            : ($isTotal
-                                                ? ' font-bold text-neutral-900 dark:text-neutral-100'
-                                                : ' text-neutral-800 dark:text-neutral-200');
+                                        $tdClass  = 'border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-xs '.$align;
+                                        $tdClass .= $isTotal
+                                            ? ' font-bold text-neutral-900 dark:text-neutral-100'
+                                            : ' text-neutral-800 dark:text-neutral-200';
                                     @endphp
                                     <td rowspan="{{ $cell['rowspan'] }}"
                                         colspan="{{ $cell['colspan'] }}"
@@ -197,6 +304,7 @@
                             </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         </div>
