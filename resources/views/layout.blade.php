@@ -76,10 +76,6 @@
                 border-color: #262626 !important;
             }
             
-            .dark .border-neutral-200 {
-                border-color: #262626 !important;
-            }
-            
             .dark .border-neutral-100 {
                 border-color: #262626 !important;
             }

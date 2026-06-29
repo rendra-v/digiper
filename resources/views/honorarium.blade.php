@@ -21,17 +21,6 @@
                class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                 Dashboard
             </a>
-            @if(!$error && count($sheets) > 0)
-            <a href="{{ route('honorarium.print') }}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
-                </svg>
-                Print PDF
-            </a>
-            @endif
         </div>
     </div>
 
@@ -179,7 +168,15 @@
                                     $firstVal = trim((string)($row[$firstKey] ?? ''));
                                     $isSummary = !is_numeric($firstVal) && $firstVal !== '' && strtoupper($firstVal) !== 'NO';
                                     if (!$isSummary) $rowNum++;
+
+                                    // Skip baris kosong: semua nilai adalah kosong atau nol
+                                    $rowIsEmpty = collect($row)->every(function($v, $k) {
+                                        if ($k === '_rowspans' || $k === '_original_row') return true;
+                                        $s = trim((string)($v ?? ''));
+                                        return $s === '' || $s === '0' || (is_numeric($s) && (float)$s == 0);
+                                    });
                                 @endphp
+                                @if($rowIsEmpty) @continue @endif
                                 <tr class="border-b border-neutral-100 dark:border-neutral-800 transition-colors duration-100
                                     {{ $isSummary
                                         ? 'bg-neutral-100 dark:bg-neutral-800/60'

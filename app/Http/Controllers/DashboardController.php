@@ -289,12 +289,21 @@ class DashboardController extends Controller
                 }
             }
 
+            // Save to database
+            $excelFile = ExcelFile::create([
+                'original_filename' => $file->getClientOriginalName(),
+                'file_path' => $fullPath,
+                'period' => '',
+            ]);
+
             // Store both data and sheet info in session
+            Session::put('current_file_id', $excelFile->id);
             Session::put('excel_data', $data);
             Session::put('excel_sheets', $sheetNames);
             Session::put('excel_current_sheet', $targetSheetName);
             Session::put('excel_file_name', $file->getClientOriginalName());
             Session::put('excel_file_path', $fullPath);
+            Session::put('excel_period', '');
 
             // Cleanup
             $spreadsheet->disconnectWorksheets();
@@ -334,11 +343,15 @@ class DashboardController extends Controller
 
     public function clear()
     {
+        $this->invalidateSessionCache();
+
         Session::forget('excel_data');
         Session::forget('excel_sheets');
         Session::forget('excel_current_sheet');
         Session::forget('excel_file_name');
         Session::forget('excel_file_path');
+        Session::forget('current_file_id');
+        Session::forget('excel_period');
 
         return response()->json(['success' => true]);
     }
@@ -848,6 +861,7 @@ class DashboardController extends Controller
         $rows = [];
         for ($row = 1; $row <= $lastRow; $row++) {
             $cells = [];
+            $hasData = false;
             for ($column = 1; $column <= $lastColumnIndex; $column++) {
                 $cellReference = Coordinate::stringFromColumnIndex($column).$row;
 
@@ -857,6 +871,17 @@ class DashboardController extends Controller
 
                 $cell = $worksheet->getCell($cellReference);
                 $value = trim((string) $cell->getFormattedValue());
+
+                try {
+                    $rawValue = $cell->getCalculatedValue();
+                } catch (\Throwable $e) {
+                    $rawValue = $cell->getValue();
+                }
+                $rawStr = trim((string) ($rawValue ?? ''));
+
+                if ($rawStr !== '' && $rawStr !== '0' && $rawStr !== '-' && !(is_numeric($rawStr) && (float) $rawStr == 0)) {
+                    $hasData = true;
+                }
 
                 $cells[] = [
                     'reference' => $cellReference,
@@ -869,6 +894,7 @@ class DashboardController extends Controller
             $rows[] = [
                 'number' => $row,
                 'cells' => $cells,
+                'hasData' => $hasData,
             ];
         }
 
@@ -1713,6 +1739,8 @@ class DashboardController extends Controller
         $rows = [];
         for ($row = $startRow; $row <= $endRow; $row++) {
             $cells = [];
+            $hasData = false; // flag: ada setidaknya satu cell dengan data bermakna
+
             for ($colIdx = $startColIdx; $colIdx <= $endColIdx; $colIdx++) {
                 $cellRef = Coordinate::stringFromColumnIndex($colIdx).$row;
 
@@ -1722,6 +1750,19 @@ class DashboardController extends Controller
 
                 $cell = $worksheet->getCell($cellRef);
                 $value = trim((string) $cell->getFormattedValue());
+
+                // Gunakan raw value untuk mendeteksi apakah ada data bermakna
+                try {
+                    $rawValue = $cell->getCalculatedValue();
+                } catch (\Throwable $e) {
+                    $rawValue = $cell->getValue();
+                }
+                $rawStr = trim((string) ($rawValue ?? ''));
+
+                // Data bermakna = bukan kosong, bukan nol, bukan "-"
+                if ($rawStr !== '' && $rawStr !== '0' && $rawStr !== '-' && !(is_numeric($rawStr) && (float) $rawStr == 0)) {
+                    $hasData = true;
+                }
 
                 $cells[] = [
                     'reference' => $cellRef,
@@ -1734,6 +1775,7 @@ class DashboardController extends Controller
             $rows[] = [
                 'number' => $row,
                 'cells' => $cells,
+                'hasData' => $hasData, // baris bermakna jika minimal ada 1 cell non-kosong/non-nol
             ];
         }
 
@@ -2475,7 +2517,14 @@ class DashboardController extends Controller
                 $cell = $worksheet->getCell($cellRef);
                 $value = trim((string) $cell->getFormattedValue());
 
-                if ($value !== '') {
+                try {
+                    $rawValue = $cell->getCalculatedValue();
+                } catch (\Throwable $e) {
+                    $rawValue = $cell->getValue();
+                }
+                $rawStr = trim((string) ($rawValue ?? ''));
+
+                if ($rawStr !== '' && $rawStr !== '0' && $rawStr !== '-' && !(is_numeric($rawStr) && (float) $rawStr == 0)) {
                     $hasData = true;
                 }
 
@@ -2487,12 +2536,11 @@ class DashboardController extends Controller
                 ];
             }
 
-            if ($hasData) {
-                $rows[] = [
-                    'number' => $row,
-                    'cells' => $cells,
-                ];
-            }
+            $rows[] = [
+                'number' => $row,
+                'cells' => $cells,
+                'hasData' => $hasData,
+            ];
         }
 
         return [
@@ -2514,7 +2562,8 @@ class DashboardController extends Controller
                 unlink($excelFile->file_path);
             }
             $excelFile->delete();
-            if (Session::get('current_file_id') === $id) {
+            if (Session::get('current_file_id') == (int) $id) {
+                $this->invalidateSessionCache();
                 Session::forget(['current_file_id', 'excel_file_name', 'excel_file_path', 'excel_sheets', 'excel_period']);
             }
 
@@ -2530,7 +2579,7 @@ class DashboardController extends Controller
             $request->validate(['period' => 'required|string|max:100']);
             $excelFile = ExcelFile::findOrFail($id);
             $excelFile->update(['period' => $request->input('period')]);
-            if (Session::get('current_file_id') === $id) {
+            if (Session::get('current_file_id') == (int) $id) {
                 Session::put('excel_period', $request->input('period'));
             }
 

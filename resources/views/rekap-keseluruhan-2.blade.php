@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', 'Rekap Keseluruhan')
+@section('title', 'Rekap Keseluruhan 2')
 
 @section('content')
 <div class="min-h-screen">
@@ -8,7 +8,7 @@
     {{-- ─── Header Page ─── --}}
     <div class="mb-8 flex items-center justify-between">
         <div>
-            <h2 class="text-4xl font-semibold tracking-tight mb-3">Rekap Keseluruhan</h2>
+            <h2 class="text-4xl font-semibold tracking-tight mb-3">Rekap Keseluruhan 2</h2>
             <p class="text-neutral-500 dark:text-neutral-400">
                 Rekapitulasi biaya penyelesaian perkara – Distribusi per peruntukan
                 @if($fileName)
@@ -186,6 +186,10 @@
                                 $cells  = $row['cells'];
 
                                 $isHeaderRow  = ($rowNum >= $HEADER_START && $rowNum <= $HEADER_END);
+
+                                // Skip baris kosong berdasarkan raw value (dari controller)
+                                if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
+
                                 $isJumlah     = !$isHeaderRow && $isJumlahRow($rowNum, $cells);
                                 $isTotal100   = !$isHeaderRow && !$isJumlah && $is100Row($rowNum, $cells);
 

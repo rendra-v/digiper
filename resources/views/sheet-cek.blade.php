@@ -58,7 +58,11 @@
                 <div class="space-y-2">
                     <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-100">REKAP TOTAL PENYERAHAN KE MASING - MASING PANMUD</h3>
                     <p class="text-base font-semibold text-neutral-700 dark:text-neutral-300">HONORARIUM BIAYA PENYELESAIAN PERKARA</p>
-                    <p class="text-sm text-neutral-600 dark:text-neutral-400">PERIODE BULAN DESEMBER 2025 s/D FEBRUARI 2026</p>
+                    @if(Session::has('excel_period') && Session::get('excel_period') !== '')
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">PERIODE: {{ strtoupper(Session::get('excel_period')) }}</p>
+                    @elseif(Session::has('excel_file_name'))
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">File: {{ Session::get('excel_file_name') }}</p>
+                    @endif
                 </div>
             </div>
 

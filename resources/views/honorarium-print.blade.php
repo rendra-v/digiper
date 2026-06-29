@@ -192,7 +192,15 @@
                         $firstKey  = array_key_first($row);
                         $firstVal  = trim((string)($row[$firstKey] ?? ''));
                         $isSummary = !is_numeric($firstVal) && $firstVal !== '' && strtoupper($firstVal) !== 'NO';
+
+                        // Skip baris kosong: semua nilai kosong atau nol
+                        $rowIsEmpty = collect($row)->every(function($v, $k) {
+                            if ($k === '_rowspans' || $k === '_original_row') return true;
+                            $s = trim((string)($v ?? ''));
+                            return $s === '' || $s === '0' || (is_numeric($s) && (float)$s == 0);
+                        });
                     @endphp
+                    @if($rowIsEmpty) @continue @endif
                     <tr class="{{ $isSummary ? 'summary-row' : '' }}">
                         @foreach($sheet['headers'] as $colIdx => $headerName)
                             @php

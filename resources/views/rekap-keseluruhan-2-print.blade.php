@@ -198,6 +198,10 @@
                         $cells  = $row['cells'];
 
                         $isHeaderRow = ($rowNum >= $HEADER_START && $rowNum <= $HEADER_END);
+
+                        // Skip baris kosong berdasarkan raw value (dari controller)
+                        if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
+
                         $isJumlah    = !$isHeaderRow && $isJumlahRow($rowNum, $cells);
                         $isTotal100  = !$isHeaderRow && !$isJumlah && $is100Row($rowNum, $cells);
 

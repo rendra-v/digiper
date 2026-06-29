@@ -139,6 +139,10 @@
                                 $rowNum   = $row['number'];
                                 $cells    = $row['cells'];
                                 $isHeader = $isHeaderRowFn($rowNum);
+
+                                // Skip baris kosong berdasarkan raw value (dari controller)
+                                if (!$isHeader && !($row['hasData'] ?? true)) continue;
+
                                 $isTotal  = ! $isHeader && $isTotalRowFn($cells);
 
                                 if ($isHeader) {

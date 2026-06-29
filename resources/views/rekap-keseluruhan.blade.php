@@ -148,6 +148,9 @@
 
                                 $isHeaderRow = ($rowNum <= $HEADER_END);
 
+                                // Skip baris kosong berdasarkan raw value (dari controller)
+                                if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
+
                                 $firstCell = collect($row['cells'])->first();
                                 $firstVal  = trim($firstCell['value'] ?? '');
 

@@ -502,7 +502,7 @@ function dashboardApp() {
                 const response = await fetch('/upload-with-period', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
                     body: formData,
                 });
@@ -542,7 +542,7 @@ function dashboardApp() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
                     body: JSON.stringify({ period: this.renameInput }),
                 });
@@ -573,7 +573,7 @@ function dashboardApp() {
                 const response = await fetch(`/file/${this.selectedFileId}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
                 });
 
