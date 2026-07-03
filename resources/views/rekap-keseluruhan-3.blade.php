@@ -231,7 +231,7 @@
                         <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
                             <th rowspan="2" class="{{ $_thBase }} px-2 py-2">NO</th>
                             <th rowspan="2" class="{{ $_thBase }} px-2 py-2">PERUNTUKAN</th>
-                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">%</th>
+                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2"></th>
                             @foreach($_categories as $_cat)
                                 <th colspan="{{ $_cat['colspan'] }}"
                                     class="{{ $_thBase }} px-2 py-2">{{ $_cat['label'] }}</th>
@@ -255,14 +255,49 @@
                     </thead>
 
                     {{-- ▸ BODY: baris data --}}
+                    {{-- Kolom % (startColIdx+2) dipindah ke PERUNTUKAN jika PERUNTUKAN kosong, lalu di-skip --}}
+                    @php $colPctAbs = $startColIdx + 2; @endphp
                     <tbody>
                         @foreach($tbodyRows as $row)
                             @php
-                                $cells   = $row['cells'];
-                                $isTotal = $isTotalRowFn($cells);
-                                $trBg    = $isTotal
+                                $rawCells = $row['cells'];
+                                $isTotal  = $isTotalRowFn($rawCells);
+                                $trBg     = $isTotal
                                     ? 'bg-neutral-100 dark:bg-neutral-800/60'
                                     : 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
+
+                                // Ambil nilai dari kolom % untuk dipindahkan ke PERUNTUKAN
+                                $pctVal = '';
+                                $pctRowspan = 1;
+                                $pctColspan = 1;
+                                foreach ($rawCells as $_c) {
+                                    $_cn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(
+                                        preg_replace('/\d+/', '', $_c['reference'])
+                                    );
+                                    if ($_cn === $colPctAbs) {
+                                        $pctVal     = $_c['value'];
+                                        $pctRowspan = $_c['rowspan'];
+                                        $pctColspan = $_c['colspan'];
+                                        break;
+                                    }
+                                }
+
+                                // Buat array cells baru: isi PERUNTUKAN dari kolom % jika kosong, skip kolom %
+                                $cells = [];
+                                foreach ($rawCells as $_c) {
+                                    $_cn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(
+                                        preg_replace('/\d+/', '', $_c['reference'])
+                                    );
+                                    if ($_cn === $colPctAbs) {
+                                        continue; // skip kolom %
+                                    }
+                                    if ($_cn === $colNamaAbs && trim($_c['value']) === '' && trim($pctVal) !== '') {
+                                        $_c['value']   = $pctVal;
+                                        $_c['rowspan'] = $pctRowspan;
+                                        $_c['colspan'] = $pctColspan;
+                                    }
+                                    $cells[] = $_c;
+                                }
                             @endphp
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
                                 @foreach($cells as $cell)
@@ -280,9 +315,9 @@
                                             $align = 'text-right';
                                         }
 
-                                        // Format angka pada kolom numerik (kolom ke-3 dan seterusnya)
+                                        // Format angka pada kolom numerik (kolom setelah kolom %)
                                         $display   = $val;
-                                        $isNumeric = ($colNum > $colNamaAbs);
+                                        $isNumeric = ($colNum > $colPctAbs);
                                         if ($isNumeric) {
                                             $stripped = str_replace([',', '.'], '', $val);
                                             if (is_numeric($stripped) && (float) $stripped != 0) {
