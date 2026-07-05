@@ -29,6 +29,23 @@ Route::get('/honorarium', [DashboardController::class, 'honorarium'])->name('hon
 Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])->name('honorarium.print');
 Route::get('/honorarium/debug', [DashboardController::class, 'honorariumDebug'])->name('honorarium.debug');
 
+
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);
 Route::get('perkaras-recap', [PerkaraRecapController::class, 'index'])->name('perkaras.recap');
+
+// Dev helper: re-inject latest uploaded file into current session
+Route::get('/dev/inject-file', function () {
+    $file = App\Models\ExcelFile::latest()->first();
+    if (!$file) {
+        return 'No file found.';
+    }
+    $fullPath = storage_path('app/' . $file->file_path);
+    $originalName = $file->original_name ?: basename($file->file_path);
+    session([
+        'excel_file_path' => $fullPath,
+        'excel_file_name' => $originalName,
+    ]);
+    return redirect('/honorarium');
+});
+

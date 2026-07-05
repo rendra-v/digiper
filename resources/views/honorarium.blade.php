@@ -52,6 +52,7 @@
                         {{-- Tab pilih sheet --}}
                         @if(count($sheets) > 1)
                         <div class="flex-1 min-w-0">
+
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                                 Pilih sheet honorarium
                             </label>
@@ -312,14 +313,15 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
-                            @php $rowNum = 0; @endphp
+                            @php $rowNum = 0; $lastSectionTitle = null; @endphp
                             @foreach($sheet['rows'] as $rIdx => $row)
                                 @php
-                                    $kode      = $row['_kode_kuitansi'] ?? 0;
-                                    $jabSub    = $row['_jabatan_sub'] ?? '';
-                                    $firstKey  = collect(array_keys($row))->first(fn($k) => !str_starts_with($k, '_'));
-                                    $firstVal  = trim((string)($row[$firstKey] ?? ''));
-                                    $isSummary = !is_numeric($firstVal) && $firstVal !== '' && strtoupper($firstVal) !== 'NO';
+                                    $kode         = $row['_kode_kuitansi'] ?? 0;
+                                    $jabSub       = $row['_jabatan_sub'] ?? '';
+                                    $sectionTitle = $row['_section_title'] ?? '';
+                                    $firstKey     = collect(array_keys($row))->first(fn($k) => !str_starts_with($k, '_'));
+                                    $firstVal     = trim((string)($row[$firstKey] ?? ''));
+                                    $isSummary    = !is_numeric($firstVal) && $firstVal !== '' && strtoupper($firstVal) !== 'NO';
                                     if (!$isSummary) $rowNum++;
 
                                     // Skip baris kosong (selain field internal _kode_kuitansi)
@@ -328,8 +330,24 @@
                                         $s = trim((string)($v ?? ''));
                                         return $s === '' || $s === '0' || (is_numeric($s) && (float)$s == 0);
                                     });
+
+                                    // Tampilkan separator section jika judul berubah
+                                    $showSectionSeparator = $sectionTitle !== '' && $sectionTitle !== $lastSectionTitle;
+                                    if ($showSectionSeparator) $lastSectionTitle = $sectionTitle;
                                 @endphp
                                 @if($rowIsEmpty) @continue @endif
+
+                                {{-- Section separator row --}}
+                                @if($showSectionSeparator)
+                                <tr class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800" data-kode="0" data-sub="">
+                                    <td class="px-3 py-2 text-center" colspan="1">
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-white text-[9px] font-bold">§</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-xs font-bold text-white uppercase tracking-wide" colspan="{{ count($sheet['headers']) }}">
+                                        {{ $sectionTitle }}
+                                    </td>
+                                </tr>
+                                @endif
 
                                 {{--
                                     x-show: filter oleh kode (1/2) atau sub-jabatan ('operator'/'panmud').
@@ -419,95 +437,105 @@
                                     @endforeach
                                 </tr>
                             @endforeach
-                        </tbody>
+                    </tbody>
                     </table>
                 </div>
 
-                {{-- ── Bagian Mengetahui / Tanda Tangan ── --}}
                 @if(!empty($sheet['footerBlocks']))
-                <div class="border-t-2 border-neutral-200 dark:border-neutral-700 px-6 py-6 bg-neutral-50/60 dark:bg-neutral-800/20">
-                    <p class="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-4">Tanda Tangan</p>
-                    <div class="grid grid-cols-3 gap-8 text-xs text-neutral-700 dark:text-neutral-300">
+                    @php
+                        $blockMap = [];
+                        foreach ($sheet['footerBlocks'] as $blk) {
+                            $blockMap[$blk['position']] = $blk['lines'];
+                        }
 
-                        @php
-                            $blockMap = [];
-                            foreach ($sheet['footerBlocks'] as $blk) {
-                                $blockMap[$blk['position']] = $blk['lines'];
-                            }
-                        @endphp
+                        $leftFooterLines = $blockMap['left'] ?? [];
+                        $centerFooterLines = $blockMap['center'] ?? [];
+                        $rightFooterLines = $blockMap['right'] ?? [];
+                        $footerLineCount = max(count($leftFooterLines), count($centerFooterLines), count($rightFooterLines));
 
-                        {{-- Kiri --}}
-                        <div class="flex flex-col gap-1.5">
-                            @if(!empty($blockMap['left']))
-                                @foreach($blockMap['left'] as $line)
-                                    @php
-                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
-                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
-                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
-                                    @endphp
-                                    <p class="{{ $isDate ? 'text-neutral-400 dark:text-neutral-500' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">
-                                        {{ $line }}
-                                    </p>
-                                @endforeach
-                            @endif
+                        $footerStats = [
+                            'sheet' => $sheet['sheetName'],
+                            'total' => count($sheet['rows']),
+                            'tim' => count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 1)),
+                            'pane' => count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 2)),
+                        ];
+                    @endphp
+                    <div class="mt-4 overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+                        <div class="border-b border-neutral-200 dark:border-neutral-800 px-5 py-4 bg-gradient-to-r from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400 dark:text-neutral-500">Tanda Tangan</p>
+                            <p class="mt-1 text-base font-semibold text-neutral-900 dark:text-neutral-100">Per Kolom</p>
                         </div>
 
-                        {{-- Tengah --}}
-                        <div class="flex flex-col gap-1.5 items-center text-center">
-                            @if(!empty($blockMap['center']))
-                                @foreach($blockMap['center'] as $line)
-                                    @php
-                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
-                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
-                                    @endphp
-                                    <p class="{{ $isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '') }}">
-                                        {{ $line }}
-                                    </p>
-                                @endforeach
-                            @endif
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-fixed border-collapse text-sm">
+                                <colgroup>
+                                    <col class="w-1/3">
+                                    <col class="w-1/3">
+                                    <col class="w-1/3">
+                                </colgroup>
+                                <tbody>
+                                    @for($lineIndex = 0; $lineIndex < $footerLineCount; $lineIndex++)
+                                        <tr class="align-top bg-white dark:bg-neutral-900">
+                                            <td class="px-5 py-3 border-t border-r border-neutral-200 dark:border-neutral-800 text-left text-sm text-neutral-700 dark:text-neutral-300">
+                                                @php $line = $leftFooterLines[$lineIndex] ?? ''; @endphp
+                                                @if($line !== '')
+                                                    @php
+                                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
+                                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                                    @endphp
+                                                    <p class="leading-snug {{ $isDate ? 'text-neutral-400 dark:text-neutral-500 text-right' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">{{ $line }}</p>
+                                                @endif
+                                            </td>
+                                            <td class="px-5 py-3 border-t border-r border-neutral-200 dark:border-neutral-800 text-center text-sm text-neutral-700 dark:text-neutral-300">
+                                                @php $line = $centerFooterLines[$lineIndex] ?? ''; @endphp
+                                                @if($line !== '')
+                                                    @php
+                                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                                    @endphp
+                                                    <p class="leading-snug {{ $isTitle ? 'font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '') }}">{{ $line }}</p>
+                                                @endif
+                                            </td>
+                                            <td class="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 text-right text-sm text-neutral-700 dark:text-neutral-300">
+                                                @php $line = $rightFooterLines[$lineIndex] ?? ''; @endphp
+                                                @if($line !== '')
+                                                    @php
+                                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
+                                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                                    @endphp
+                                                    <p class="leading-snug {{ $isDate ? 'text-neutral-400 dark:text-neutral-500' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">{{ $line }}</p>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endfor
+                                </tbody>
+                            </table>
                         </div>
 
-                        {{-- Kanan --}}
-                        <div class="flex flex-col gap-1.5 items-end text-right">
-                            @if(!empty($blockMap['right']))
-                                @foreach($blockMap['right'] as $line)
-                                    @php
-                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
-                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
-                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
-                                    @endphp
-                                    <p class="{{ $isDate ? 'text-neutral-400 dark:text-neutral-500' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">
-                                        {{ $line }}
-                                    </p>
-                                @endforeach
-                            @endif
+                        <div class="border-t border-neutral-200 dark:border-neutral-800 p-4 bg-neutral-50/70 dark:bg-neutral-950/40">
+                            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 text-xs text-neutral-500 dark:text-neutral-400">
+                                <div class="rounded-lg border border-neutral-200 dark:border-neutral-800 px-3 py-2 bg-white dark:bg-neutral-900">
+                                    <span class="block uppercase tracking-[0.22em] text-[10px] text-neutral-400 dark:text-neutral-500">Sheet</span>
+                                    <strong class="text-neutral-700 dark:text-neutral-200">{{ $footerStats['sheet'] }}</strong>
+                                </div>
+                                <div class="rounded-lg border border-neutral-200 dark:border-neutral-800 px-3 py-2 bg-white dark:bg-neutral-900">
+                                    <span class="block uppercase tracking-[0.22em] text-[10px] text-neutral-400 dark:text-neutral-500">Total Baris</span>
+                                    <strong class="text-neutral-700 dark:text-neutral-200">{{ $footerStats['total'] }}</strong>
+                                </div>
+                                <div class="rounded-lg border border-blue-200 dark:border-blue-900 px-3 py-2 bg-blue-50 dark:bg-blue-950/30">
+                                    <span class="block uppercase tracking-[0.22em] text-[10px] text-blue-500 dark:text-blue-400">Tim</span>
+                                    <strong class="text-blue-700 dark:text-blue-300">{{ $footerStats['tim'] }}</strong>
+                                </div>
+                                <div class="rounded-lg border border-emerald-200 dark:border-emerald-900 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30">
+                                    <span class="block uppercase tracking-[0.22em] text-[10px] text-emerald-500 dark:text-emerald-400">Kepaniteraan</span>
+                                    <strong class="text-emerald-700 dark:text-emerald-300">{{ $footerStats['pane'] }}</strong>
+                                </div>
+                            </div>
                         </div>
-
                     </div>
-                </div>
                 @endif
-
-                {{-- Footer info --}}
-                <div class="px-6 py-3 bg-neutral-50 dark:bg-neutral-800/30 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                        Sheet: <strong class="text-neutral-700 dark:text-neutral-300">{{ $sheet['sheetName'] }}</strong>
-                        &nbsp;·&nbsp; Total baris: <strong class="text-neutral-700 dark:text-neutral-300">{{ count($sheet['rows']) }}</strong>
-                    </p>
-                    <div class="flex gap-2 text-xs">
-                        @php
-                            $cntTim  = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 1));
-                            $cntPane = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 2));
-                        @endphp
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-medium">
-                            <span class="w-3.5 h-3.5 rounded-full bg-blue-200 dark:bg-blue-800 inline-flex items-center justify-center text-[9px] font-bold">1</span>
-                            Tim: {{ $cntTim }}
-                        </span>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-medium">
-                            <span class="w-3.5 h-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800 inline-flex items-center justify-center text-[9px] font-bold">2</span>
-                            Kepaniteraan: {{ $cntPane }}
-                        </span>
-                    </div>
-                </div>
 
             </div>
             @endforeach
