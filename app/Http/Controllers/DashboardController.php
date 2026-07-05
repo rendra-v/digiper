@@ -1788,6 +1788,77 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * DEBUG: Tampilkan struktur raw sheet honorarium untuk diagnosa
+     * Akses: /honorarium/debug
+     */
+    public function honorariumDebug()
+    {
+        ini_set('memory_limit', '1024M');
+        $filePath = Session::get('excel_file_path');
+        if (!$filePath || !file_exists($filePath)) {
+            return response()->json(['error' => 'Tidak ada file. Upload dulu.'], 404);
+        }
+
+        $reader      = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(false);
+        $spreadsheet = $reader->load($filePath);
+
+        $result = [];
+        foreach ($spreadsheet->getAllSheets() as $ws) {
+            $lower = strtolower($ws->getTitle());
+            if (!str_contains($lower, 'honor')) continue;
+
+            $highestRow    = $ws->getHighestRow();
+            $highestColIdx = Coordinate::columnIndexFromString($ws->getHighestColumn());
+
+            // Cari header row
+            $headerRow = null;
+            for ($r = 1; $r <= min($highestRow, 20); $r++) {
+                $hasNo = $hasNama = false;
+                for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
+                    $v = strtoupper(trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c).$r)->getFormattedValue()));
+                    if (in_array($v, ['NO','NO.','NOMOR'])) $hasNo = true;
+                    if (str_contains($v, 'NAMA')) $hasNama = true;
+                }
+                if ($hasNo && $hasNama) { $headerRow = $r; break; }
+            }
+
+            // Baca headers
+            $headers = [];
+            for ($c = 1; $c <= $highestColIdx; $c++) {
+                $v = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c).$headerRow)->getFormattedValue());
+                $headers[$c] = $v ?: Coordinate::stringFromColumnIndex($c);
+            }
+
+            // Baca 30 baris pertama data
+            $sampleRows = [];
+            for ($r = $headerRow + 1; $r <= min($highestRow, $headerRow + 50); $r++) {
+                $rowData = [];
+                $hasContent = false;
+                for ($c = 1; $c <= $highestColIdx; $c++) {
+                    $cell = $ws->getCell(Coordinate::stringFromColumnIndex($c).$r);
+                    try { $cell->getCalculatedValue(); } catch (\Throwable $e) {}
+                    $v = trim((string)$cell->getFormattedValue());
+                    $rowData['col_'.Coordinate::stringFromColumnIndex($c).'_'.$headers[$c]] = $v;
+                    if ($v !== '') $hasContent = true;
+                }
+                if ($hasContent) $sampleRows[] = $rowData;
+                if (count($sampleRows) >= 30) break;
+            }
+
+            $result[$ws->getTitle()] = [
+                'headerRow' => $headerRow,
+                'headers'   => $headers,
+                'totalCols' => $highestColIdx,
+                'sampleRows' => $sampleRows,
+            ];
+        }
+
+        $spreadsheet->disconnectWorksheets();
+        return response()->json($result, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
     public function honorarium()
     {
         try {
@@ -1807,16 +1878,26 @@ class DashboardController extends Controller
                 ]);
             }
 
-            // Cek cache
+            // Cek cache — invalidate otomatis jika data lama (tidak ada _kode_kuitansi)
             $cacheKey = $this->getCacheKey($filePath, 'honorarium');
             $cached = Session::get($cacheKey);
             if ($cached !== null) {
-                \Log::info('honorarium() - loaded from session cache');
+                // Validasi: pastikan data cache punya field _kode_kuitansi (fitur v2)
+                $firstSheet = $cached['sheets'][0] ?? null;
+                $firstRow   = $firstSheet['rows'][0] ?? null;
+                $hasKode    = $firstRow !== null && array_key_exists('_kode_kuitansi', $firstRow);
 
-                return view('honorarium', array_merge($cached, [
-                    'fileName' => $fileName,
-                    'error' => null,
-                ]));
+                if ($hasKode) {
+                    \Log::info('honorarium() - loaded from session cache (valid)');
+                    return view('honorarium', array_merge($cached, [
+                        'fileName' => $fileName,
+                        'error'    => null,
+                    ]));
+                }
+
+                // Cache lama: hapus dan parse ulang
+                \Log::info('honorarium() - cache invalidated (missing _kode_kuitansi), re-parsing');
+                Session::forget($cacheKey);
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
@@ -2028,37 +2109,71 @@ class DashboardController extends Controller
             $headers[$c] = $val !== '' ? $val : Coordinate::stringFromColumnIndex($c);
         }
 
-        // Baca data
-        $rows = [];
-        for ($r = $headerRow + 1; $r <= $highestRow; $r++) {
-            $rowData = [];
-            $hasData = false;
-            $firstVal = trim((string) $worksheet->getCell('A'.$r)->getFormattedValue());
+        // ── Tracking kolom yang memiliki konten di baris data ────────────────
+        $colHasContent = array_fill(1, $highestColIdx, false);
 
-            // Stop jika baris ini mengandung teks tanda tangan / footer
-            if (stripos($firstVal, 'Jakarta') !== false
-                || stripos($firstVal, 'Mengetahui') !== false
-                || stripos($firstVal, 'PANITERA') !== false
-            ) {
-                break;
+        // ── Baca semua baris: pisahkan data vs footer ────────────────────────
+        $rows       = [];
+        $footerRows = [];
+        $inFooter   = false;
+
+        // Keyword penanda awal section footer / tanda-tangan
+        $footerKeywords = [
+            'jakarta', 'mengetahui', 'panitera mahkamah', 'petugas pembuat',
+            'bendahara', 'kuasa pengelola', 'biaya proses',
+        ];
+
+        for ($r = $headerRow + 1; $r <= $highestRow; $r++) {
+            // Deteksi baris footer berdasarkan teks di kolom-kolom awal
+            if (!$inFooter) {
+                $rowTextLow = '';
+                for ($c = 1; $c <= min($highestColIdx, 12); $c++) {
+                    $ref        = Coordinate::stringFromColumnIndex($c).$r;
+                    $rowTextLow .= ' '.strtolower(trim((string) $worksheet->getCell($ref)->getFormattedValue()));
+                }
+                $rowTextLow = trim($rowTextLow);
+                foreach ($footerKeywords as $kw) {
+                    if (str_contains($rowTextLow, $kw)) {
+                        $inFooter = true;
+                        break;
+                    }
+                }
             }
+
+            // Baca isi seluruh kolom di baris ini
+            $rowData       = [];
+            $hasAnyContent = false;
 
             for ($c = 1; $c <= $highestColIdx; $c++) {
-                $ref = Coordinate::stringFromColumnIndex($c).$r;
-                $val = trim((string) $worksheet->getCell($ref)->getFormattedValue());
-                $key = $headers[$c] ?? Coordinate::stringFromColumnIndex($c);
+                $ref  = Coordinate::stringFromColumnIndex($c).$r;
+                $cell = $worksheet->getCell($ref);
+
+                // Gunakan calculated value (untuk formula) → fallback ke raw value
+                try {
+                    $cell->getCalculatedValue(); // memicu kalkulasi
+                } catch (\Throwable $e) {
+                    // abaikan error kalkulasi formula
+                }
+                $val = trim((string) $cell->getFormattedValue());
+
+                $key           = $headers[$c] ?? Coordinate::stringFromColumnIndex($c);
                 $rowData[$key] = $val;
+
                 if ($val !== '') {
-                    $hasData = true;
+                    $hasAnyContent = true;
+                    if (!$inFooter) {
+                        $colHasContent[$c] = true;
+                    }
                 }
             }
 
-            if ($hasData) {
-                // Skip baris total/sub-total yang tidak bernomor
-                $noVal = trim((string) ($rowData[$headers[1] ?? 'A'] ?? ''));
-                if ($noVal !== '' && ! is_numeric($noVal) && strtoupper($noVal) !== 'NO') {
-                    // Ini baris sub-total/jumlah, tetap tampilkan
-                }
+            if (!$hasAnyContent) {
+                continue; // skip baris benar-benar kosong
+            }
+
+            if ($inFooter) {
+                $footerRows[] = $rowData;
+            } else {
                 $rows[] = $rowData;
             }
         }
@@ -2067,12 +2182,189 @@ class DashboardController extends Controller
             return null;
         }
 
-        return [
-            'sheetName' => $sheetName,
-            'title' => implode("\n", array_slice($titleLines, 0, 5)),
-            'headers' => $headers,
-            'rows' => $rows,
+        // ── Hapus kolom yang sepenuhnya kosong di area data ─────────────────
+        // Kolom dipertahankan hanya jika ada minimal 1 sel berisi di baris data
+        $activeHeaders = [];
+        foreach ($headers as $c => $hName) {
+            if ($colHasContent[$c]) {
+                $activeHeaders[$c] = $hName;
+            }
+        }
+
+        // Filter setiap row agar hanya kolom aktif yang tersisa
+        $filteredRows = array_map(function ($row) use ($activeHeaders) {
+            $out = [];
+            foreach ($activeHeaders as $c => $hName) {
+                $out[$hName] = $row[$hName] ?? '';
+            }
+            return $out;
+        }, $rows);
+
+        // ── Auto-koding kode_kuitansi per baris ──────────────────────────────
+        // Kode 1 = Honor Tim     : Hakim Agung, Askor/Panmud, Asisten, Operator
+        // Kode 2 = Kepaniteraan  : semua jabatan lain
+        //
+        // Keyword yang termasuk Tim (kode 1) — case-insensitive partial match
+        $timKeywords = [
+            'hakim agung', 'hakim', 'askor', 'asisten koordinator',
+            'panitera muda', 'panmud', 'asisten', 'operator',
         ];
+
+        // ── Strategi 1: cari kolom berdasarkan NAMA header ───────────────────
+        $jabatanColName = null;
+        foreach ($activeHeaders as $hName) {
+            $up = strtoupper(trim($hName));
+            if (in_array($up, ['JABATAN', 'URAIAN', 'NAMA JABATAN', 'KETERANGAN', 'JABATAN/URAIAN'])) {
+                $jabatanColName = $hName;
+                break;
+            }
+            // Partial match: header mengandung kata 'jabat' atau 'urai'
+            if (str_contains(strtolower($up), 'jabat') || str_contains(strtolower($up), 'urai')) {
+                $jabatanColName = $hName;
+                break;
+            }
+        }
+
+        // ── Strategi 2: scan VALUES semua kolom teks ─────────────────────────
+        // Cari kolom yang VALUE-nya paling banyak mengandung keyword jabatan
+        if ($jabatanColName === null && !empty($filteredRows)) {
+            $colMatchScore = [];
+            foreach ($activeHeaders as $hName) {
+                $up = strtoupper(trim($hName));
+                // Skip kolom angka
+                if (in_array($up, ['BIAYA','JUMLAH','NETTO','PPH','PAJAK','TOTAL','NO','NO.'])
+                    || str_contains($up, 'BIAYA') || str_contains($up, 'PPH') || str_contains($up, 'NETTO')) {
+                    continue;
+                }
+                $score = 0;
+                foreach ($filteredRows as $r) {
+                    $v = strtolower(trim((string)($r[$hName] ?? '')));
+                    foreach ($timKeywords as $kw) {
+                        if (str_contains($v, $kw)) { $score++; break; }
+                    }
+                    // Juga skor untuk keyword kepaniteraan
+                    $kepanitKeywords = ['panitera pengganti','juru sita','staf','pelaksana','kasubag','kabag','sekretaris'];
+                    foreach ($kepanitKeywords as $kw) {
+                        if (str_contains($v, $kw)) { $score++; break; }
+                    }
+                }
+                $colMatchScore[$hName] = $score;
+            }
+            if (!empty($colMatchScore)) {
+                // Pilih kolom dengan skor tertinggi
+                arsort($colMatchScore);
+                $bestCol   = array_key_first($colMatchScore);
+                $bestScore = $colMatchScore[$bestCol];
+                if ($bestScore > 0) {
+                    $jabatanColName = $bestCol;
+                }
+            }
+        }
+
+        // ── Assign kode + sub-jabatan ke setiap baris ────────────────────────
+        // _kode_kuitansi : 1 = Tim, 2 = Kepaniteraan
+        // _jabatan_sub   : 'hakim' | 'panmud' | 'asisten' | 'operator' | ''
+        foreach ($filteredRows as &$row) {
+            $isTim  = false;
+            $subKey = '';    // sub-jabatan dalam Tim
+
+            // Ambil teks jabatan dari kolom yang terdeteksi, atau scan semua kolom
+            $jabVal = '';
+            if ($jabatanColName !== null) {
+                $jabVal = strtolower(trim((string) ($row[$jabatanColName] ?? '')));
+            } else {
+                // Fallback: gabungkan semua teks non-internal
+                $parts = [];
+                foreach ($row as $k => $v) {
+                    if (!str_starts_with((string)$k, '_')) {
+                        $parts[] = strtolower(trim((string)$v));
+                    }
+                }
+                $jabVal = implode(' ', $parts);
+            }
+
+            if ($jabVal !== '') {
+                // Deteksi sub-jabatan secara spesifik (urutan penting: cek paling spesifik dulu)
+                if (str_contains($jabVal, 'hakim agung') || str_contains($jabVal, 'hakim')) {
+                    $isTim  = true;
+                    $subKey = 'hakim';
+                } elseif (str_contains($jabVal, 'panmud')
+                    || str_contains($jabVal, 'panitera muda')
+                    || str_contains($jabVal, 'askor')
+                    || str_contains($jabVal, 'asisten koordinator')) {
+                    $isTim  = true;
+                    $subKey = 'panmud';
+                } elseif (str_contains($jabVal, 'operator')) {
+                    $isTim  = true;
+                    $subKey = 'operator';
+                } elseif (str_contains($jabVal, 'asisten')) {
+                    // Asisten (bukan koordinator — sudah dicek di atas)
+                    $isTim  = true;
+                    $subKey = 'asisten';
+                }
+            }
+
+            $row['_kode_kuitansi'] = $isTim ? 1 : 2;
+            $row['_jabatan_sub']   = $subKey;   // '' jika kepaniteraan
+        }
+        unset($row);
+
+        // ── Parse footer menjadi blok tanda-tangan ───────────────────────────
+        $footerBlocks = $this->parseFooterBlocks($footerRows, $headers, $highestColIdx);
+
+        return [
+            'sheetName'      => $sheetName,
+            'title'          => implode("\n", array_slice($titleLines, 0, 5)),
+            'headers'        => $activeHeaders,
+            'rows'           => $filteredRows,
+            'footerBlocks'   => $footerBlocks,
+            'jabatanColName' => $jabatanColName,
+        ];
+    }
+
+    /**
+     * Kelompokkan baris footer menjadi blok tanda-tangan berdasarkan posisi kolom.
+     * Output: array of [ 'position' => 'left'|'center'|'right', 'lines' => [...] ]
+     */
+    private function parseFooterBlocks(array $footerRows, array $headers, int $totalCols): array
+    {
+        if (empty($footerRows)) {
+            return [];
+        }
+
+        // Pembagi posisi: 1/3 pertama = kiri, 1/3 tengah = center, 1/3 akhir = kanan
+        $leftEnd   = (int) ceil($totalCols / 3);
+        $centerEnd = (int) ceil(2 * $totalCols / 3);
+
+        $buckets = ['left' => [], 'center' => [], 'right' => []];
+
+        foreach ($footerRows as $row) {
+            foreach ($headers as $c => $hName) {
+                $val = trim((string) ($row[$hName] ?? ''));
+                if ($val === '') {
+                    continue;
+                }
+                if ($c <= $leftEnd) {
+                    $buckets['left'][] = $val;
+                } elseif ($c <= $centerEnd) {
+                    $buckets['center'][] = $val;
+                } else {
+                    $buckets['right'][] = $val;
+                }
+            }
+        }
+
+        $result = [];
+        foreach (['left', 'center', 'right'] as $pos) {
+            if (!empty($buckets[$pos])) {
+                $result[] = [
+                    'position' => $pos,
+                    'lines'    => array_values(array_unique($buckets[$pos])),
+                ];
+            }
+        }
+
+        return $result;
     }
 
     public function rekapKeseluruhan3()

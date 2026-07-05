@@ -27,6 +27,7 @@ Route::get('/rekap-keseluruhan-3', [DashboardController::class, 'rekapKeseluruha
 Route::get('/rekap-keseluruhan-3/print', [DashboardController::class, 'rekapKeseluruhan3Print'])->name('rekap-keseluruhan-3.print');
 Route::get('/honorarium', [DashboardController::class, 'honorarium'])->name('honorarium');
 Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])->name('honorarium.print');
+Route::get('/honorarium/debug', [DashboardController::class, 'honorariumDebug'])->name('honorarium.debug');
 
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);

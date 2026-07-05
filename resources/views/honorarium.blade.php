@@ -39,16 +39,17 @@
     @if(!$error && count($sheets) > 0)
 
         {{-- ─── Card Utama ─── --}}
-        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
 
-            {{-- ── Toolbar: Tab Sheet + Dropdown Nav ── --}}
-            <div class="border-b border-neutral-200 dark:border-neutral-800 p-4">
+            {{-- ── Toolbar: Tab Sheet + Navigasi + Filter ── --}}
+            <div class="border-b border-neutral-200 dark:border-neutral-800 p-4 space-y-4">
+
+                {{-- Baris 1: Sheet selector + Nav + Print --}}
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
-                    {{-- Kiri: Tab sheet (jika > 1) + Dropdown navigasi --}}
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-end w-full lg:flex-1">
 
-                        {{-- Tab pilih sheet (hanya muncul kalau ada > 1 sheet) --}}
+                        {{-- Tab pilih sheet --}}
                         @if(count($sheets) > 1)
                         <div class="flex-1 min-w-0">
                             <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -56,7 +57,8 @@
                             </label>
                             <div class="relative">
                                 <select x-model.number="activeSheet"
-                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-3 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    @change="filterKuitansi = 0"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                                     @foreach($sheets as $idx => $sheet)
                                         <option value="{{ $idx }}">{{ $sheet['sheetName'] }}</option>
                                     @endforeach
@@ -69,12 +71,11 @@
                             </div>
                         </div>
 
-                        {{-- Divider vertikal --}}
                         <div class="hidden sm:block self-stretch w-px bg-neutral-200 dark:bg-neutral-700 mb-0.5"></div>
                         @endif
 
                         {{-- Dropdown: Lihat Halaman Lain --}}
-                        <div class="{{ count($sheets) > 1 ? 'sm:w-60' : 'flex-1 max-w-xs' }}">
+                        <div class="{{ count($sheets) > 1 ? 'sm:w-56' : 'flex-1 max-w-xs' }}">
                             <label for="nav-page-select-honor"
                                 class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                                 Lihat halaman lain
@@ -82,7 +83,7 @@
                             <div class="relative">
                                 <select id="nav-page-select-honor"
                                     onchange="if(this.value) window.location.href = this.value"
-                                    class="w-full appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-3 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                                    class="w-full appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-11 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
                                     <option value="" disabled selected>— Pilih halaman —</option>
                                     <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
                                     <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
@@ -99,9 +100,9 @@
 
                     </div>
 
-                    {{-- Kanan: Print PDF --}}
+                    {{-- Print PDF --}}
                     <a href="{{ route('honorarium.print') }}" target="_blank" rel="noopener"
-                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 flex-shrink-0">
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 flex-shrink-0">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
@@ -111,10 +112,154 @@
                     </a>
 
                 </div>
+
+                {{-- ─── Baris 2: Filter Kuitansi ─── --}}
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                        </svg>
+                        <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Filter Kuitansi:</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+
+                        {{-- Tombol: Semua --}}
+                        <button type="button"
+                            @click="filterKuitansi = 0"
+                            :class="filterKuitansi === 0
+                                ? 'bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 ring-2 ring-neutral-800 dark:ring-neutral-100'
+                                : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700'"
+                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            </svg>
+                            Semua Data
+                        </button>
+
+                        {{-- Tombol: Kuitansi Tim (Kode 1) --}}
+                        <button type="button"
+                            @click="filterKuitansi = 1"
+                            title="Hakim Agung · Panmud/Askor · Asisten · Operator"
+                            :class="filterKuitansi === 1
+                                ? 'bg-blue-600 text-white ring-2 ring-blue-600'
+                                : 'bg-white dark:bg-neutral-800 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30'"
+                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer">
+                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
+                                :class="filterKuitansi === 1 ? 'bg-white/30 text-white' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'">
+                                1
+                            </span>
+                            Kuitansi Tim
+                        </button>
+
+                        {{-- Tombol: Honor Kepaniteraan (Kode 2) --}}
+                        <button type="button"
+                            @click="filterKuitansi = 2"
+                            title="Panitera Pengganti · Juru Sita · dan jabatan kepaniteraan lainnya"
+                            :class="filterKuitansi === 2
+                                ? 'bg-emerald-600 text-white ring-2 ring-emerald-600'
+                                : 'bg-white dark:bg-neutral-800 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'"
+                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer">
+                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
+                                :class="filterKuitansi === 2 ? 'bg-white/30 text-white' : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'">
+                                2
+                            </span>
+                            Kuitansi Kepaniteraan
+                        </button>
+
+                        {{-- Divider --}}
+                        <span class="self-center w-px h-5 bg-neutral-300 dark:bg-neutral-600 mx-1"></span>
+
+                        {{-- Tombol: Operator --}}
+                        <button type="button"
+                            @click="filterKuitansi = 'operator'"
+                            title="Filter hanya Operator"
+                            :class="filterKuitansi === 'operator'
+                                ? 'bg-violet-600 text-white ring-2 ring-violet-600'
+                                : 'bg-white dark:bg-neutral-800 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-700 hover:bg-violet-50 dark:hover:bg-violet-950/30'"
+                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Operator
+                        </button>
+
+                        {{-- Tombol: Panmud --}}
+                        <button type="button"
+                            @click="filterKuitansi = 'panmud'"
+                            title="Filter hanya Panmud / Askor / Panitera Muda"
+                            :class="filterKuitansi === 'panmud'
+                                ? 'bg-orange-500 text-white ring-2 ring-orange-500'
+                                : 'bg-white dark:bg-neutral-800 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30'"
+                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Panmud
+                        </button>
+
+                    </div>
+
+                    {{-- Info jumlah baris aktif --}}
+                    @foreach($sheets as $idx => $sheet)
+                    @php
+                        $cT    = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 1));
+                        $cP    = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 2));
+                        $cA    = $cT + $cP;
+                        $cOpr  = count(array_filter($sheet['rows'], fn($r) => ($r['_jabatan_sub'] ?? '') === 'operator'));
+                        $cPanm = count(array_filter($sheet['rows'], fn($r) => ($r['_jabatan_sub'] ?? '') === 'panmud'));
+                    @endphp
+                    <div x-show="activeSheet === {{ $idx }}" x-cloak class="ml-auto">
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">
+                            <span x-show="filterKuitansi === 0">Semua: <strong class="text-neutral-700 dark:text-neutral-200">{{ $cA }}</strong> baris</span>
+                            <span x-show="filterKuitansi === 1" x-cloak>Tim: <strong class="text-blue-700 dark:text-blue-300">{{ $cT }}</strong> baris</span>
+                            <span x-show="filterKuitansi === 2" x-cloak>Kepaniteraan: <strong class="text-emerald-700 dark:text-emerald-300">{{ $cP }}</strong> baris</span>
+                            <span x-show="filterKuitansi === 'operator'" x-cloak>Operator: <strong class="text-violet-700 dark:text-violet-300">{{ $cOpr }}</strong> baris</span>
+                            <span x-show="filterKuitansi === 'panmud'" x-cloak>Panmud: <strong class="text-orange-700 dark:text-orange-300">{{ $cPanm }}</strong> baris</span>
+                        </span>
+                    </div>
+                    @endforeach
+
+                </div>
+
+                {{-- Legend kode --}}
+                <div class="flex flex-wrap gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <span class="text-xs text-neutral-400 dark:text-neutral-500 self-center">Kode:</span>
+                    {{-- Kode 1: Tim --}}
+                    <div class="flex items-start gap-1.5">
+                        <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/50 text-[10px] font-bold text-blue-700 dark:text-blue-300 mt-0.5 flex-shrink-0">1</span>
+                        <div class="text-xs text-blue-700 dark:text-blue-300">
+                            <span class="font-semibold">Tim</span>
+                            <span class="text-blue-500 dark:text-blue-400"> — </span>
+                            <span class="inline-flex flex-wrap gap-1">
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[10px] font-medium">Hakim Agung</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[10px] font-medium">Panmud / Askor</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[10px] font-medium">Asisten</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[10px] font-medium">Operator</span>
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Kode 2: Kepaniteraan --}}
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 flex-shrink-0">2</span>
+                        <span class="text-xs text-emerald-700 dark:text-emerald-300">
+                            <span class="font-semibold">Kepaniteraan</span>
+                            <span class="text-emerald-500 dark:text-emerald-400"> — semua jabatan selain Tim</span>
+                        </span>
+                    </div>
+                </div>
+
             </div>
 
             {{-- ── Konten per Sheet ── --}}
             @foreach($sheets as $idx => $sheet)
+            @php
+                // Hitung jumlah Tim/Kepaniteraan untuk counter di JS
+                $cntTimSheet  = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 1));
+                $cntPaneSheet = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 2));
+                $cntAllSheet  = $cntTimSheet + $cntPaneSheet;
+            @endphp
             <div x-show="activeSheet === {{ $idx }}" x-cloak>
 
                 {{-- Judul dari Excel --}}
@@ -133,56 +278,107 @@
                     @endif
                 </div>
 
-                {{-- Info row count --}}
-                <div class="px-6 py-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/30">
-                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        <span class="font-semibold text-neutral-700 dark:text-neutral-300">{{ count($sheet['rows']) }}</span> baris data
-                        &nbsp;·&nbsp; Sheet: <span class="font-semibold text-neutral-700 dark:text-neutral-300">{{ $sheet['sheetName'] }}</span>
-                    </p>
-                </div>
-
-                {{-- Tabel --}}
+                {{-- Tabel dengan Filter Reaktif --}}
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse">
-                        <thead class="bg-blue-600 text-white sticky top-0">
+                    <table class="min-w-full text-sm border-collapse" style="min-width: 700px;">
+                        <thead class="bg-blue-600 text-white sticky top-0 z-10 shadow-sm">
                             <tr>
+                                {{-- Kolom badge kode --}}
+                                <th class="px-2 py-3 text-center text-xs font-bold uppercase tracking-wide border-r border-blue-500/40 w-10 min-w-[48px]">
+                                    Kode
+                                </th>
                                 @foreach($sheet['headers'] as $colIdx => $headerName)
                                     @php
-                                        $upper = strtoupper(trim($headerName));
-                                        $isWide   = in_array($upper, ['NAMA', 'NAMA LENGKAP', 'JABATAN']);
-                                        $isNarrow = in_array($upper, ['NO', 'NO.', 'NOMOR']);
-                                        $isTtd    = str_contains($upper, 'TANDA') || str_contains($upper, 'TTD');
+                                        $upper       = strtoupper(trim($headerName));
+                                        $isWide      = in_array($upper, ['NAMA', 'NAMA LENGKAP', 'JABATAN', 'URAIAN']);
+                                        $isExtraWide = str_contains($upper, 'NAMA') && str_contains($upper, 'PERKARA');
+                                        $isNarrow    = in_array($upper, ['NO', 'NO.', 'NOMOR']);
+                                        $isTtd       = str_contains($upper, 'TANDA') || str_contains($upper, 'TTD');
+                                        $isNumHdr    = in_array($upper, ['BIAYA','JUMLAH BIAYA','PPH 15%','PPH 5%','NETTO','PPH','PAJAK','TOTAL'])
+                                                       || str_contains($upper, 'BIAYA')
+                                                       || str_contains($upper, 'NETTO')
+                                                       || str_contains($upper, 'PPH');
                                     @endphp
-                                    <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide border-r border-blue-500/50 last:border-r-0
-                                        {{ $isNarrow ? 'w-10' : ($isWide ? 'min-w-[160px]' : ($isTtd ? 'min-w-[100px]' : 'min-w-[90px]')) }}">
+                                    <th class="px-3 py-3 text-center text-xs font-bold uppercase tracking-wide border-r border-blue-500/40 last:border-r-0 whitespace-nowrap
+                                        {{ $isNarrow    ? 'w-10 min-w-[40px]'   : '' }}
+                                        {{ $isExtraWide ? 'min-w-[200px]'        : '' }}
+                                        {{ $isWide && !$isExtraWide ? 'min-w-[150px]' : '' }}
+                                        {{ $isTtd       ? 'min-w-[90px]'         : '' }}
+                                        {{ $isNumHdr    ? 'min-w-[130px]'        : '' }}
+                                        {{ !$isNarrow && !$isExtraWide && !$isWide && !$isTtd && !$isNumHdr ? 'min-w-[100px]' : '' }}">
                                         {{ $headerName }}
                                     </th>
                                 @endforeach
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
                             @php $rowNum = 0; @endphp
-                            @foreach($sheet['rows'] as $row)
+                            @foreach($sheet['rows'] as $rIdx => $row)
                                 @php
-                                    $firstKey = array_key_first($row);
-                                    $firstVal = trim((string)($row[$firstKey] ?? ''));
+                                    $kode      = $row['_kode_kuitansi'] ?? 0;
+                                    $jabSub    = $row['_jabatan_sub'] ?? '';
+                                    $firstKey  = collect(array_keys($row))->first(fn($k) => !str_starts_with($k, '_'));
+                                    $firstVal  = trim((string)($row[$firstKey] ?? ''));
                                     $isSummary = !is_numeric($firstVal) && $firstVal !== '' && strtoupper($firstVal) !== 'NO';
                                     if (!$isSummary) $rowNum++;
 
-                                    // Skip baris kosong: semua nilai adalah kosong atau nol
+                                    // Skip baris kosong (selain field internal _kode_kuitansi)
                                     $rowIsEmpty = collect($row)->every(function($v, $k) {
-                                        if ($k === '_rowspans' || $k === '_original_row') return true;
+                                        if (str_starts_with((string)$k, '_')) return true;
                                         $s = trim((string)($v ?? ''));
                                         return $s === '' || $s === '0' || (is_numeric($s) && (float)$s == 0);
                                     });
                                 @endphp
                                 @if($rowIsEmpty) @continue @endif
-                                <tr class="border-b border-neutral-100 dark:border-neutral-800 transition-colors duration-100
-                                    {{ $isSummary
-                                        ? 'bg-neutral-100 dark:bg-neutral-800/60'
-                                        : ($rowNum % 2 === 0
-                                            ? 'bg-neutral-50/60 hover:bg-blue-50/40 dark:bg-neutral-800/20 dark:hover:bg-blue-900/10'
-                                            : 'bg-white dark:bg-neutral-900 hover:bg-blue-50/40 dark:hover:bg-blue-900/10') }}">
+
+                                {{--
+                                    x-show: filter oleh kode (1/2) atau sub-jabatan ('operator'/'panmud').
+                                    data-kode: kode kuitansi (0=summary, 1=tim, 2=kepaniteraan)
+                                    data-sub : sub-jabatan ('hakim','panmud','asisten','operator','')
+                                --}}
+                                <tr
+                                    data-kode="{{ $isSummary ? 0 : $kode }}"
+                                    data-sub="{{ $isSummary ? '' : $jabSub }}"
+                                    x-show="
+                                        filterKuitansi === 0
+                                        || $el.dataset.kode == '0'
+                                        || (filterKuitansi === 1 && $el.dataset.kode == '1')
+                                        || (filterKuitansi === 2 && $el.dataset.kode == '2')
+                                        || (filterKuitansi === 'operator' && $el.dataset.sub === 'operator')
+                                        || (filterKuitansi === 'panmud'   && $el.dataset.sub === 'panmud')
+                                    "
+                                    x-transition:enter="transition-opacity duration-150"
+                                    x-transition:enter-start="opacity-0"
+                                    x-transition:enter-end="opacity-100"
+                                    class="transition-colors duration-100
+                                        {{ $isSummary
+                                            ? 'bg-blue-50/80 dark:bg-blue-950/20'
+                                            : ($rowNum % 2 === 0
+                                                ? 'bg-neutral-50/80 hover:bg-blue-50/50 dark:bg-neutral-800/20 dark:hover:bg-blue-900/10'
+                                                : 'bg-white dark:bg-neutral-900 hover:bg-blue-50/50 dark:hover:bg-blue-900/10') }}">
+
+                                    {{-- Badge kode kuitansi + sub-jabatan --}}
+                                    <td class="px-2 py-2.5 text-center align-middle border-r border-neutral-100 dark:border-neutral-800/50 w-14 min-w-[56px]">
+                                        @if(!$isSummary && $kode > 0)
+                                            @if($kode === 1)
+                                                {{-- Tim: tampilkan badge sub-jabatan --}}
+                                                @if($jabSub === 'hakim')
+                                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 whitespace-nowrap" title="Tim – Hakim">Hakim</span>
+                                                @elseif($jabSub === 'panmud')
+                                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 whitespace-nowrap" title="Tim – Panmud/Askor">Panmud</span>
+                                                @elseif($jabSub === 'operator')
+                                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 whitespace-nowrap" title="Tim – Operator">Operator</span>
+                                                @elseif($jabSub === 'asisten')
+                                                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 whitespace-nowrap" title="Tim – Asisten">Asisten</span>
+                                                @else
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-xs font-bold text-blue-700 dark:text-blue-300" title="Kuitansi Tim">1</span>
+                                                @endif
+                                            @else
+                                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-xs font-bold text-emerald-700 dark:text-emerald-300" title="Kuitansi Kepaniteraan">2</span>
+                                            @endif
+                                        @endif
+                                    </td>
+
                                     @foreach($sheet['headers'] as $colIdx => $headerName)
                                         @php
                                             $val   = $row[$headerName] ?? '';
@@ -192,27 +388,32 @@
                                                 || str_contains($upper, 'BIAYA')
                                                 || str_contains($upper, 'NETTO')
                                                 || str_contains($upper, 'PPH');
-                                            $isNoCol  = in_array($upper, ['NO','NO.','NOMOR']);
-                                            $isJmlCol = str_contains($upper,'PERKARA') && str_contains($upper,'JUMLAH');
-                                            $isTtdCol = str_contains($upper,'TANDA') || str_contains($upper,'TTD');
+                                            $isNoCol   = in_array($upper, ['NO','NO.','NOMOR']);
+                                            $isJmlCol  = str_contains($upper,'PERKARA') && str_contains($upper,'JUMLAH');
+                                            $isTtdCol  = str_contains($upper,'TANDA') || str_contains($upper,'TTD');
+                                            $isWideCol = in_array($upper, ['NAMA', 'NAMA LENGKAP', 'JABATAN', 'URAIAN'])
+                                                || (str_contains($upper, 'NAMA') && str_contains($upper, 'PERKARA'));
 
                                             // Format angka
                                             $displayVal = $val;
-                                            $stripped = str_replace(['.', ',', ' ', 'Rp'], '', $val);
+                                            $stripped   = str_replace(['.', ',', ' ', 'Rp'], '', $val);
                                             if ($isNumericCol && $stripped !== '' && is_numeric($stripped)) {
-                                                $num = (float) $stripped;
-                                                $displayVal = $num != 0 ? 'Rp ' . number_format($num, 0, ',', '.') : '-';
+                                                $num        = (float) $stripped;
+                                                $displayVal = $num != 0 ? 'Rp '.number_format($num, 0, ',', '.') : '-';
                                             } elseif ($val === '' || $val === null) {
                                                 $displayVal = $isTtdCol ? '' : '';
                                             }
                                         @endphp
-                                        <td class="px-4 py-2.5 text-xs border-r border-neutral-100 dark:border-neutral-800/60 last:border-r-0
-                                            {{ $isNoCol    ? 'text-center text-neutral-500 dark:text-neutral-400 w-10' : '' }}
-                                            {{ $isNumericCol ? 'text-right tabular-nums font-medium' : '' }}
-                                            {{ $isJmlCol   ? 'text-center font-semibold' : '' }}
-                                            {{ $isTtdCol   ? 'text-center' : '' }}
-                                            {{ !$isNoCol && !$isNumericCol && !$isJmlCol && !$isTtdCol ? 'text-left' : '' }}
-                                            {{ $isSummary  ? 'font-bold text-neutral-800 dark:text-neutral-200' : 'text-neutral-800 dark:text-neutral-200' }}">
+                                        <td class="px-3 py-2.5 text-xs border-r border-neutral-100 dark:border-neutral-800/50 last:border-r-0 align-middle
+                                            {{ $isNoCol      ? 'text-center text-neutral-400 dark:text-neutral-500 w-10 min-w-[40px]' : '' }}
+                                            {{ $isNumericCol ? 'text-right tabular-nums font-medium whitespace-nowrap min-w-[130px]'    : '' }}
+                                            {{ $isJmlCol     ? 'text-center font-semibold'                                              : '' }}
+                                            {{ $isTtdCol     ? 'text-center min-w-[90px]'                                               : '' }}
+                                            {{ $isWideCol    ? 'text-left min-w-[150px] leading-snug'                                   : '' }}
+                                            {{ !$isNoCol && !$isNumericCol && !$isJmlCol && !$isTtdCol && !$isWideCol ? 'text-left'     : '' }}
+                                            {{ $isSummary
+                                                ? 'font-semibold text-blue-800 dark:text-blue-200'
+                                                : 'text-neutral-800 dark:text-neutral-200' }}">
                                             {{ $displayVal }}
                                         </td>
                                     @endforeach
@@ -222,11 +423,90 @@
                     </table>
                 </div>
 
+                {{-- ── Bagian Mengetahui / Tanda Tangan ── --}}
+                @if(!empty($sheet['footerBlocks']))
+                <div class="border-t-2 border-neutral-200 dark:border-neutral-700 px-6 py-6 bg-neutral-50/60 dark:bg-neutral-800/20">
+                    <p class="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-4">Tanda Tangan</p>
+                    <div class="grid grid-cols-3 gap-8 text-xs text-neutral-700 dark:text-neutral-300">
+
+                        @php
+                            $blockMap = [];
+                            foreach ($sheet['footerBlocks'] as $blk) {
+                                $blockMap[$blk['position']] = $blk['lines'];
+                            }
+                        @endphp
+
+                        {{-- Kiri --}}
+                        <div class="flex flex-col gap-1.5">
+                            @if(!empty($blockMap['left']))
+                                @foreach($blockMap['left'] as $line)
+                                    @php
+                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
+                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                    @endphp
+                                    <p class="{{ $isDate ? 'text-neutral-400 dark:text-neutral-500' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">
+                                        {{ $line }}
+                                    </p>
+                                @endforeach
+                            @endif
+                        </div>
+
+                        {{-- Tengah --}}
+                        <div class="flex flex-col gap-1.5 items-center text-center">
+                            @if(!empty($blockMap['center']))
+                                @foreach($blockMap['center'] as $line)
+                                    @php
+                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                    @endphp
+                                    <p class="{{ $isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '') }}">
+                                        {{ $line }}
+                                    </p>
+                                @endforeach
+                            @endif
+                        </div>
+
+                        {{-- Kanan --}}
+                        <div class="flex flex-col gap-1.5 items-end text-right">
+                            @if(!empty($blockMap['right']))
+                                @foreach($blockMap['right'] as $line)
+                                    @php
+                                        $isDate  = preg_match('/\d{1,2}\s+\w+\s+\d{4}/', $line);
+                                        $isTitle = strtoupper($line) === $line && strlen(trim($line)) > 3;
+                                        $isName  = preg_match('/,\s*(S\.H|M\.H|S\.E|M\.M|S\.Ag|M\.Ag)/i', $line);
+                                    @endphp
+                                    <p class="{{ $isDate ? 'text-neutral-400 dark:text-neutral-500' : ($isTitle ? 'font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200' : ($isName ? 'font-semibold underline underline-offset-2 decoration-neutral-400' : '')) }}">
+                                        {{ $line }}
+                                    </p>
+                                @endforeach
+                            @endif
+                        </div>
+
+                    </div>
+                </div>
+                @endif
+
                 {{-- Footer info --}}
-                <div class="px-6 py-3 bg-neutral-50 dark:bg-neutral-800/30 border-t border-neutral-200 dark:border-neutral-800">
+                <div class="px-6 py-3 bg-neutral-50 dark:bg-neutral-800/30 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
                     <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                        Menampilkan <strong class="text-neutral-700 dark:text-neutral-300">{{ count($sheet['rows']) }}</strong> baris dari sheet <strong class="text-neutral-700 dark:text-neutral-300">{{ $sheet['sheetName'] }}</strong>
+                        Sheet: <strong class="text-neutral-700 dark:text-neutral-300">{{ $sheet['sheetName'] }}</strong>
+                        &nbsp;·&nbsp; Total baris: <strong class="text-neutral-700 dark:text-neutral-300">{{ count($sheet['rows']) }}</strong>
                     </p>
+                    <div class="flex gap-2 text-xs">
+                        @php
+                            $cntTim  = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 1));
+                            $cntPane = count(array_filter($sheet['rows'], fn($r) => ($r['_kode_kuitansi'] ?? 0) === 2));
+                        @endphp
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-medium">
+                            <span class="w-3.5 h-3.5 rounded-full bg-blue-200 dark:bg-blue-800 inline-flex items-center justify-center text-[9px] font-bold">1</span>
+                            Tim: {{ $cntTim }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-medium">
+                            <span class="w-3.5 h-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800 inline-flex items-center justify-center text-[9px] font-bold">2</span>
+                            Kepaniteraan: {{ $cntPane }}
+                        </span>
+                    </div>
                 </div>
 
             </div>
@@ -252,10 +532,11 @@
 </div>
 
 <script>
-    function honorariumApp() {
-        return {
-            activeSheet: {{ $activeSheet ?? 0 }},
-        }
-    }
+function honorariumApp() {
+    return {
+        activeSheet:    {{ $activeSheet ?? 0 }},
+        filterKuitansi: 0,  // 0 = Semua, 1 = Tim, 2 = Kepaniteraan
+    };
+}
 </script>
 @endsection
