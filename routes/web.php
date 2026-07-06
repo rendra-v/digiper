@@ -30,6 +30,7 @@ Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])
 Route::get('/honorarium/debug', [DashboardController::class, 'honorariumDebug'])->name('honorarium.debug');
 
 
+
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);
 Route::get('perkaras-recap', [PerkaraRecapController::class, 'index'])->name('perkaras.recap');

@@ -1896,119 +1896,52 @@ class DashboardController extends Controller
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
-            if (! $filePath || ! file_exists($filePath)) {
+            if (!$filePath || !file_exists($filePath)) {
                 return view('honorarium', [
                     'fileName' => null,
-                    'sheets' => [],
-                    'activeSheet' => null,
-                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'sheets'   => [],
+                    'error'    => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
-            // Cek cache — invalidate otomatis jika data lama (tidak ada _kode_kuitansi)
-            $cacheKey = $this->getCacheKey($filePath, 'honorarium');
-            $cached = Session::get($cacheKey);
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
+            $cached   = Session::get($cacheKey);
             if ($cached !== null) {
-                // Validasi: pastikan data cache punya field _kode_kuitansi (fitur v2)
-                $firstSheet = $cached['sheets'][0] ?? null;
-                $firstRow = $firstSheet['rows'][0] ?? null;
-                $hasKode = $firstRow !== null && array_key_exists('_kode_kuitansi', $firstRow);
-
-                if ($hasKode) {
-                    \Log::info('honorarium() - loaded from session cache (valid)');
-
-                    return view('honorarium', array_merge($cached, [
-                        'fileName' => $fileName,
-                        'error' => null,
-                    ]));
-                }
-
-                // Cache lama: hapus dan parse ulang
-                \Log::info('honorarium() - cache invalidated (missing _kode_kuitansi), re-parsing');
-                Session::forget($cacheKey);
+                return view('honorarium', array_merge($cached, [
+                    'fileName' => $fileName,
+                    'error'    => null,
+                ]));
             }
 
             $reader = IOFactory::createReaderForFile($filePath);
             $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
 
-            $allSheetNames = $spreadsheet->getSheetNames();
-
-            // Sheet yang DIKETAHUI bukan honorarium dan harus dieksklusi
-            $excludedSheets = [
-                'Data Print',
-                'cek', 'Cek',
-                'Rekap Keseluruhan', 'REKAP GABUNGAN', 'rekap keseluruhan',
-                'Periode Laporan',
-                'Sheet1', 'Sheet2', 'Sheet3', 'Sheet4',
-                'list baru', 'List Baru',
-                'Print_Amplop', 'print_amplop',
-                'PEMBAGIAN PER-ANMUD', 'Pembagian Per-Anmud',
-                'Rekap Khusus PDT',
-            ];
-
-            // Cari sheet yang mengandung kata honorarium/honor
-            $honorSheets = array_values(array_filter($allSheetNames, function ($name) {
-                $lower = strtolower($name);
-                return str_contains($lower, 'honor') || str_contains($lower, 'honorarium');
-            }));
-
-            // Jika tidak ada, ambil sheet berdasarkan nama yang dikenal
-            if (empty($honorSheets)) {
-                // Known honorarium sheet name patterns
-                $knownHonorNames = ['op - staf', 'op-staf', 'opstaf', 'tim', 'kepaniteraan',
-                    'rekap-kep', 'rekap-panmud', 'rekap kep', 'rekap panmud',
-                    'kma', 'panitera', 'all panmud', 'allpanmud', 'rekap kma',
-                    'pemilah', 'rekap pemilah', 'data print copy'];
-
-                $honorSheets = array_values(array_filter($allSheetNames, function ($n) use ($excludedSheets, $knownHonorNames) {
-                    if (in_array($n, $excludedSheets)) {
-                        return false;
-                    }
-                    $lower = strtolower(trim($n));
-                    // Eksklusi pattern: rekap-xxx (kecuali yg sudah ada di knownHonorNames)
-                    foreach ($knownHonorNames as $known) {
-                        if (str_contains($lower, $known)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }));
-
-                // Jika masih kosong, fallback ke semua kecuali excluded
-                if (empty($honorSheets)) {
-                    $honorSheets = array_values(array_filter($allSheetNames, fn ($n) => ! in_array($n, $excludedSheets)));
-                }
-            }
+            // Sheet yang berisi dokumen honorarium per kamar
+            $targetSheets = ['Kepaniteraan', 'TIM', 'OP - STAF'];
 
             $sheets = [];
-            foreach ($honorSheets as $sheetName) {
+            foreach ($targetSheets as $sheetName) {
                 $ws = $spreadsheet->getSheetByName($sheetName);
-                if (! $ws) {
-                    continue;
-                }
+                if (!$ws) continue;
 
-                $parsedTables = $this->parseHonorariumSheet($ws, $sheetName);
-                if (!empty($parsedTables)) {
-                    foreach ($parsedTables as $tblIdx => $parsedTable) {
-                        if (count($parsedTables) > 1) {
-                            $parsedTable['sheetName'] = $sheetName . ' (Bagian ' . ($tblIdx + 1) . ')';
-                        }
-                        $sheets[] = $parsedTable;
-                    }
+                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                if (!empty($blocks)) {
+                    $sheets[] = [
+                        'sheetName' => $sheetName,
+                        'blocks'    => $blocks,
+                    ];
                 }
             }
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
-            // Jika tidak ada sheet honorarium yang valid, tampilkan pesan
             if (empty($sheets)) {
                 return view('honorarium', [
                     'fileName' => $fileName,
-                    'sheets' => [],
-                    'activeSheet' => null,
-                    'error' => 'Sheet honorarium tidak ditemukan dalam file. Pastikan file memiliki sheet dengan nama mengandung kata "honor".',
+                    'sheets'   => [],
+                    'error'    => 'Tidak ada data honorarium kamar ditemukan.',
                 ]);
             }
 
@@ -2016,18 +1949,15 @@ class DashboardController extends Controller
 
             return view('honorarium', [
                 'fileName' => $fileName,
-                'sheets' => $sheets,
-                'activeSheet' => 0,
-                'error' => null,
+                'sheets'   => $sheets,
+                'error'    => null,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorarium', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
-
             return view('honorarium', [
                 'fileName' => Session::get('excel_file_name'),
-                'sheets' => [],
-                'activeSheet' => null,
-                'error' => 'Error: '.$e->getMessage(),
+                'sheets'   => [],
+                'error'    => 'Error: ' . $e->getMessage(),
             ]);
         }
     }
@@ -2973,6 +2903,167 @@ class DashboardController extends Controller
             'lastColIdx' => $lastColIdx,
             'signatureLines' => $signatureLines,
         ];
+    }
+
+    /**
+     * Honorarium Kamar - tampilkan semua dokumen honorarium per jenis perkara
+     * dari sheet Kepaniteraan, TIM, dan OP - STAF.
+     * Setiap blok = satu dokumen (judul + baris data + total + footer).
+     */
+
+
+    /**
+     * Parse satu sheet (Kepaniteraan / TIM / OP-STAF) dan ekstrak semua blok honorarium.
+     * Setiap blok punya: title1, title2, title3 (judul 3 baris), headers, rows, totalRow, footerInfo.
+     */
+    private function parseHonorariumKamarSheet($ws, string $sheetName): array
+    {
+        $highestRow = $ws->getHighestRow();
+        $blocks     = [];
+
+        // Footer keywords – baris ini dan setelahnya adalah footer (tanda tangan)
+        $footerKeywords = ['jakarta', 'mengetahui', 'petugas pembuat', 'bendahara', 'kuasa pengelola'];
+
+        for ($r = 1; $r <= $highestRow; $r++) {
+            $valA = strtolower(trim((string)$ws->getCell('A' . $r)->getFormattedValue()));
+            if (strpos($valA, 'honorarium biaya penyelesaian') === false) {
+                continue;
+            }
+
+            // Ambil judul 3 baris
+            $title1 = trim((string)$ws->getCell('A' . $r)->getFormattedValue());
+            $title2 = trim((string)$ws->getCell('A' . ($r + 1))->getFormattedValue());
+            $title3 = trim((string)$ws->getCell('A' . ($r + 2))->getFormattedValue());
+
+            // Cari header row: baris dengan "NO" di kolom A dan "NAMA" di kolom B
+            $headerRow = null;
+            for ($hr = $r + 1; $hr <= min($r + 8, $highestRow); $hr++) {
+                $hA = strtoupper(trim((string)$ws->getCell('A' . $hr)->getFormattedValue()));
+                $hB = strtoupper(trim((string)$ws->getCell('B' . $hr)->getFormattedValue()));
+                if (($hA === 'NO' || $hA === 'NO.') && strpos($hB, 'NAMA') === 0) {
+                    $headerRow = $hr;
+                    break;
+                }
+            }
+            if ($headerRow === null) continue;
+
+            // Baca kolom header
+            $colHeaders = [];
+            for ($c = 1; $c <= 15; $c++) {
+                $hVal = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $headerRow)->getFormattedValue());
+                if ($hVal === '' && $headerRow > 1) {
+                    // Coba ambil dari baris sebelumnya (merged header)
+                    $hVal = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . ($headerRow - 1))->getFormattedValue());
+                }
+                $colHeaders[$c] = $hVal !== '' ? $hVal : null;
+            }
+            // Trim kolom kosong di akhir
+            while (!empty($colHeaders) && end($colHeaders) === null) {
+                array_pop($colHeaders);
+            }
+            $numCols = count($colHeaders);
+
+            // Baca baris data sampai footer atau blok berikutnya
+            $dataRows   = [];
+            $totalRow   = null;
+            $footerInfo = ['date' => '', 'left' => '', 'center' => '', 'right' => ''];
+            $inFooter   = false;
+
+            for ($dr = $headerRow + 1; $dr <= $highestRow; $dr++) {
+                // Deteksi batas blok berikutnya
+                $drValA = strtolower(trim((string)$ws->getCell('A' . $dr)->getFormattedValue()));
+                if (strpos($drValA, 'honorarium biaya penyelesaian') !== false) {
+                    break; // Mulai blok baru
+                }
+
+                // Deteksi footer
+                if (!$inFooter) {
+                    $rowTextLow = '';
+                    for ($c = 1; $c <= min($numCols, 12); $c++) {
+                        $rowTextLow .= ' ' . strtolower(trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $dr)->getFormattedValue()));
+                    }
+                    foreach ($footerKeywords as $kw) {
+                        if (strpos($rowTextLow, $kw) !== false) {
+                            $inFooter = true;
+                            break;
+                        }
+                    }
+                }
+
+                if ($inFooter) {
+                    // Ambil info footer (tanggal, nama penanda tangan)
+                    for ($c = 1; $c <= $numCols; $c++) {
+                        $fv = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $dr)->getFormattedValue());
+                        if ($fv === '') continue;
+                        $fvLow = strtolower($fv);
+                        if (strpos($fvLow, 'jakarta') !== false) {
+                            $footerInfo['date'] = $fv;
+                        } elseif (strpos($fvLow, 'mengetahui') !== false || strpos($fvLow, 'kuasa pengelola') !== false) {
+                            $footerInfo['center'] = ($footerInfo['center'] ? $footerInfo['center'] . "\n" : '') . $fv;
+                        } elseif (strpos($fvLow, 'petugas pembuat') !== false || strpos($fvLow, 'biaya proses') !== false) {
+                            $footerInfo['left'] = ($footerInfo['left'] ? $footerInfo['left'] . "\n" : '') . $fv;
+                        } elseif (strpos($fvLow, 'bendahara') !== false) {
+                            $footerInfo['right'] = ($footerInfo['right'] ? $footerInfo['right'] . "\n" : '') . $fv;
+                        }
+                        // Nama penanda tangan (huruf besar semua, bukan keyword)
+                        if (preg_match('/^[A-Z\s\.\,]+$/', $fv) && strlen($fv) > 5 && !preg_match('/^[A-Z]+\s[A-Z]+\s[A-Z]+\s[A-Z]+$/', $fv)) {
+                            if ($c <= 3) {
+                                $footerInfo['left_name'] = $fv;
+                            } elseif ($c >= $numCols - 2) {
+                                $footerInfo['right_name'] = $fv;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Baca row data
+                $rowData    = [];
+                $rowHasData = false;
+                for ($c = 1; $c <= $numCols; $c++) {
+                    $cellRef = Coordinate::stringFromColumnIndex($c) . $dr;
+                    $cell    = $ws->getCell($cellRef);
+                    try { $cell->getCalculatedValue(); } catch (\Throwable $e) {}
+                    $val = trim((string)$cell->getFormattedValue());
+                    $rowData[$c] = $val;
+                    if ($val !== '') $rowHasData = true;
+                }
+
+                if (!$rowHasData) continue;
+
+                // Deteksi baris TOTAL
+                $isTotal = false;
+                foreach ($rowData as $v) {
+                    $up = strtoupper(trim($v));
+                    if ($up === 'TOTAL' || $up === 'JUMLAH' || strpos($up, 'TOTAL') === 0) {
+                        $isTotal = true;
+                        break;
+                    }
+                }
+
+                if ($isTotal) {
+                    $totalRow = $rowData;
+                } else {
+                    $dataRows[] = $rowData;
+                }
+            }
+
+            // Hanya simpan blok yang punya data baris
+            if (!empty($dataRows)) {
+                $blocks[] = [
+                    'title1'     => $title1,
+                    'title2'     => $title2,
+                    'title3'     => $title3,
+                    'headers'    => $colHeaders,
+                    'rows'       => $dataRows,
+                    'totalRow'   => $totalRow,
+                    'footerInfo' => $footerInfo,
+                    'numCols'    => $numCols,
+                ];
+            }
+        }
+
+        return $blocks;
     }
 
     public function deleteFile($id)
