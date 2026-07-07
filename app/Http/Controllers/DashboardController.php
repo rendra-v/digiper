@@ -747,6 +747,16 @@ class DashboardController extends Controller
         }
     }
 
+    public function sheetCekPrint()
+    {
+        // Reuse sheetCek() — grab the view data and redirect to print view
+        $response = $this->sheetCek();
+        $viewData = $response->getData();
+
+        return view('sheet-cek-print', (array) $viewData);
+    }
+
+
     public function printRekapKeseluruhan()
     {
         try {
@@ -1962,87 +1972,63 @@ class DashboardController extends Controller
         }
     }
 
-    public function honorariumPrint()
+    public function honorariumPrint(Request $request)
     {
+        // Reuse the same cache + data as honorarium() to avoid re-parsing the Excel file.
+        $filePath = Session::get('excel_file_path');
+        $fileName = Session::get('excel_file_name');
+
+        // Filter params passed by the print button from Alpine state
+        $sheetIdx = $request->query('sheet');   // integer index or null
+        $blockIdx = $request->query('block');   // integer index or 'all' or null
+
+        if (!$filePath || !file_exists($filePath)) {
+            return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.']);
+        }
+
+        // Same cache key as honorarium()
+        $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
+        $cached   = Session::get($cacheKey);
+
+        // Helper: filter full sheets array down to user's selection
+        $applyFilter = function (array $sheets) use ($sheetIdx, $blockIdx) {
+            // Filter by sheet tab
+            if ($sheetIdx !== null && isset($sheets[(int) $sheetIdx])) {
+                $sheets = [$sheets[(int) $sheetIdx]];
+            }
+            // Filter by block within that sheet
+            if ($blockIdx !== null && $blockIdx !== 'all') {
+                foreach ($sheets as &$sheet) {
+                    if (isset($sheet['blocks'][(int) $blockIdx])) {
+                        $sheet['blocks'] = [$sheet['blocks'][(int) $blockIdx]];
+                    }
+                }
+            }
+            return $sheets;
+        };
+
+        if ($cached !== null) {
+            $sheets = $applyFilter($cached['sheets']);
+            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null]);
+        }
+
+        // Cache miss: load & parse (same logic as honorarium())
         try {
             ini_set('memory_limit', '1024M');
             ini_set('max_execution_time', '300');
             set_time_limit(300);
 
-            $filePath = Session::get('excel_file_path');
-            $fileName = Session::get('excel_file_name');
-
-            if (! $filePath || ! file_exists($filePath)) {
-                return view('honorarium-print', [
-                    'fileName' => null,
-                    'sheets' => [],
-                    'error' => 'File tidak ditemukan.',
-                ]);
-            }
-
-            $cacheKey = $this->getCacheKey($filePath, 'honorarium');
-            $cached = Session::get($cacheKey);
-            if ($cached !== null) {
-                return view('honorarium-print', array_merge($cached, [
-                    'fileName' => $fileName,
-                    'error' => null,
-                ]));
-            }
-
-            // Reuse logic from honorarium()
             $reader = IOFactory::createReaderForFile($filePath);
             $reader->setReadDataOnly(false);
             $spreadsheet = $reader->load($filePath);
-            $allSheetNames = $spreadsheet->getSheetNames();
-
-            $excludedSheets = [
-                'Data Print',
-                'cek', 'Cek',
-                'Rekap Keseluruhan', 'REKAP GABUNGAN', 'rekap keseluruhan',
-                'Periode Laporan',
-                'Sheet1', 'Sheet2', 'Sheet3', 'Sheet4',
-                'list baru', 'List Baru',
-                'Print_Amplop', 'print_amplop',
-                'PEMBAGIAN PER-ANMUD', 'Pembagian Per-Anmud',
-                'Rekap Khusus PDT',
-            ];
-
-            $honorSheets = array_values(array_filter($allSheetNames, function ($name) {
-                $lower = strtolower($name);
-                return str_contains($lower, 'honor') || str_contains($lower, 'honorarium');
-            }));
-            if (empty($honorSheets)) {
-                $knownHonorNames = ['op - staf', 'op-staf', 'opstaf', 'tim', 'kepaniteraan',
-                    'rekap-kep', 'rekap-panmud', 'rekap kep', 'rekap panmud',
-                    'kma', 'panitera', 'all panmud', 'allpanmud', 'rekap kma',
-                    'pemilah', 'rekap pemilah', 'data print copy'];
-                $honorSheets = array_values(array_filter($allSheetNames, function ($n) use ($excludedSheets, $knownHonorNames) {
-                    if (in_array($n, $excludedSheets)) return false;
-                    $lower = strtolower(trim($n));
-                    foreach ($knownHonorNames as $known) {
-                        if (str_contains($lower, $known)) return true;
-                    }
-                    return false;
-                }));
-                if (empty($honorSheets)) {
-                    $honorSheets = array_values(array_filter($allSheetNames, fn ($n) => ! in_array($n, $excludedSheets)));
-                }
-            }
 
             $sheets = [];
-            foreach ($honorSheets as $sheetName) {
+            foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
                 $ws = $spreadsheet->getSheetByName($sheetName);
-                if (! $ws) {
-                    continue;
-                }
-                $parsedTables = $this->parseHonorariumSheet($ws, $sheetName);
-                if (!empty($parsedTables)) {
-                    foreach ($parsedTables as $tblIdx => $parsedTable) {
-                        if (count($parsedTables) > 1) {
-                            $parsedTable['sheetName'] = $sheetName . ' (Bagian ' . ($tblIdx + 1) . ')';
-                        }
-                        $sheets[] = $parsedTable;
-                    }
+                if (!$ws) continue;
+                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                if (!empty($blocks)) {
+                    $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
                 }
             }
 
@@ -2051,21 +2037,14 @@ class DashboardController extends Controller
 
             Session::put($cacheKey, compact('sheets'));
 
-            return view('honorarium-print', [
-                'fileName' => $fileName,
-                'sheets' => $sheets,
-                'error' => null,
-            ]);
+            $sheets = $applyFilter($sheets);
+            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorariumPrint', ['error' => $e->getMessage()]);
-
-            return view('honorarium-print', [
-                'fileName' => Session::get('excel_file_name'),
-                'sheets' => [],
-                'error' => 'Error: '.$e->getMessage(),
-            ]);
+            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: ' . $e->getMessage()]);
         }
     }
+
 
     /**
      * Parse sebuah sheet honorarium.

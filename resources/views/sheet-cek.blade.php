@@ -37,6 +37,16 @@
                 </div>
             </div>
 
+            @if(isset($data) && count($data) > 0)
+            <a href="{{ route('sheet-cek.print') }}" target="_blank" class="px-4 py-2.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                Cetak PDF
+            </a>
+            @endif
             <a href="{{ route('dashboard') }}" class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                 Dashboard
             </a>
