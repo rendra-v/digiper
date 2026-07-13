@@ -3044,22 +3044,64 @@ class DashboardController extends Controller
                         }
                     }
 
+                    \Log::warning('[OP-STAF NEW CODE] colOperator=' . json_encode($colOperator) . ' colAsisten=' . json_encode($colAsisten) . ' headers=' . json_encode($colHeaders));
+
                     // Hapus kolom Asisten dari headers
                     if ($colAsisten !== null) {
                         unset($colHeaders[$colAsisten]);
                         if ($totalRow !== null) unset($totalRow[$colAsisten]);
                     }
 
-                    // Transformasi per row
+                    // Hapus kolom Asisten dari rows
                     foreach ($dataRows as &$row) {
-                        // Hapus kolom Asisten
                         if ($colAsisten !== null) unset($row[$colAsisten]);
-                        // Ganti isi NAMA OPERATOR → "OPERATOR"
-                        if ($colOperator !== null && isset($row[$colOperator]) && $row[$colOperator] !== '') {
-                            $row[$colOperator] = 'OPERATOR';
-                        }
                     }
                     unset($row);
+
+                    // Sisipkan kolom JABATAN setelah NAMA OPERATOR, kosongkan isi NAMA OPERATOR
+                    if ($colOperator !== null) {
+                        // Bangun peta indeks lama → baru (sisipkan slot jabatan setelah colOperator)
+                        $keyMap     = [];
+                        $jabatanIdx = null;
+                        $newIdx     = 1;
+                        foreach ($colHeaders as $ci => $hName) {
+                            $keyMap[$ci] = $newIdx++;
+                            if ($ci === $colOperator) {
+                                $jabatanIdx = $newIdx++;
+                            }
+                        }
+
+                        // Rebuild headers
+                        $newHeaders = [];
+                        foreach ($keyMap as $oldCi => $newCi) {
+                            $newHeaders[$newCi] = $colHeaders[$oldCi];
+                        }
+                        $newHeaders[$jabatanIdx] = 'JABATAN';
+                        ksort($newHeaders);
+
+                        // Rebuild rows: kosongkan NAMA OPERATOR, isi JABATAN = 'OPERATOR'
+                        foreach ($dataRows as &$row) {
+                            $newRow = [];
+                            foreach ($keyMap as $oldCi => $newCi) {
+                                $newRow[$newCi] = ($oldCi === $colOperator) ? '' : ($row[$oldCi] ?? '');
+                            }
+                            $newRow[$jabatanIdx] = 'OPERATOR';
+                            $row = $newRow;
+                        }
+                        unset($row);
+
+                        // Rebuild totalRow
+                        if ($totalRow !== null) {
+                            $newTotal = [];
+                            foreach ($keyMap as $oldCi => $newCi) {
+                                $newTotal[$newCi] = ($oldCi === $colOperator) ? '' : ($totalRow[$oldCi] ?? '');
+                            }
+                            $newTotal[$jabatanIdx] = '';
+                            $totalRow = $newTotal;
+                        }
+
+                        $colHeaders = $newHeaders;
+                    }
 
                     $numCols = count($colHeaders);
                 }
