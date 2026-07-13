@@ -103,7 +103,7 @@
             border-radius: 3px;
             padding: 14mm 16mm 12mm;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* ── Kop Surat (header) ───────────────────────────────────────── */
@@ -136,33 +136,7 @@
             color: var(--ink-light);
         }
 
-        /* ── Judul dokumen ────────────────────────────────────────────── */
-        .doc-title-wrap {
-            background: linear-gradient(90deg, var(--bg-head) 0%, #2e5999 100%);
-            color: #fff;
-            text-align: center;
-            padding: 9px 12px;
-            margin: 0 0 12px;   /* sejajar dengan tabel — tanpa negative margin */
-            border-radius: 2px;
-        }
-        .doc-title-wrap .t1 {
-            font-size: 9.5pt;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-        }
-        .doc-title-wrap .t2 {
-            font-size: 8.5pt;
-            font-weight: 600;
-            color: rgba(255,255,255,.85);
-            margin-top: 2px;
-        }
-        .doc-title-wrap .t3 {
-            font-size: 8pt;
-            color: var(--gold);
-            margin-top: 3px;
-            font-weight: 600;
-        }
+
 
         /* ── Tabel ────────────────────────────────────────────────────── */
         table {
@@ -263,7 +237,7 @@
            PRINT STYLES — override everything for clean paper output
         ══════════════════════════════════════════════════════════════ */
         @page {
-            size: A4 landscape;
+            size: 297mm 210mm;  /* A4 landscape: lebar 297mm × tinggi 210mm */
             margin: 10mm 12mm 10mm;
         }
         @media print {
@@ -363,16 +337,7 @@
 
 
 
-                {{-- Judul Dokumen --}}
-                <div class="doc-title-wrap">
-                    <div class="t1">{{ $block['title1'] ?? 'HONORARIUM BIAYA PENYELESAIAN PERKARA' }}</div>
-                    @if(!empty($block['title2']))
-                        <div class="t2">{{ $block['title2'] }}</div>
-                    @endif
-                    @if(!empty($block['title3']))
-                        <div class="t3">{{ $block['title3'] }}</div>
-                    @endif
-                </div>
+
 
                 {{-- Tabel Data --}}
                 <table>
