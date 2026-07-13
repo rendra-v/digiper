@@ -161,8 +161,9 @@
                                             $isJab  = strpos($hdrUp, 'JABATAN') !== false || strpos($hdrUp, 'NAMA OPERATOR') !== false;
                                             $isNum  = !$isNo && !$isNama && !$isJab;
 
-                                            // Format angka
-                                            if ($isNum && $val !== '' && $val !== '-') {
+                                            // Format angka (JUMLAH PERKARA = count, bukan currency)
+                                            $isCount = str_contains(strtoupper($hdrUp), 'JUMLAH PERKARA');
+                                            if ($isNum && !$isCount && $val !== '' && $val !== '-') {
                                                 $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
                                                 if (is_numeric($stripped) && (float)$stripped != 0) {
                                                     $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');
@@ -193,7 +194,8 @@
                                             $isJab  = strpos($hdrUp, 'JABATAN') !== false;
                                             $isNum  = !$isNo && !$isNama && !$isJab;
 
-                                            if ($isNum && $val !== '' && $val !== '-') {
+                                            $isCount = str_contains(strtoupper($hdrUp), 'JUMLAH PERKARA');
+                                            if ($isNum && !$isCount && $val !== '' && $val !== '-') {
                                                 $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
                                                 if (is_numeric($stripped) && (float)$stripped != 0) {
                                                     $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');

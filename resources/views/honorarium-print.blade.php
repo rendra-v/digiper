@@ -414,7 +414,8 @@
                                         $isJab  = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
                                         $isNum  = !$isNo && !$isNama && !$isJab;
 
-                                        if ($isNum && $val !== '' && $val !== '-') {
+                                        $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
+                                        if ($isNum && !$isCount && $val !== '' && $val !== '-') {
                                             $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
                                             if (is_numeric($stripped) && (float)$stripped != 0) {
                                                 $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');
@@ -441,7 +442,8 @@
                                         $isJab  = str_contains($hdrUp, 'JABATAN');
                                         $isNum  = !$isNo && !$isNama && !$isJab;
 
-                                        if ($isNum && $val !== '' && $val !== '-') {
+                                        $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
+                                        if ($isNum && !$isCount && $val !== '' && $val !== '-') {
                                             $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
                                             if (is_numeric($stripped) && (float)$stripped != 0) {
                                                 $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');

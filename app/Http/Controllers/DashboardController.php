@@ -3029,6 +3029,42 @@ class DashboardController extends Controller
 
             // Hanya simpan blok yang punya data baris
             if (!empty($dataRows)) {
+                // ── Transformasi khusus OP - STAF ──────────────────────────
+                if (stripos($sheetName, 'OP') !== false && stripos($sheetName, 'STAF') !== false) {
+                    // Cari kolom yang perlu dimanipulasi
+                    $colAsisten  = null; // "NAMA ASISTEN / PANITERA PENGGANTI" → hapus
+                    $colOperator = null; // "NAMA OPERATOR" → isinya diganti jadi "OPERATOR"
+
+                    foreach ($colHeaders as $ci => $hName) {
+                        $hUp = strtoupper(trim((string)$hName));
+                        if (str_contains($hUp, 'ASISTEN') || str_contains($hUp, 'PANITERA PENGGANTI')) {
+                            $colAsisten = $ci;
+                        } elseif (str_contains($hUp, 'NAMA OPERATOR')) {
+                            $colOperator = $ci;
+                        }
+                    }
+
+                    // Hapus kolom Asisten dari headers
+                    if ($colAsisten !== null) {
+                        unset($colHeaders[$colAsisten]);
+                        if ($totalRow !== null) unset($totalRow[$colAsisten]);
+                    }
+
+                    // Transformasi per row
+                    foreach ($dataRows as &$row) {
+                        // Hapus kolom Asisten
+                        if ($colAsisten !== null) unset($row[$colAsisten]);
+                        // Ganti isi NAMA OPERATOR → "OPERATOR"
+                        if ($colOperator !== null && isset($row[$colOperator]) && $row[$colOperator] !== '') {
+                            $row[$colOperator] = 'OPERATOR';
+                        }
+                    }
+                    unset($row);
+
+                    $numCols = count($colHeaders);
+                }
+                // ── Akhir transformasi OP - STAF ───────────────────────────
+
                 $blocks[] = [
                     'title1'     => $title1,
                     'title2'     => $title2,
