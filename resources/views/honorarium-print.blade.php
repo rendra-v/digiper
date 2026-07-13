@@ -17,7 +17,7 @@
             --bg-head:    #1e3a5f;
             --bg-alt:     #f4f6fb;
             --gold:       #c8a84b;
-            --page-w:     210mm;
+            --page-w:     297mm;  /* landscape A4 width */
         }
 
         html, body {
@@ -26,6 +26,7 @@
             color: var(--ink);
             background: #e8ecf3;
             line-height: 1.45;
+            overflow-x: auto;
         }
 
         /* ── Screen: action bar ───────────────────────────────────────── */
@@ -96,11 +97,11 @@
         /* ── Paper page ───────────────────────────────────────────────── */
         .page {
             width: var(--page-w);
-            min-height: 297mm;
+            min-height: 210mm;  /* landscape A4 height */
             background: #fff;
             box-shadow: 0 4px 32px rgba(0,0,0,.18), 0 1px 6px rgba(0,0,0,.08);
             border-radius: 3px;
-            padding: 18mm 18mm 14mm;
+            padding: 14mm 16mm 12mm;
             position: relative;
             overflow: hidden;
         }
@@ -141,7 +142,7 @@
             color: #fff;
             text-align: center;
             padding: 9px 12px;
-            margin: 0 -3mm 12px;
+            margin: 0 0 12px;   /* sejajar dengan tabel — tanpa negative margin */
             border-radius: 2px;
         }
         .doc-title-wrap .t1 {
@@ -167,7 +168,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8pt;
+            font-size: 8.5pt;
             table-layout: auto;
         }
         thead tr {
@@ -176,24 +177,23 @@
         }
         thead th {
             border: 1px solid var(--accent);
-            padding: 4px 4px;
+            padding: 6px 8px;
             font-weight: 700;
             text-align: center;
-            word-break: break-word;
-            white-space: normal;
+            white-space: nowrap;
         }
         tbody tr:nth-child(even) { background: var(--bg-alt); }
         tbody tr:hover { background: #e3eaf7; }
         tbody td {
             border: 1px solid var(--border);
-            padding: 3px 4px;
+            padding: 5px 8px;
             vertical-align: middle;
-            word-break: break-word;
         }
-        .td-no   { text-align: center; width: 22px; }
-        .td-nama { text-align: left; }
-        .td-jab  { text-align: left; }
-        .td-num  { text-align: right; }
+        .td-no    { text-align: center; width: 28px;  white-space: nowrap; }
+        .td-nama  { text-align: left;   min-width: 130px; }
+        .td-jab   { text-align: left;   min-width: 150px; }
+        .td-num   { text-align: right;  white-space: nowrap; min-width: 72px; }
+        .td-count { text-align: center; white-space: nowrap; min-width: 72px; }
 
         tr.row-total {
             background: #d0daea !important;
@@ -269,6 +269,7 @@
         @media print {
             html, body { background: #fff; font-size: 8pt; }
             .action-bar { display: none !important; }
+            .kop         { display: none !important; }  /* Sembunyikan kop surat di PDF */
             .pages { margin-top: 0; padding: 0; gap: 0; background: none; }
 
             .page {
@@ -283,26 +284,28 @@
             .page:last-child { page-break-after: avoid; break-after: avoid; }
 
             table {
-                font-size: 7.5pt;
+                font-size: 8pt;
                 width: 100% !important;
                 table-layout: auto;
             }
             thead th {
-                padding: 3px 4px;
+                padding: 5px 8px;
+                white-space: nowrap;
+            }
+            tbody td {
+                padding: 4px 8px;
+            }
+            .td-nama, .td-jab {
                 white-space: normal;
                 word-break: break-word;
             }
-            tbody td {
-                padding: 2px 4px;
-            }
-            /* Angka uang jangan sampai wrap */
             .td-num {
                 white-space: nowrap;
+                text-align: right;
             }
-
+            thead { display: table-header-group; }
             tbody tr:hover { background: inherit; }
             .page-label { display: none; }
-            thead { display: table-header-group; }
         }
     </style>
 </head>
@@ -358,19 +361,7 @@
             {{-- Satu blok = satu halaman --}}
             <div class="page">
 
-                {{-- Kop Surat --}}
-                <div class="kop">
-                    {{-- Logo Garuda SVG placeholder (bisa diganti <img> logo instansi) --}}
-                    <svg class="kop-logo" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="40" cy="40" r="38" fill="#1e3a5f" stroke="#c8a84b" stroke-width="2.5"/>
-                        <text x="40" y="46" text-anchor="middle" font-size="22" font-family="serif" fill="#c8a84b" font-weight="bold">⚖</text>
-                    </svg>
-                    <div class="kop-text">
-                        <div class="instansi">Mahkamah Agung Republik Indonesia</div>
-                        <div class="sub-instansi">Pengadilan Tinggi / Pengadilan Negeri</div>
-                        <div class="kota">{{ $fileName ?? '' }}</div>
-                    </div>
-                </div>
+
 
                 {{-- Judul Dokumen --}}
                 <div class="doc-title-wrap">
@@ -393,8 +384,9 @@
                                     $isNo   = in_array($hdrUp, ['NO', 'NO.']);
                                     $isNama = str_starts_with($hdrUp, 'NAMA');
                                     $isJab  = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
-                                    $isNum  = !$isNo && !$isNama && !$isJab;
-                                    $cls    = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : 'td-num'));
+                                    $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
+                                    $isNum  = !$isNo && !$isNama && !$isJab && !$isCount;
+                                    $cls    = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
                                 @endphp
                                 <th class="{{ $cls }}">{{ $hdr ?? '' }}</th>
                             @endforeach
@@ -423,7 +415,7 @@
                                                 $val = 'Rp -';
                                             }
                                         }
-                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : 'td-num'));
+                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
                                     @endphp
                                     <td class="{{ $cls }}">{{ $val }}</td>
                                 @endforeach
@@ -449,7 +441,7 @@
                                                 $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');
                                             }
                                         }
-                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : 'td-num'));
+                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
                                     @endphp
                                     <td class="{{ $cls }}">{{ $val }}</td>
                                 @endforeach
