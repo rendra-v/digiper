@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            @if(isset($data) && count($data) > 0)
+            @if(isset($groups) && count($groups) > 0)
             <a href="{{ route('sheet-cek.print') }}" target="_blank" class="px-4 py-2.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm inline-flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <polyline points="6 9 6 2 18 2 18 9"/>
@@ -60,7 +60,7 @@
         </div>
     @endif
 
-    @if(count($data) > 0)
+    @if(count($groups) > 0)
         <!-- Table Section -->
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
             <!-- Title Header from Excel -->
@@ -76,71 +76,140 @@
                 </div>
             </div>
 
-            <!-- Table Header Info -->
+                                                <!-- Table Header Info -->
             <div class="px-8 py-4 border-b border-neutral-200 dark:border-neutral-800">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{{ count($data) }} baris data</p>
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Jika data kosong, mohon kembali ke Dashboard dan upload ulang file Excel (sesi mungkin telah berakhir).</p>
                     </div>
                 </div>
             </div>
 
             <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse">
-                    <thead class="bg-neutral-50 dark:bg-neutral-800/50 sticky top-0">
-                        <tr class="border-b border-neutral-200 dark:border-neutral-800">
-                            @foreach($headers as $colLetter => $headerName)
-                                <th class="px-4 py-3 text-center font-bold text-neutral-700 dark:text-neutral-300 border-r border-neutral-200 dark:border-neutral-700 whitespace-nowrap text-xs">
-                                    {{ $headerName }}
-                                </th>
-                            @endforeach
+                <table class="w-full text-[11px] border-collapse">
+                    <thead class="bg-neutral-300 dark:bg-neutral-700 sticky top-0">
+                        <tr class="border-b border-neutral-400 dark:border-neutral-600">
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">NO</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PERKARA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">JENIS PERKARA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">JUMLAH</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">BIAYA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600"></th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600"></th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TIM</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">5 MAJELIS</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">KEPANITERAAN</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PEMILAH</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">Total</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PAJAK</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($data as $idx => $row)
-                            <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-150">
-                                @foreach($headers as $colLetter => $headerName)
-                                    @php 
-                                        $key = $colToKey[$colLetter] ?? $headerName;
-                                        $value = $row[$key] ?? null;
-                                        $rowspan = $row['_rowspans'][$key] ?? 1;
+                        @if(isset($groups) && count($groups) > 0)
+                            @foreach($groups as $group)
+                                @php
+                                    // Hitung total group terlebih dahulu untuk kolom 16
+                                    $groupTotal = 0;
+                                    foreach($group['sub_groups'] as $sg) {
+                                        $p15 = round($sg['total_m_15'] * 0.15);
+                                        $b15 = $sg['total_m_15'] - $p15;
+                                        $p5 = round($sg['total_m_5'] * 0.05);
+                                        $b5 = $sg['total_m_5'] - $p5;
+                                        $groupTotal += ($b15 + $b5);
+                                    }
+                                @endphp
+                                @foreach($group['sub_groups'] as $index => $sg)
+                                    @php
+                                        $pajak15 = round($sg['total_m_15'] * 0.15);
+                                        $bersih15 = $sg['total_m_15'] - $pajak15;
+                                        
+                                        $pajak5 = round($sg['total_m_5'] * 0.05);
+                                        $bersih5 = $sg['total_m_5'] - $pajak5;
+                                        
+                                        $subGroupTotal = $bersih15 + $bersih5;
                                     @endphp
                                     
-                                    @if($value === 'SKIP_OR_NULL')
-                                        @continue
+                                    {{-- Judul tambahan K-PDTSUS dsb jika ada --}}
+                                    @if($sg['label'])
+                                    <tr class="bg-blue-300 dark:bg-blue-800/80 font-bold border-b border-neutral-400 dark:border-neutral-700">
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-center">{{ $index === 0 ? $group['no'] : '' }}</td>
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700">{{ $sg['label'] }}</td>
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700">{{ $sg['jenis'] }}</td>
+                                        <td colspan="13"></td>
+                                    </tr>
                                     @endif
-                                    
-                                    <td class="px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800 {{ in_array($headerName, ['JUMLAH', 'BIAYA', 'TIM', '5 MAJELIS', 'KEPANITERAAN', 'PEMILAH', 'Total', 'PAJAK', 'TOTAL', 'Penyerahan', 'Honorarium', 'Biaya', 'Bersih']) ? 'text-right' : '' }}"
-                                        @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
-                                        @if(is_numeric($value))
-                                            @if((float)$value === 0.0)
-                                                -
-                                            @else
-                                                {{ number_format((float)$value, 0, ',', '.') }}
-                                            @endif
-                                        @else
-                                            {{ $value ?? '-' }}
+                                
+                                    <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-blue-100 dark:bg-blue-900/30 font-bold">
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700">
+                                            {{ $index === 0 && !$sg['label'] ? $group['no'] : '' }}
+                                        </td>
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-blue-700 dark:text-blue-300">
+                                            {{ $index === 0 && !$sg['label'] ? $group['perkara'] : '' }}
+                                        </td>
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-blue-700 dark:text-blue-300">{{ $sg['label'] ? '' : $sg['jenis'] }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['biaya_total'] > 0 ? number_format($sg['biaya_total'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle" rowspan="3">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
+                                        @if($index === 0)
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle bg-white dark:bg-neutral-900" rowspan="{{ count($group['sub_groups']) * 3 }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
                                         @endif
-                                    </td>
+                                    </tr>
+                                    
+                                    {{-- Baris PPH 15% --}}
+                                    <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-medium">
+                                        <td colspan="3" class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['biaya_15'] > 0 ? number_format($sg['biaya_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['total_15'] > 0 ? number_format($sg['total_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-400 dark:bg-neutral-600 text-black">PAJAK 15 %</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['tim_15'] > 0 ? number_format($sg['tim_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['majelis5_15'] > 0 ? number_format($sg['majelis5_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['kepaniteraan_15'] > 0 ? number_format($sg['kepaniteraan_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['pemilah_15'] > 0 ? number_format($sg['pemilah_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['total_m_15'] > 0 ? number_format($sg['total_m_15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $pajak15 > 0 ? number_format($pajak15, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $bersih15 > 0 ? number_format($bersih15, 0, ',', '.') : '-' }}</td>
+                                    </tr>
+                                    
+                                    {{-- Baris PPH 5% --}}
+                                    <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-medium">
+                                        <td colspan="3" class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['biaya_5'] > 0 ? number_format($sg['biaya_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['total_5'] > 0 ? number_format($sg['total_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-400 dark:bg-neutral-600 text-black">PAJAK 5 %</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['tim_5'] > 0 ? number_format($sg['tim_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['majelis5_5'] > 0 ? number_format($sg['majelis5_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['kepaniteraan_5'] > 0 ? number_format($sg['kepaniteraan_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['pemilah_5'] > 0 ? number_format($sg['pemilah_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['total_m_5'] > 0 ? number_format($sg['total_m_5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $pajak5 > 0 ? number_format($pajak5, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $bersih5 > 0 ? number_format($bersih5, 0, ',', '.') : '-' }}</td>
+                                    </tr>
                                 @endforeach
-                            </tr>
-                        @empty
+                            @endforeach
+                        @else
                             <tr>
-                                <td colspan="{{ count($headers) }}" class="px-8 py-8 text-center text-neutral-500 dark:text-neutral-400">
-                                    Tidak ada data
+                                <td colspan="16" class="px-8 py-8 text-center text-red-500 font-bold bg-red-50 dark:bg-red-900/10">
+                                    DATA KOSONG: Sesi Excel Anda sudah berakhir. Silakan kembali ke Dashboard dan upload ulang file Excel Anda.
                                 </td>
                             </tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Pagination Info -->
-            <div class="px-8 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50">
-                <p class="text-sm text-neutral-600 dark:text-neutral-400">
-                    Menampilkan <strong>{{ count($data) }}</strong> dari <strong>{{ count($data) }}</strong> baris
-                </p>
             </div>
         </div>
 
@@ -217,8 +286,11 @@
             <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-700 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Sheet "cek" tidak ditemukan</p>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Pastikan file Excel berisi sheet bernama "cek"</p>
+            <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Data belum tersedia</p>
+            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Silakan upload file Excel yang mengandung sheet "Data Print" terlebih dahulu</p>
+            <a href="{{ route('dashboard') }}" class="mt-6 inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+                Ke Dashboard
+            </a>
         </div>
     @endif
 </div>
