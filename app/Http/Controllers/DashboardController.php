@@ -756,7 +756,6 @@ class DashboardController extends Controller
         return view('sheet-cek-print', (array) $viewData);
     }
 
-
     public function printRekapKeseluruhan()
     {
         try {
@@ -1906,20 +1905,20 @@ class DashboardController extends Controller
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
 
-            if (!$filePath || !file_exists($filePath)) {
+            if (! $filePath || ! file_exists($filePath)) {
                 return view('honorarium', [
                     'fileName' => null,
-                    'sheets'   => [],
-                    'error'    => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'sheets' => [],
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
             $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
             if ($cached !== null) {
                 return view('honorarium', array_merge($cached, [
                     'fileName' => $fileName,
-                    'error'    => null,
+                    'error' => null,
                 ]));
             }
 
@@ -1933,13 +1932,15 @@ class DashboardController extends Controller
             $sheets = [];
             foreach ($targetSheets as $sheetName) {
                 $ws = $spreadsheet->getSheetByName($sheetName);
-                if (!$ws) continue;
+                if (! $ws) {
+                    continue;
+                }
 
                 $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
-                if (!empty($blocks)) {
+                if (! empty($blocks)) {
                     $sheets[] = [
                         'sheetName' => $sheetName,
-                        'blocks'    => $blocks,
+                        'blocks' => $blocks,
                     ];
                 }
             }
@@ -1950,8 +1951,8 @@ class DashboardController extends Controller
             if (empty($sheets)) {
                 return view('honorarium', [
                     'fileName' => $fileName,
-                    'sheets'   => [],
-                    'error'    => 'Tidak ada data honorarium kamar ditemukan.',
+                    'sheets' => [],
+                    'error' => 'Tidak ada data honorarium kamar ditemukan.',
                 ]);
             }
 
@@ -1959,15 +1960,16 @@ class DashboardController extends Controller
 
             return view('honorarium', [
                 'fileName' => $fileName,
-                'sheets'   => $sheets,
-                'error'    => null,
+                'sheets' => $sheets,
+                'error' => null,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorarium', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
+
             return view('honorarium', [
                 'fileName' => Session::get('excel_file_name'),
-                'sheets'   => [],
-                'error'    => 'Error: ' . $e->getMessage(),
+                'sheets' => [],
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -1982,13 +1984,13 @@ class DashboardController extends Controller
         $sheetIdx = $request->query('sheet');   // integer index or null
         $blockIdx = $request->query('block');   // integer index or 'all' or null
 
-        if (!$filePath || !file_exists($filePath)) {
+        if (! $filePath || ! file_exists($filePath)) {
             return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.']);
         }
 
         // Same cache key as honorarium()
         $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
-        $cached   = Session::get($cacheKey);
+        $cached = Session::get($cacheKey);
 
         // Helper: filter full sheets array down to user's selection
         $applyFilter = function (array $sheets) use ($sheetIdx, $blockIdx) {
@@ -2004,11 +2006,13 @@ class DashboardController extends Controller
                     }
                 }
             }
+
             return $sheets;
         };
 
         if ($cached !== null) {
             $sheets = $applyFilter($cached['sheets']);
+
             return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null]);
         }
 
@@ -2025,9 +2029,11 @@ class DashboardController extends Controller
             $sheets = [];
             foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
                 $ws = $spreadsheet->getSheetByName($sheetName);
-                if (!$ws) continue;
+                if (! $ws) {
+                    continue;
+                }
                 $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
-                if (!empty($blocks)) {
+                if (! empty($blocks)) {
                     $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
                 }
             }
@@ -2038,13 +2044,14 @@ class DashboardController extends Controller
             Session::put($cacheKey, compact('sheets'));
 
             $sheets = $applyFilter($sheets);
+
             return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorariumPrint', ['error' => $e->getMessage()]);
-            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: ' . $e->getMessage()]);
+
+            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: '.$e->getMessage()]);
         }
     }
-
 
     /**
      * Parse sebuah sheet honorarium.
@@ -2053,22 +2060,22 @@ class DashboardController extends Controller
      * Mengembalikan array berisi SATU entry (single table dengan semua rows).
      */
     private function parseHonorariumSheet($worksheet, string $sheetName): ?array
-
     {
-        $highestRow    = $worksheet->getHighestRow();
+        $highestRow = $worksheet->getHighestRow();
         $highestColumn = $worksheet->getHighestColumn();
         $highestColIdx = Coordinate::columnIndexFromString($highestColumn);
 
         // ── 1. Cari SEMUA baris header (mengandung NO dan NAMA) ──────────────
         $headerRows = [];
         for ($r = 1; $r <= $highestRow; $r++) {
-            $rowHasNo   = false;
+            $rowHasNo = false;
             $rowHasNama = false;
             for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
                 $val = trim((string) $worksheet->getCell([$c, $r])->getFormattedValue());
                 if ($val === '') {
                     continue;
                 }
+
                 $upper = strtoupper($val);
                 // "NO" biasanya ada di kolom 1 atau 2. Batasi c <= 3 agar tidak match Amar "NO" di akhir tabel
                 if ($c <= 3 && ($upper === 'NO' || $upper === 'NO.' || $upper === 'NOMOR')) {
@@ -2109,7 +2116,7 @@ class DashboardController extends Controller
             for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
                 $val = trim((string) $worksheet->getCell([$c, $r])->getFormattedValue());
                 if ($val !== '') {
-                    $rowText .= ' ' . $val;
+                    $rowText .= ' '.$val;
                 }
             }
             $text = trim($rowText);
@@ -2120,7 +2127,7 @@ class DashboardController extends Controller
 
         // ── 4. Gabungkan semua sub-tabel menjadi satu ────────────────────────
         $colHasContent = array_fill(1, $highestColIdx, false);
-        $allRows       = [];
+        $allRows = [];
         $footerKeywords = [
             'jakarta', 'mengetahui', 'panitera mahkamah', 'petugas pembuat',
             'bendahara', 'kuasa pengelola', 'biaya proses',
@@ -2139,17 +2146,17 @@ class DashboardController extends Controller
 
             // Lebih baik: ambil judul dari baris yang ada text sebelum hRow
             $subTitleLines = [];
-            
+
             // Cari batas atas sub-judul: scan mundur dari hRow-1
             $scanStart = $hRow - 1;
             $titleBoundary = -1;
-            
+
             // Batasi scan mundur max 5 baris, dan tidak boleh melewati header sebelumnya
             $maxScan = max(1, $hRow - 5);
             if ($idx > 0) {
                 $maxScan = max($maxScan, $headerRows[$idx - 1] + 1);
             }
-            
+
             for ($r = $hRow - 1; $r >= $maxScan; $r--) {
                 $hasText = false;
                 for ($c = 1; $c <= min($highestColIdx, 12); $c++) {
@@ -2158,17 +2165,17 @@ class DashboardController extends Controller
                         break;
                     }
                 }
-                
-                if (!$hasText) {
+
+                if (! $hasText) {
                     break; // ketemu baris kosong
                 }
-                
+
                 // Jika kolom pertama adalah angka, ini kemungkinan data row dari halaman sebelumnya, bukan title
                 $val1 = trim((string) $worksheet->getCell([1, $r])->getFormattedValue());
                 if (is_numeric($val1) && $val1 != '') {
                     break;
                 }
-                
+
                 $titleBoundary = $r;
             }
 
@@ -2178,7 +2185,7 @@ class DashboardController extends Controller
                     for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
                         $val = trim((string) $worksheet->getCell([$c, $r])->getFormattedValue());
                         if ($val !== '') {
-                            $rowText .= ' ' . $val;
+                            $rowText .= ' '.$val;
                         }
                     }
                     $text = trim($rowText);
@@ -2202,7 +2209,7 @@ class DashboardController extends Controller
                 if (! $inFooter) {
                     $rowTextLow = '';
                     for ($c = 1; $c <= min($highestColIdx, 12); $c++) {
-                        $rowTextLow .= ' ' . strtolower(trim((string) $worksheet->getCell([$c, $r])->getFormattedValue()));
+                        $rowTextLow .= ' '.strtolower(trim((string) $worksheet->getCell([$c, $r])->getFormattedValue()));
                     }
                     foreach ($footerKeywords as $kw) {
                         if (str_contains($rowTextLow, $kw)) {
@@ -2213,10 +2220,24 @@ class DashboardController extends Controller
                 }
 
                 if ($inFooter) {
+                    $rowTextLow = '';
+                    for ($c = 1; $c <= min($highestColIdx, 12); $c++) {
+                        $ref = Coordinate::stringFromColumnIndex($c).$r;
+                        $rowTextLow .= ' '.strtolower(trim((string) $worksheet->getCell($ref)->getFormattedValue()));
+                    }
+                    $rowTextLow = trim($rowTextLow);
+
+                    $stopKeywords = ['rekapitulasi honorarium', 'pada masing - masing', 'jumlah biaya', 'total', 'perdata umum', 'perdata khusus'];
+                    foreach ($stopKeywords as $sk) {
+                        if (str_contains($rowTextLow, $sk)) {
+                            break 2; // Berhenti membaca baris untuk sheet ini
+                        }
+                    }
+
                     continue; // Skip footer rows
                 }
 
-                $rowData    = [];
+                $rowData = [];
                 $rowHasData = false;
                 for ($c = 1; $c <= $highestColIdx; $c++) {
                     $cell = $worksheet->getCell([$c, $r]);
@@ -2259,6 +2280,7 @@ class DashboardController extends Controller
                 $out[$hName] = $row[$hName] ?? '';
             }
             $out['_section_title'] = $row['_section_title'] ?? '';
+
             return $out;
         }, $allRows);
 
@@ -2313,7 +2335,7 @@ class DashboardController extends Controller
         }
 
         foreach ($filteredRows as &$row) {
-            $isTim  = false;
+            $isTim = false;
             $subKey = '';
             $jabVal = '';
 
@@ -2331,35 +2353,36 @@ class DashboardController extends Controller
 
             if ($jabVal !== '') {
                 if (str_contains($jabVal, 'hakim agung') || str_contains($jabVal, 'hakim') || str_contains($jabVal, 'tim korektor')) {
-                    $isTim  = true;
+                    $isTim = true;
                     $subKey = 'hakim';
                 } elseif (str_contains($jabVal, 'panmud') || str_contains($jabVal, 'panitera muda')
                     || str_contains($jabVal, 'askor') || str_contains($jabVal, 'asisten koordinator')) {
-                    $isTim  = true;
+                    $isTim = true;
                     $subKey = 'panmud';
                 } elseif (str_contains($jabVal, 'operator')) {
-                    $isTim  = true;
+                    $isTim = true;
                     $subKey = 'operator';
                 } elseif (str_contains($jabVal, 'asisten')) {
-                    $isTim  = true;
+                    $isTim = true;
                     $subKey = 'asisten';
                 }
             }
 
             $row['_kode_kuitansi'] = $isTim ? 1 : 2;
-            $row['_jabatan_sub']   = $subKey;
+            $row['_jabatan_sub'] = $subKey;
         }
         unset($row);
 
         return [[
-            'sheetName'     => $sheetName,
-            'title'         => implode("\n", array_slice($mainTitleLines, 0, 5)),
-            'headers'       => $activeHeaders,
-            'rows'          => $filteredRows,
-            'footerBlocks'  => [],
+            'sheetName' => $sheetName,
+            'title' => implode("\n", array_slice($mainTitleLines, 0, 5)),
+            'headers' => $activeHeaders,
+            'rows' => $filteredRows,
+            'footerBlocks' => [],
             'jabatanColName' => $jabatanColName,
         ]];
     }
+
     /**
      * Kelompokkan baris footer menjadi blok tanda-tangan berdasarkan posisi kolom.
      * Output: array of [ 'position' => 'left'|'center'|'right', 'lines' => [...] ]
@@ -2382,6 +2405,16 @@ class DashboardController extends Controller
                 if ($val === '') {
                     continue;
                 }
+
+                // Abaikan teks sampah yang bukan bagian dari nama/jabatan penandatangan
+                $valUpper = strtoupper($val);
+                if (in_array($valUpper, ['PPH 15%', 'PPH 5%', 'NETTO', 'RP -', 'RP-']) ||
+                    preg_match('/^\d+$/', $valUpper) || // Angka bulat (misal no urut 1, 2, 3)
+                    preg_match('/^RP\s*\-?$/', $valUpper) // String 'Rp' atau 'Rp -'
+                ) {
+                    continue;
+                }
+
                 if ($c <= $leftEnd) {
                     $buckets['left'][] = $val;
                 } elseif ($c <= $centerEnd) {
@@ -2890,7 +2923,6 @@ class DashboardController extends Controller
      * Setiap blok = satu dokumen (judul + baris data + total + footer).
      */
 
-
     /**
      * Parse satu sheet (Kepaniteraan / TIM / OP-STAF) dan ekstrak semua blok honorarium.
      * Setiap blok punya: title1, title2, title3 (judul 3 baris), headers, rows, totalRow, footerInfo.
@@ -2898,68 +2930,70 @@ class DashboardController extends Controller
     private function parseHonorariumKamarSheet($ws, string $sheetName): array
     {
         $highestRow = $ws->getHighestRow();
-        $blocks     = [];
+        $blocks = [];
 
         // Footer keywords – baris ini dan setelahnya adalah footer (tanda tangan)
         $footerKeywords = ['jakarta', 'mengetahui', 'petugas pembuat', 'bendahara', 'kuasa pengelola'];
 
         for ($r = 1; $r <= $highestRow; $r++) {
-            $valA = strtolower(trim((string)$ws->getCell('A' . $r)->getFormattedValue()));
+            $valA = strtolower(trim((string) $ws->getCell('A'.$r)->getFormattedValue()));
             if (strpos($valA, 'honorarium biaya penyelesaian') === false) {
                 continue;
             }
 
             // Ambil judul 3 baris
-            $title1 = trim((string)$ws->getCell('A' . $r)->getFormattedValue());
-            $title2 = trim((string)$ws->getCell('A' . ($r + 1))->getFormattedValue());
-            $title3 = trim((string)$ws->getCell('A' . ($r + 2))->getFormattedValue());
+            $title1 = trim((string) $ws->getCell('A'.$r)->getFormattedValue());
+            $title2 = trim((string) $ws->getCell('A'.($r + 1))->getFormattedValue());
+            $title3 = trim((string) $ws->getCell('A'.($r + 2))->getFormattedValue());
 
             // Cari header row: baris dengan "NO" di kolom A dan "NAMA" di kolom B
             $headerRow = null;
             for ($hr = $r + 1; $hr <= min($r + 8, $highestRow); $hr++) {
-                $hA = strtoupper(trim((string)$ws->getCell('A' . $hr)->getFormattedValue()));
-                $hB = strtoupper(trim((string)$ws->getCell('B' . $hr)->getFormattedValue()));
+                $hA = strtoupper(trim((string) $ws->getCell('A'.$hr)->getFormattedValue()));
+                $hB = strtoupper(trim((string) $ws->getCell('B'.$hr)->getFormattedValue()));
                 if (($hA === 'NO' || $hA === 'NO.') && strpos($hB, 'NAMA') === 0) {
                     $headerRow = $hr;
                     break;
                 }
             }
-            if ($headerRow === null) continue;
+            if ($headerRow === null) {
+                continue;
+            }
 
             // Baca kolom header
             $colHeaders = [];
             for ($c = 1; $c <= 15; $c++) {
-                $hVal = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $headerRow)->getFormattedValue());
+                $hVal = trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).$headerRow)->getFormattedValue());
                 if ($hVal === '' && $headerRow > 1) {
                     // Coba ambil dari baris sebelumnya (merged header)
-                    $hVal = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . ($headerRow - 1))->getFormattedValue());
+                    $hVal = trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).($headerRow - 1))->getFormattedValue());
                 }
                 $colHeaders[$c] = $hVal !== '' ? $hVal : null;
             }
             // Trim kolom kosong di akhir
-            while (!empty($colHeaders) && end($colHeaders) === null) {
+            while (! empty($colHeaders) && end($colHeaders) === null) {
                 array_pop($colHeaders);
             }
             $numCols = count($colHeaders);
 
             // Baca baris data sampai footer atau blok berikutnya
-            $dataRows   = [];
-            $totalRow   = null;
+            $dataRows = [];
+            $totalRow = null;
             $footerInfo = ['date' => '', 'left' => '', 'center' => '', 'right' => ''];
-            $inFooter   = false;
+            $inFooter = false;
 
             for ($dr = $headerRow + 1; $dr <= $highestRow; $dr++) {
                 // Deteksi batas blok berikutnya
-                $drValA = strtolower(trim((string)$ws->getCell('A' . $dr)->getFormattedValue()));
+                $drValA = strtolower(trim((string) $ws->getCell('A'.$dr)->getFormattedValue()));
                 if (strpos($drValA, 'honorarium biaya penyelesaian') !== false) {
                     break; // Mulai blok baru
                 }
 
                 // Deteksi footer
-                if (!$inFooter) {
+                if (! $inFooter) {
                     $rowTextLow = '';
                     for ($c = 1; $c <= min($numCols, 12); $c++) {
-                        $rowTextLow .= ' ' . strtolower(trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $dr)->getFormattedValue()));
+                        $rowTextLow .= ' '.strtolower(trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).$dr)->getFormattedValue()));
                     }
                     foreach ($footerKeywords as $kw) {
                         if (strpos($rowTextLow, $kw) !== false) {
@@ -2972,20 +3006,22 @@ class DashboardController extends Controller
                 if ($inFooter) {
                     // Ambil info footer (tanggal, nama penanda tangan)
                     for ($c = 1; $c <= $numCols; $c++) {
-                        $fv = trim((string)$ws->getCell(Coordinate::stringFromColumnIndex($c) . $dr)->getFormattedValue());
-                        if ($fv === '') continue;
+                        $fv = trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).$dr)->getFormattedValue());
+                        if ($fv === '') {
+                            continue;
+                        }
                         $fvLow = strtolower($fv);
                         if (strpos($fvLow, 'jakarta') !== false) {
                             $footerInfo['date'] = $fv;
                         } elseif (strpos($fvLow, 'mengetahui') !== false || strpos($fvLow, 'kuasa pengelola') !== false) {
-                            $footerInfo['center'] = ($footerInfo['center'] ? $footerInfo['center'] . "\n" : '') . $fv;
+                            $footerInfo['center'] = ($footerInfo['center'] ? $footerInfo['center']."\n" : '').$fv;
                         } elseif (strpos($fvLow, 'petugas pembuat') !== false || strpos($fvLow, 'biaya proses') !== false) {
-                            $footerInfo['left'] = ($footerInfo['left'] ? $footerInfo['left'] . "\n" : '') . $fv;
+                            $footerInfo['left'] = ($footerInfo['left'] ? $footerInfo['left']."\n" : '').$fv;
                         } elseif (strpos($fvLow, 'bendahara') !== false) {
-                            $footerInfo['right'] = ($footerInfo['right'] ? $footerInfo['right'] . "\n" : '') . $fv;
+                            $footerInfo['right'] = ($footerInfo['right'] ? $footerInfo['right']."\n" : '').$fv;
                         }
                         // Nama penanda tangan (huruf besar semua, bukan keyword)
-                        if (preg_match('/^[A-Z\s\.\,]+$/', $fv) && strlen($fv) > 5 && !preg_match('/^[A-Z]+\s[A-Z]+\s[A-Z]+\s[A-Z]+$/', $fv)) {
+                        if (preg_match('/^[A-Z\s\.\,]+$/', $fv) && strlen($fv) > 5 && ! preg_match('/^[A-Z]+\s[A-Z]+\s[A-Z]+\s[A-Z]+$/', $fv)) {
                             if ($c <= 3) {
                                 $footerInfo['left_name'] = $fv;
                             } elseif ($c >= $numCols - 2) {
@@ -2993,22 +3029,30 @@ class DashboardController extends Controller
                             }
                         }
                     }
+
                     continue;
                 }
 
                 // Baca row data
-                $rowData    = [];
+                $rowData = [];
                 $rowHasData = false;
                 for ($c = 1; $c <= $numCols; $c++) {
-                    $cellRef = Coordinate::stringFromColumnIndex($c) . $dr;
-                    $cell    = $ws->getCell($cellRef);
-                    try { $cell->getCalculatedValue(); } catch (\Throwable $e) {}
-                    $val = trim((string)$cell->getFormattedValue());
+                    $cellRef = Coordinate::stringFromColumnIndex($c).$dr;
+                    $cell = $ws->getCell($cellRef);
+                    try {
+                        $cell->getCalculatedValue();
+                    } catch (\Throwable $e) {
+                    }
+                    $val = trim((string) $cell->getFormattedValue());
                     $rowData[$c] = $val;
-                    if ($val !== '') $rowHasData = true;
+                    if ($val !== '') {
+                        $rowHasData = true;
+                    }
                 }
 
-                if (!$rowHasData) continue;
+                if (! $rowHasData) {
+                    continue;
+                }
 
                 // Deteksi baris TOTAL
                 $isTotal = false;
@@ -3028,15 +3072,15 @@ class DashboardController extends Controller
             }
 
             // Hanya simpan blok yang punya data baris
-            if (!empty($dataRows)) {
+            if (! empty($dataRows)) {
                 // ── Transformasi khusus OP - STAF ──────────────────────────
                 if (stripos($sheetName, 'OP') !== false && stripos($sheetName, 'STAF') !== false) {
                     // Cari kolom yang perlu dimanipulasi
-                    $colAsisten  = null; // "NAMA ASISTEN / PANITERA PENGGANTI" → hapus
+                    $colAsisten = null; // "NAMA ASISTEN / PANITERA PENGGANTI" → hapus
                     $colOperator = null; // "NAMA OPERATOR" → isinya diganti jadi "OPERATOR"
 
                     foreach ($colHeaders as $ci => $hName) {
-                        $hUp = strtoupper(trim((string)$hName));
+                        $hUp = strtoupper(trim((string) $hName));
                         if (str_contains($hUp, 'ASISTEN') || str_contains($hUp, 'PANITERA PENGGANTI')) {
                             $colAsisten = $ci;
                         } elseif (str_contains($hUp, 'NAMA OPERATOR')) {
@@ -3044,26 +3088,30 @@ class DashboardController extends Controller
                         }
                     }
 
-                    \Log::warning('[OP-STAF NEW CODE] colOperator=' . json_encode($colOperator) . ' colAsisten=' . json_encode($colAsisten) . ' headers=' . json_encode($colHeaders));
+                    \Log::warning('[OP-STAF NEW CODE] colOperator='.json_encode($colOperator).' colAsisten='.json_encode($colAsisten).' headers='.json_encode($colHeaders));
 
                     // Hapus kolom Asisten dari headers
                     if ($colAsisten !== null) {
                         unset($colHeaders[$colAsisten]);
-                        if ($totalRow !== null) unset($totalRow[$colAsisten]);
+                        if ($totalRow !== null) {
+                            unset($totalRow[$colAsisten]);
+                        }
                     }
 
                     // Hapus kolom Asisten dari rows
                     foreach ($dataRows as &$row) {
-                        if ($colAsisten !== null) unset($row[$colAsisten]);
+                        if ($colAsisten !== null) {
+                            unset($row[$colAsisten]);
+                        }
                     }
                     unset($row);
 
                     // Sisipkan kolom JABATAN setelah NAMA OPERATOR, kosongkan isi NAMA OPERATOR
                     if ($colOperator !== null) {
                         // Bangun peta indeks lama → baru (sisipkan slot jabatan setelah colOperator)
-                        $keyMap     = [];
+                        $keyMap = [];
                         $jabatanIdx = null;
-                        $newIdx     = 1;
+                        $newIdx = 1;
                         foreach ($colHeaders as $ci => $hName) {
                             $keyMap[$ci] = $newIdx++;
                             if ($ci === $colOperator) {
@@ -3108,14 +3156,14 @@ class DashboardController extends Controller
                 // ── Akhir transformasi OP - STAF ───────────────────────────
 
                 $blocks[] = [
-                    'title1'     => $title1,
-                    'title2'     => $title2,
-                    'title3'     => $title3,
-                    'headers'    => $colHeaders,
-                    'rows'       => $dataRows,
-                    'totalRow'   => $totalRow,
+                    'title1' => $title1,
+                    'title2' => $title2,
+                    'title3' => $title3,
+                    'headers' => $colHeaders,
+                    'rows' => $dataRows,
+                    'totalRow' => $totalRow,
                     'footerInfo' => $footerInfo,
-                    'numCols'    => $numCols,
+                    'numCols' => $numCols,
                 ];
             }
         }
