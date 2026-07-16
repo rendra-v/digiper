@@ -152,36 +152,12 @@
     @if($error)
         <div class="notice">{{ $error }}</div>
     @else
-        @php
-            $rows = collect($report['rows'] ?? [])->keyBy('number');
-            $getCellVal = function (int $rn, string $ref, string $def = '') use ($rows) {
-                $row  = $rows->get($rn);
-                $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
-                $v    = $cell['value'] ?? '';
-                return ($v !== '' && $v !== null) ? $v : $def;
-            };
-
-            // Baris 4–8  : header Excel (dengan merged cells)
-            // Baris 9–34 : data tabel
-            // Baris 35+  : area tanda tangan (tidak dirender di tabel)
-            $HEADER_END = 8;
-            $DATA_END   = 34;
-
-            $romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-        @endphp
-
         {{-- Title --}}
         <div class="doc-title">
-            <div class="t1">{{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS PADA BULAN DESEMBER 2025 S/D FEBRUARI 2026' }}</div>
-            <div class="t2">{{ $title2 ?: 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK' }}</div>
+            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS</div>
+            <div class="t2">YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
         </div>
 
-        {{--
-            Tabel: render baris 4–34 langsung dari data Excel.
-            Rowspan/colspan sudah diekstrak dari merged cells Excel
-            oleh buildRekapKeseluruhanReport().
-            Tidak ada thead hardcoded — struktur merge dari Excel yang berlaku.
-        --}}
         <table class="recap-table">
             <colgroup>
                 {{-- A: No --}}              <col style="width:3%;">
@@ -201,100 +177,112 @@
                 <col style="width:5.5%;">
                 {{-- N: Total --}}           <col style="width:7%;">
             </colgroup>
+            <thead>
+                <tr class="hdr">
+                    <td rowspan="3">NO.</td>
+                    <td rowspan="3">JENIS PERKARA</td>
+                    <td rowspan="3">KLASIFIKASI</td>
+                    <td colspan="10">JUMLAH PERKARA</td>
+                    <td rowspan="3">TOTAL JML MINUTASI TEPAT WAKTU (120 HARI)</td>
+                </tr>
+                <tr class="hdr">
+                    <td colspan="5">KASASI</td>
+                    <td colspan="5">PENINJAUAN KEMBALI</td>
+                </tr>
+                <tr class="hdr" style="font-size: 5.5px;">
+                    <td>SISA S.D TH<br>LALU</td>
+                    <td>MASUK TH<br>INI</td>
+                    <td>PUTUS</td>
+                    <td>BELUM PUTUS</td>
+                    <td>JML MINUT TEPAT WAKTU (120 HARI)</td>
+                    <td>SISA S.D TH<br>LALU</td>
+                    <td>MASUK TH<br>INI</td>
+                    <td>PUTUS</td>
+                    <td>BELUM PUTUS</td>
+                    <td>JML MINUT TEPAT WAKTU (120 HARI)</td>
+                </tr>
+                <tr class="hdr" style="color: #666; font-size: 5px;">
+                    @for($i = 1; $i <= 14; $i++)
+                        <td>{{ $i }}</td>
+                    @endfor
+                </tr>
+            </thead>
             <tbody>
-                @foreach($report['rows'] as $row)
+                @foreach($rekap['rows'] as $row)
                     @php
-                        $rowNum = $row['number'];
-                        if ($rowNum < 4 || $rowNum > $DATA_END) continue;
-
-                        $isHeaderRow = ($rowNum <= $HEADER_END);
-
-                        // Skip baris kosong berdasarkan raw value (dari controller)
-                        if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
-
-                        $firstCell = collect($row['cells'])->first();
-                        $firstVal  = trim($firstCell['value'] ?? '');
-
-                        $isCat = !$isHeaderRow && in_array($firstVal, $romanNumerals);
-                        $isTot = !$isHeaderRow
-                            && (stripos($firstVal, 'TOTAL') !== false
-                             || stripos($firstVal, 'JUMLAH') !== false);
-
-                        $trClass = $isHeaderRow ? 'hdr' : ($isCat ? 'cat' : ($isTot ? 'tot' : ''));
+                        $trClass = $row['is_category'] ? 'cat' : '';
                     @endphp
                     <tr class="{{ $trClass }}">
-                        @foreach($row['cells'] as $cell)
-                            @php
-                                $val    = $cell['value'];
-                                $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                                $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
+                        <td class="c">{{ $row['no'] }}</td>
+                        <td class="l">{{ $row['perkara'] }}</td>
+                        <td class="l">{{ $row['klasifikasi'] }}</td>
+                        
+                        {{-- Kasasi --}}
+                        <td class="r">{{ $row['kasasi']['sisa'] > 0 ? number_format($row['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['kasasi']['masuk'] > 0 ? number_format($row['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['kasasi']['putus'] > 0 ? number_format($row['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['kasasi']['blm'] > 0 ? number_format($row['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['kasasi']['minut'] > 0 ? number_format($row['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
 
-                                // Alignment
-                                if ($isHeaderRow)     $align = 'c';
-                                elseif ($colNum === 1) $align = 'c';
-                                elseif ($colNum === 2) $align = 'l';
-                                elseif ($colNum === 3) $align = 'c';
-                                else                   $align = 'r';
+                        {{-- PK --}}
+                        <td class="r">{{ $row['pk']['sisa'] > 0 ? number_format($row['pk']['sisa'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pk']['masuk'] > 0 ? number_format($row['pk']['masuk'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pk']['putus'] > 0 ? number_format($row['pk']['putus'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pk']['blm'] > 0 ? number_format($row['pk']['blm'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pk']['minut'] > 0 ? number_format($row['pk']['minut'], 0, ',', '.') : '-' }}</td>
 
-                                // Format number
-                                $display = $val;
-                                if (!$isHeaderRow && is_numeric($val) && (float)$val != 0 && $colNum >= 4) {
-                                    $display = number_format((float)$val, 0, ',', '.');
-                                }
-                                if (!$isHeaderRow && $colNum >= 4
-                                    && ($display === '' || $display === null
-                                        || (string)$display === '0' || (float)($val ?? 0) == 0)
-                                ) {
-                                    $display = '-';
-                                }
-
-                                $boldClass = ($isHeaderRow || $isCat || $isTot) ? ' b' : '';
-                            @endphp
-                            <td rowspan="{{ $cell['rowspan'] }}"
-                                colspan="{{ $cell['colspan'] }}"
-                                class="{{ $align }}{{ $boldClass }}">{{ $display }}</td>
-                        @endforeach
+                        {{-- Total --}}
+                        <td class="r b">{{ $row['total_minut'] > 0 ? number_format($row['total_minut'], 0, ',', '.') : '-' }}</td>
                     </tr>
                 @endforeach
+                
+                {{-- Baris JUMLAH --}}
+                @php $t = $rekap['total']; @endphp
+                <tr class="tot">
+                    <td colspan="3" class="c" style="letter-spacing: 1px;">TOTAL</td>
+                    <td class="r">{{ $t['kasasi']['sisa'] > 0 ? number_format($t['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['kasasi']['masuk'] > 0 ? number_format($t['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['kasasi']['putus'] > 0 ? number_format($t['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['kasasi']['blm'] > 0 ? number_format($t['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['kasasi']['minut'] > 0 ? number_format($t['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['pk']['sisa'] > 0 ? number_format($t['pk']['sisa'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['pk']['masuk'] > 0 ? number_format($t['pk']['masuk'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['pk']['putus'] > 0 ? number_format($t['pk']['putus'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['pk']['blm'] > 0 ? number_format($t['pk']['blm'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $t['pk']['minut'] > 0 ? number_format($t['pk']['minut'], 0, ',', '.') : '-' }}</td>
+                    <td class="r b">{{ $t['total_minut'] > 0 ? number_format($t['total_minut'], 0, ',', '.') : '-' }}</td>
+                </tr>
             </tbody>
         </table>
 
-        {{-- ══ Signature Area ══ --}}
+        {{-- ── Tanda Tangan ── --}}
         <div class="sig-wrap">
+            <div class="sig-date">
+                {{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}
+            </div>
 
-            {{-- Tanggal kanan --}}
-            <div class="sig-date">{{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}</div>
-
-            {{-- 3 kolom --}}
             <div class="sig-row">
-
                 <div class="sig-col left">
                     <div class="sig-label">Kuasa Pengelola Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $getCellVal(40, 'B40', 'ASEP NURSOBAH, S.Ag., M.H.') }}</div>
+                    <div class="sig-name">ASEP NURSOBAH, S.Ag., M.H.</div>
                 </div>
-
                 <div class="sig-col center">
                     <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $getCellVal(40, 'F40', 'ST. KRIS NUGROHO, S.H., M.H.') }}</div>
+                    <div class="sig-name">ST. KRIS NUGROHO, S.H., M.H.</div>
                 </div>
-
                 <div class="sig-col right">
                     <div class="sig-label">Bendahara Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $getCellVal(40, 'L40', 'FARIDA,SH') }}</div>
+                    <div class="sig-name">FARIDA,SH</div>
                 </div>
-
             </div>
 
-            {{-- Mengetahui --}}
             <div class="sig-bottom">
-                <div class="sig-label">Mengetahui,</div>
-                <div class="sig-label">Panitera MA-RI</div>
-                <div class="sig-name">{{ $getCellVal(49, 'F49', 'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.') }}</div>
+                <div class="sig-label">Mengetahui,<br>Panitera MA-RI</div>
+                <div class="sig-name">Dr. SUDHARMAWATININGSIH, S.H., M.Hum.</div>
             </div>
-
         </div>
     @endif
 

@@ -3,222 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak – Rekap Keseluruhan 3</title>
+    <title>Print – Rekap Keseluruhan Halaman 3</title>
     <style>
+        @page { size: A4 landscape; margin: 7mm 6mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 8pt;
-            color: #000;
-            background: #fff;
-        }
-        .page-header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .page-header h1 {
-            font-size: 9pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .page-header p {
-            font-size: 8pt;
-            margin-top: 2px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 7pt;
-        }
-        th, td {
-            border: 1px solid #000;
-            padding: 2px 4px;
-            vertical-align: middle;
-        }
-        th {
-            background-color: #d0e8f0;
-            font-weight: bold;
-            text-align: center;
-        }
-        td.text-left   { text-align: left; }
-        td.text-center { text-align: center; }
-        td.text-right  { text-align: right; }
-        td.total-row {
-            font-weight: bold;
-            background-color: #f0f0f0;
-        }
-        .footer-area {
-            margin-top: 20px;
-        }
-        .signature-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-top: 8px;
-        }
-        .signature-block {
-            min-height: 80px;
-        }
-        .signature-block p {
-            font-size: 7pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .signature-name {
-            margin-top: 60px;
-            border-top: 2px solid #000;
-            padding-top: 2px;
-            font-size: 7.5pt;
-            font-weight: bold;
-        }
-        .mengetahui {
-            margin-top: 16px;
-            text-align: center;
-        }
-        .date-line {
-            text-align: right;
-            margin-bottom: 10px;
-            font-size: 8pt;
-        }
-        @media print {
-            body { margin: 0; }
-            @page { margin: 10mm; size: A3 landscape; }
-        }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 6.5px; color: #111; background: #fff; }
+        .no-print { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background: #f3f4f6; border-bottom: 1px solid #d1d5db; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        @media print { .no-print { display: none !important; } }
+        .doc-title { text-align: center; margin-bottom: 3px; line-height: 1.4; }
+        .doc-title .t1 { font-size: 8px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 7.5px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t3 { font-size: 7px; font-weight: 400; color: #555; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { border: 0.6px solid #555; padding: 1px 2px; vertical-align: middle; font-size: 5.8px; line-height: 1.15; }
+        .hdr { background: #cce5ff; font-weight: 700; text-align: center; font-size: 5.5px; text-transform: uppercase; }
+        .tot { background: #f1f5f9; font-weight: 700; }
+        .c { text-align: center; } .l { text-align: left; } .r { text-align: right; }
+        .b { font-weight: 700; } .netto { color: #166534; font-weight: 700; }
+        .notice { margin: 30px auto; max-width: 600px; padding: 16px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="page-header">
-        <h1>{{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS' }}</h1>
-        <p>{{ $title2 ?: 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK' }}</p>
-        <p>Rincian Honorarium Perkara – Bruto, PPh &amp; Netto</p>
+    <div class="no-print">
+        <span style="font-weight:600; color:#1f2937;">🖨️ Preview – Rekap Keseluruhan 3 (Honorarium Bruto/PPh/Netto)</span>
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.print()" style="padding:7px 22px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Print / Save PDF</button>
+            <button onclick="window.close()" style="padding:7px 16px; background:#e5e7eb; color:#374151; border:none; border-radius:6px; cursor:pointer; font-size:13px;">Tutup</button>
+        </div>
     </div>
 
     @if($error)
-        <p style="color:red; text-align:center;">{{ $error }}</p>
-    @elseif(isset($report) && count($report['rows']) > 0)
+        <div class="notice">{{ $error }}</div>
+    @elseif(!isset($rekap) || !$rekap)
+        <div class="notice">Belum ada data. Silakan buka halaman Rekap Keseluruhan 3 terlebih dahulu.</div>
+    @else
         @php
-            $headerRow  = $report['headerRow'] ?? null;
-            $numericStartColIdx = 3;
-
-            $isHeaderRowFn = function(int $rowNum) use ($headerRow): bool {
-                if ($headerRow === null) return false;
-                return $rowNum >= ($headerRow - 4) && $rowNum <= $headerRow;
-            };
-
-            $isTotalRowFn = function(array $cells): bool {
-                foreach ($cells as $cell) {
-                    $upper = strtoupper(trim($cell['value']));
-                    if (str_contains($upper, 'JUMLAH') || str_contains($upper, 'TOTAL')) {
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            $isFooterRowFn = function(array $cells): bool {
-                $text = '';
-                foreach ($cells as $cell) {
-                    $text .= ' ' . strtolower($cell['value']);
-                }
-                return str_contains($text, 'jakarta') ||
-                       str_contains($text, 'mengetahui') ||
-                       str_contains($text, 'kuasa pengelola') ||
-                       str_contains($text, 'bendahara') ||
-                       str_contains($text, 'panitera');
-            };
-
-            $tableRows  = [];
-            $footerRows = [];
-            foreach ($report['rows'] as $row) {
-                if ($isFooterRowFn($row['cells'])) {
-                    $footerRows[] = $row;
-                } else {
-                    $tableRows[] = $row;
-                }
-            }
+            $jenisList = $rekap['jenis_list'];
+            $rows      = $rekap['rows'];
         @endphp
 
+        <div class="doc-title">
+            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS</div>
+            <div class="t2">YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
+            <div class="t3">Rincian Honorarium Perkara – Bruto, PPh &amp; Netto</div>
+        </div>
+
         <table>
+            <thead>
+                <tr class="hdr">
+                    <th rowspan="2">NO</th>
+                    <th rowspan="2"></th>
+                    <th rowspan="2" class="l">PERUNTUKAN</th>
+                    <th rowspan="2">PPh</th>
+                    @foreach($jenisList as $jenis)
+                        <th colspan="3">{{ $jenis['label'] }}</th>
+                    @endforeach
+                    <th colspan="4">TOTAL</th>
+                </tr>
+                <tr class="hdr">
+                    @foreach($jenisList as $jenis)
+                        <th>BIAYA</th><th>JML</th><th>SUB TOTAL</th>
+                    @endforeach
+                    <th>BRUTO</th><th>PPh 15%</th><th>PPh 5%</th><th>NETTO</th>
+                </tr>
+            </thead>
             <tbody>
-                @foreach($tableRows as $row)
-                    @php
-                        $rowNum   = $row['number'];
-                        $cells    = $row['cells'];
-                        $isHeader = $isHeaderRowFn($rowNum);
-
-                        // Skip baris kosong berdasarkan raw value (dari controller)
-                        if (!$isHeader && !($row['hasData'] ?? true)) continue;
-
-                        $isTotal  = !$isHeader && $isTotalRowFn($cells);
-                    @endphp
+                @php $prevNo = null; @endphp
+                @foreach($rows as $row)
                     <tr>
-                        @foreach($cells as $cell)
-                            @php
-                                $val    = $cell['value'];
-                                $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                                $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
-
-                                if ($isHeader) {
-                                    $align = 'text-center';
-                                } elseif ($colNum === 1) {
-                                    $align = 'text-center';
-                                } elseif ($colNum === 2) {
-                                    $align = 'text-left';
-                                } else {
-                                    $align = 'text-right';
-                                }
-
-                                $display   = $val;
-                                $isNumeric = $colNum >= $numericStartColIdx && !$isHeader;
-                                if ($isNumeric && is_numeric(str_replace([',', '.'], '', $val))) {
-                                    $numVal = (float) str_replace([',', '.'], '', $val);
-                                    $display = $numVal != 0 ? number_format($numVal, 0, ',', '.') : '-';
-                                } elseif ($isNumeric && ($val === '' || $val === null)) {
-                                    $display = '-';
-                                }
-
-                                $tdClass = $align;
-                                if ($isTotal) $tdClass .= ' total-row';
-                            @endphp
-                            @if($isHeader)
-                                <th rowspan="{{ $cell['rowspan'] }}" colspan="{{ $cell['colspan'] }}">{{ $display }}</th>
-                            @else
-                                <td rowspan="{{ $cell['rowspan'] }}" colspan="{{ $cell['colspan'] }}" class="{{ $tdClass }}">{{ $display }}</td>
-                            @endif
+                        <td class="c">@if($row['no'] !== $prevNo){{ $row['no'] }}@endif</td>
+                        <td class="c">{{ $row['label_no'] }}</td>
+                        <td class="l">{{ $row['peruntukan'] }}</td>
+                        <td class="c">{{ $row['pph_pool'] }}%</td>
+                        @foreach($jenisList as $jenis)
+                            @php $j = $row['per_jenis'][$jenis['key']]; @endphp
+                            <td class="r">{{ $j['biaya'] > 0 ? number_format($j['biaya'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $j['jumlah'] > 0 ? number_format($j['jumlah'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $j['sub_total'] > 0 ? number_format($j['sub_total'], 0, ',', '.') : '-' }}</td>
                         @endforeach
+                        <td class="r b">{{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                        <td class="r netto">{{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}</td>
                     </tr>
+                    @php $prevNo = $row['no']; @endphp
                 @endforeach
+                <tr class="tot">
+                    <td colspan="4" class="b">JUMLAH</td>
+                    @foreach($jenisList as $jenis)
+                        <td colspan="2"></td>
+                        <td class="r b">{{ $rekap['jumlah_jenis'][$jenis['key']] > 0 ? number_format($rekap['jumlah_jenis'][$jenis['key']], 0, ',', '.') : '-' }}</td>
+                    @endforeach
+                    <td class="r b">{{ $rekap['jumlah_bruto'] > 0 ? number_format($rekap['jumlah_bruto'], 0, ',', '.') : '-' }}</td>
+                    <td class="r b">{{ $rekap['jumlah_pph15'] > 0 ? number_format($rekap['jumlah_pph15'], 0, ',', '.') : '-' }}</td>
+                    <td class="r b">{{ $rekap['jumlah_pph5'] > 0 ? number_format($rekap['jumlah_pph5'], 0, ',', '.') : '-' }}</td>
+                    <td class="r netto">{{ $rekap['jumlah_netto'] > 0 ? number_format($rekap['jumlah_netto'], 0, ',', '.') : '-' }}</td>
+                </tr>
             </tbody>
         </table>
-
-        <div class="footer-area">
-            <div class="date-line">{{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}</div>
-            <div class="signature-grid">
-                <div class="signature-block">
-                    <p>Kuasa Pengelola Biaya Proses</p>
-                    <div class="signature-name">&nbsp;</div>
-                </div>
-                <div class="signature-block" style="text-align:center;">
-                    <p>Petugas Pembuat Komitmen<br>Biaya Proses</p>
-                    <div class="signature-name">&nbsp;</div>
-                </div>
-                <div class="signature-block" style="text-align:right;">
-                    <p>Bendahara Biaya Proses</p>
-                    <div class="signature-name">&nbsp;</div>
-                </div>
-            </div>
-            <div class="mengetahui">
-                <p style="font-size:7pt; font-weight:bold; text-transform:uppercase;">Mengetahui,</p>
-                <p style="font-size:7pt; font-weight:bold; text-transform:uppercase; margin-top:2px;">Panitera MA-RI</p>
-                <div class="signature-name" style="width:200px; margin: 60px auto 0;">&nbsp;</div>
-            </div>
-        </div>
-    @else
-        <p style="text-align:center; padding:40px;">Tabel honorarium tidak ditemukan dalam file Excel.</p>
     @endif
 
-    <script>window.onload = function() { window.print(); }</script>
+    <script>
+        @if(!$error && isset($rekap) && $rekap)
+        window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 400); });
+        @endif
+    </script>
 </body>
 </html>

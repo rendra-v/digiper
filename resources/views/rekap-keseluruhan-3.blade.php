@@ -8,7 +8,7 @@
     {{-- ─── Header Page ─── --}}
     <div class="mb-8 flex items-center justify-between">
         <div>
-            <h2 class="text-4xl font-semibold tracking-tight mb-3">Rekap Keseluruhan</h2>
+            <h2 class="text-4xl font-semibold tracking-tight mb-3">Rekap Keseluruhan 3</h2>
             <p class="text-neutral-500 dark:text-neutral-400">
                 Rekapitulasi Honorarium Biaya Perkara – Bruto, PPh &amp; Netto
                 @if($fileName)
@@ -33,7 +33,6 @@
                             <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan 1</option>
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
                             <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
-
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,46 +94,19 @@
         </div>
     @endif
 
-    @if(!$error && isset($report) && count($report['rows']) > 0)
+    @if(!$error && isset($rekap) && count($rekap['rows']) > 0)
         @php
-            $headerRow  = $report['headerRow'] ?? null;
-            $startColIdx = $report['startColIdx'] ?? 1;
-            // Kolom ke-2 dalam tabel (relatif ke startColIdx) biasanya adalah Nama/Jabatan
-            $colNoAbs   = $startColIdx;       // Kolom pertama = NO
-            $colNamaAbs = $startColIdx + 1;   // Kolom kedua  = Nama/Jabatan
-
-            $isHeaderRowFn = function(int $rowNum) use ($headerRow): bool {
-                if ($headerRow === null) return false;
-                // Extend to headerRow+1 untuk menangkap baris subheader BIAYA|JML|SUB TOTAL
-                return $rowNum >= ($headerRow - 4) && $rowNum <= ($headerRow + 1);
-            };
-
-            // Cek apakah baris punya minimal satu sel tidak kosong
-            $rowHasContentFn = function(array $cells): bool {
-                foreach ($cells as $cell) {
-                    if (trim($cell['value']) !== '') return true;
-                }
-                return false;
-            };
-
-            $isTotalRowFn = function(array $cells): bool {
-                foreach ($cells as $cell) {
-                    $upper = strtoupper(trim($cell['value']));
-                    if (str_contains($upper, 'JUMLAH') || str_contains($upper, 'TOTAL')) {
-                        return true;
-                    }
-                }
-                return false;
-            };
+            $jenisList = $rekap['jenis_list'];
+            $rows      = $rekap['rows'];
         @endphp
 
         {{-- ─── Title ─── --}}
         <div class="mb-4 text-center">
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                {{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS' }}
+                REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS
             </p>
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
-                {{ $title2 ?: 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK' }}
+                YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
             </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rincian Honorarium Perkara – Bruto, PPh &amp; Netto</p>
         </div>
@@ -143,204 +115,113 @@
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 @php
-                    // ── Pre-separation: pisahkan baris header dan baris data ──
-                    $theadRows = [];
-                    $tbodyRows = [];
-                    foreach ($report['rows'] as $_row) {
-                        $_isHdr = $isHeaderRowFn($_row['number']);
-                        if ($_isHdr) {
-                            if ($rowHasContentFn($_row['cells'])) {
-                                $theadRows[] = $_row;
-                            }
-                        } else {
-                            if ($_row['hasData'] ?? true) {
-                                $tbodyRows[] = $_row;
-                            }
-                        }
-                    }
-
-                    // ── Filter $tbodyRows: buang baris yang hanya berisi keyword subheader ──
-                    // Ini menangani kasus di mana baris BIAYA/JML/SUB TOTAL "lolos" ke tbody
-                    // (misalnya karena ada 2 baris subheader di Excel, atau isHeaderRowFn terlalu sempit).
-                    $_tbodySubhdrKeywords = ['BIAYA','JML','SUB TOTAL','BRUTO','NETTO','PPH','PPh','TOTAL'];
-                    $_isSubhdrOnlyRow = function(array $cells) use ($_tbodySubhdrKeywords): bool {
-                        $nonEmptyCount = 0;
-                        $subhdrCount   = 0;
-                        foreach ($cells as $cell) {
-                            $v = trim($cell['value']);
-                            if ($v === '' || $v === '-' || $v === '0') continue;
-                            $nonEmptyCount++;
-                            $upper = strtoupper($v);
-                            foreach ($_tbodySubhdrKeywords as $_kw) {
-                                if (str_contains($upper, strtoupper($_kw))) {
-                                    $subhdrCount++;
-                                    break;
-                                }
-                            }
-                        }
-                        // Baris dianggap "subheader only" jika semua sel non-kosong adalah keyword subheader
-                        return $nonEmptyCount > 0 && $subhdrCount === $nonEmptyCount;
-                    };
-                    $tbodyRows = array_values(array_filter(
-                        $tbodyRows,
-                        function ($_row) use ($_isSubhdrOnlyRow) {
-                            return !$_isSubhdrOnlyRow($_row['cells']);
-                        }
-                    ));
-
-                    // ── Ekstrak nama kategori dari theadRows[0] untuk thead statis ──
-                    // Ambil semua sel dengan colspan >= 3 (= nama grup perkara / TOTAL)
-                    $_categories = []; // [['label' => string, 'isTotal' => bool]]
-                    if (count($theadRows) >= 1) {
-                        foreach ($theadRows[0]['cells'] as $_c) {
-                            if (($_c['colspan'] ?? 1) >= 3) {
-                                $isTotal = strtoupper(trim($_c['value'])) === 'TOTAL'
-                                    || (($_c['colspan'] ?? 1) >= 4);
-                                $_categories[] = [
-                                    'label'   => $_c['value'],
-                                    'colspan' => $_c['colspan'],
-                                    'isTotal' => $isTotal,
-                                ];
-                            }
-                        }
-                    }
-
-                    // Fallback: jika tidak ditemukan dari theadRows, gunakan nama default
-                    if (empty($_categories)) {
-                        $_categories = [
-                            ['label' => 'KASASI PDT, PDTSUS, AG (Rp400.000)', 'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'KASASI TUN (Rp400.000)',              'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'KASASI NIAGA (Rp5.000.000)',          'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK PDT (Rp2.000.000)',                'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'P - HUM/KHS (TUN) (Rp1.000.000)',    'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK - PAJAK (Rp2.000.000)',            'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK - PDT KHUSUS (Rp2.000.000)',       'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK - AGAMA (Rp2.000.000)',            'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK - TUN (Rp2.000.000)',              'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'PK NIAGA (Rp10.000.000)',             'colspan' => 3, 'isTotal' => false],
-                            ['label' => 'TOTAL',                               'colspan' => 4, 'isTotal' => true],
-                        ];
-                    }
-
-                    $_thBase = 'border border-neutral-300 dark:border-neutral-600 text-xs font-bold text-neutral-800 dark:text-neutral-200 text-center align-middle whitespace-nowrap';
+                    $thBase = 'border border-neutral-300 dark:border-neutral-600 text-xs font-bold text-neutral-800 dark:text-neutral-200 text-center align-middle whitespace-nowrap px-2 py-2';
                 @endphp
                 <table class="w-full text-xs border-collapse">
-
-                    {{-- ▸ HEADER STATIS: identik dengan struktur Excel referensi --}}
                     <thead>
-                        {{-- Baris 1: NO | PERUNTUKAN | % | Nama Kategori × N | TOTAL --}}
-                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
-                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">NO</th>
-                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2">PERUNTUKAN</th>
-                            <th rowspan="2" class="{{ $_thBase }} px-2 py-2"></th>
-                            @foreach($_categories as $_cat)
-                                <th colspan="{{ $_cat['colspan'] }}"
-                                    class="{{ $_thBase }} px-2 py-2">{{ $_cat['label'] }}</th>
+                        {{-- Baris 1: NO | label | PERUNTUKAN | PPh | Jenis Perkara | TOTAL --}}
+                        <tr class="bg-sky-100 dark:bg-sky-900/40">
+                            <th rowspan="2" class="{{ $thBase }}">NO</th>
+                            <th rowspan="2" class="{{ $thBase }}"></th>
+                            <th rowspan="2" class="{{ $thBase }} text-left px-3">PERUNTUKAN</th>
+                            <th rowspan="2" class="{{ $thBase }}">PPh</th>
+                            @foreach($jenisList as $jenis)
+                                <th colspan="3" class="{{ $thBase }}">{{ $jenis['label'] }}</th>
                             @endforeach
+                            <th colspan="4" class="{{ $thBase }}">TOTAL</th>
                         </tr>
-                        {{-- Baris 2: BIAYA|JML|SUB TOTAL per kategori, BRUTO|PPh15%|PPh5%|NETTO untuk TOTAL --}}
-                        <tr class="bg-sky-50 dark:bg-sky-950/40 border-b border-neutral-300 dark:border-neutral-700">
-                            @foreach($_categories as $_cat)
-                                @if($_cat['isTotal'])
-                                    <th class="{{ $_thBase }} px-1.5 py-1">BRUTO</th>
-                                    <th class="{{ $_thBase }} px-1.5 py-1">PPh 15%</th>
-                                    <th class="{{ $_thBase }} px-1.5 py-1">PPh 5%</th>
-                                    <th class="{{ $_thBase }} px-1.5 py-1">NETTO</th>
-                                @else
-                                    <th class="{{ $_thBase }} px-1.5 py-1">BIAYA</th>
-                                    <th class="{{ $_thBase }} px-1.5 py-1">JML</th>
-                                    <th class="{{ $_thBase }} px-1.5 py-1">SUB TOTAL</th>
-                                @endif
+                        {{-- Baris 2: BIAYA | JML | SUB TOTAL per jenis, lalu BRUTO | PPh15% | PPh5% | NETTO --}}
+                        <tr class="bg-sky-50 dark:bg-sky-950/40">
+                            @foreach($jenisList as $jenis)
+                                <th class="{{ $thBase }}">BIAYA</th>
+                                <th class="{{ $thBase }}">JML</th>
+                                <th class="{{ $thBase }}">SUB TOTAL</th>
                             @endforeach
+                            <th class="{{ $thBase }}">BRUTO</th>
+                            <th class="{{ $thBase }}">PPh 15%</th>
+                            <th class="{{ $thBase }}">PPh 5%</th>
+                            <th class="{{ $thBase }}">NETTO</th>
                         </tr>
                     </thead>
-
-                    {{-- ▸ BODY: baris data --}}
-                    {{-- Kolom % (startColIdx+2) dipindah ke PERUNTUKAN jika PERUNTUKAN kosong, lalu di-skip --}}
-                    @php $colPctAbs = $startColIdx + 2; @endphp
                     <tbody>
-                        @foreach($tbodyRows as $row)
+                        @php $prevNo = null; @endphp
+                        @foreach($rows as $row)
                             @php
-                                $rawCells = $row['cells'];
-                                $isTotal  = $isTotalRowFn($rawCells);
-                                $trBg     = $isTotal
-                                    ? 'bg-neutral-100 dark:bg-neutral-800/60'
-                                    : 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
-
-                                // Ambil nilai dari kolom % untuk dipindahkan ke PERUNTUKAN
-                                $pctVal = '';
-                                $pctRowspan = 1;
-                                $pctColspan = 1;
-                                foreach ($rawCells as $_c) {
-                                    $_cn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(
-                                        preg_replace('/\d+/', '', $_c['reference'])
-                                    );
-                                    if ($_cn === $colPctAbs) {
-                                        $pctVal     = $_c['value'];
-                                        $pctRowspan = $_c['rowspan'];
-                                        $pctColspan = $_c['colspan'];
-                                        break;
-                                    }
-                                }
-
-                                // Buat array cells baru: isi PERUNTUKAN dari kolom % jika kosong, skip kolom %
-                                $cells = [];
-                                foreach ($rawCells as $_c) {
-                                    $_cn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(
-                                        preg_replace('/\d+/', '', $_c['reference'])
-                                    );
-                                    if ($_cn === $colPctAbs) {
-                                        continue; // skip kolom %
-                                    }
-                                    if ($_cn === $colNamaAbs && trim($_c['value']) === '' && trim($pctVal) !== '') {
-                                        $_c['value']   = $pctVal;
-                                        $_c['rowspan'] = $pctRowspan;
-                                        $_c['colspan'] = $pctColspan;
-                                    }
-                                    $cells[] = $_c;
-                                }
+                                $isFirst = ($row['no'] !== $prevNo);
+                                $prevNo  = $row['no'];
+                                $trBg    = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
                             @endphp
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
-                                @foreach($cells as $cell)
-                                    @php
-                                        $val    = $cell['value'];
-                                        $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                                        $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
-
-                                        // Alignment: NO=center, Nama/Peruntukan=left, numerik=right
-                                        if ($colNum === $colNoAbs) {
-                                            $align = 'text-center';
-                                        } elseif ($colNum === $colNamaAbs) {
-                                            $align = 'text-left';
-                                        } else {
-                                            $align = 'text-right';
-                                        }
-
-                                        // Format angka pada kolom numerik (kolom setelah kolom %)
-                                        $display   = $val;
-                                        $isNumeric = ($colNum > $colPctAbs);
-                                        if ($isNumeric) {
-                                            $stripped = str_replace([',', '.'], '', $val);
-                                            if (is_numeric($stripped) && (float) $stripped != 0) {
-                                                $display = number_format((float) $stripped, 0, ',', '.');
-                                            } elseif ($val === '' || $val === '0' || (is_numeric($val) && (float) $val == 0)) {
-                                                $display = '-';
-                                            }
-                                        }
-
-                                        $tdClass  = 'border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-xs '.$align;
-                                        $tdClass .= $isTotal
-                                            ? ' font-bold text-neutral-900 dark:text-neutral-100'
-                                            : ' text-neutral-800 dark:text-neutral-200';
-                                    @endphp
-                                    <td rowspan="{{ $cell['rowspan'] }}"
-                                        colspan="{{ $cell['colspan'] }}"
-                                        class="{{ $tdClass }}">{{ $display }}</td>
+                                {{-- NO --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
+                                    @if($isFirst) {{ $row['no'] }} @endif
+                                </td>
+                                {{-- label_no --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
+                                    {{ $row['label_no'] }}
+                                </td>
+                                {{-- PERUNTUKAN --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-left text-xs">
+                                    {{ $row['peruntukan'] }}
+                                </td>
+                                {{-- PPh pool --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs text-neutral-500">
+                                    {{ $row['pph_pool'] }}%
+                                </td>
+                                {{-- Per jenis: BIAYA | JML | SUB TOTAL --}}
+                                @foreach($jenisList as $jenis)
+                                    @php $j = $row['per_jenis'][$jenis['key']]; @endphp
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['biaya'] > 0 ? number_format($j['biaya'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['jumlah'] > 0 ? number_format($j['jumlah'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['sub_total'] > 0 ? number_format($j['sub_total'], 0, ',', '.') : '-' }}
+                                    </td>
                                 @endforeach
+                                {{-- TOTAL: BRUTO | PPh15% | PPh5% | NETTO --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs font-semibold">
+                                    {{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                    {{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                    {{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                    {{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}
+                                </td>
                             </tr>
                         @endforeach
-                    </tbody>
 
+                        {{-- Baris JUMLAH --}}
+                        <tr class="bg-neutral-100 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 font-bold">
+                            <td colspan="4" class="border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                JUMLAH
+                            </td>
+                            @foreach($jenisList as $jenis)
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold" colspan="2"></td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                    {{ $rekap['jumlah_jenis'][$jenis['key']] > 0 ? number_format($rekap['jumlah_jenis'][$jenis['key']], 0, ',', '.') : '-' }}
+                                </td>
+                            @endforeach
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                {{ $rekap['jumlah_bruto'] > 0 ? number_format($rekap['jumlah_bruto'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                {{ $rekap['jumlah_pph15'] > 0 ? number_format($rekap['jumlah_pph15'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                {{ $rekap['jumlah_pph5'] > 0 ? number_format($rekap['jumlah_pph5'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                {{ $rekap['jumlah_netto'] > 0 ? number_format($rekap['jumlah_netto'], 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -349,7 +230,7 @@
         <div class="mt-12 mb-16">
             <div class="flex justify-end mb-8">
                 <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                    {{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}
+                    {{ $recapDate ?: '' }}
                 </p>
             </div>
             <div class="grid grid-cols-3 gap-8">
@@ -388,9 +269,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             @if(! $error)
-                <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Tabel honorarium tidak ditemukan</p>
+                <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Belum ada data</p>
                 <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">
-                    Pastikan sheet "Rekap Keseluruhan" memiliki tabel dengan kolom PEJABATAN / BRUTO / NETTO di bawah area rekap utama.
+                    Harap upload file Excel yang mengandung sheet "Data Print" di Dashboard.
                 </p>
             @endif
             <div class="flex gap-3 justify-center mt-6">

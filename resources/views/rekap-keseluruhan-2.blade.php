@@ -73,77 +73,19 @@
         </div>
     @endif
 
-    @if(!$error && isset($report) && count($report['rows']) > 0)
+    @if(!$error && isset($rekap) && count($rekap['rows']) > 0)
         @php
-            /**
-             * Tabel kanan atas dari Excel – area Q4:AY38
-             *
-             * STRUKTUR KOLOM (relatif dari Q=1):
-             *   Pos 1  = Q  = NO               (rowspan 3)
-             *   Pos 2  = R  = (no label)
-             *   Pos 3  = S  = PERUNTUKAN        (rowspan 3)
-             *   Pos 4  = T  = %                 (rowspan 3)
-             *   Pos 5  = U  = KASASI PDT... BIAYA
-             *   Pos 6  = V  = JML
-             *   Pos 7  = W  = SUB TOTAL
-             *   Pos 8  = X  = KASASI TUN... BIAYA
-             *   ... dst tiap kelompok 3 kolom
-             *   Pos 35 = AY = TOTAL             (rowspan 3)
-             *
-             * BARIS:
-             *   Row 4-5  = header level 1 (merged)
-             *   Row 6    = sub-header (BIAYA|JML|SUB TOTAL per kelompok)
-             *   Row 7    = (merged dari baris 6, hasil rowspan)
-             *   Row 8-38 = data
-             *
-             * Header baris: 4, 5, 6 (row 7 adalah covered dari merge row 6)
-             */
-            $HEADER_START = 4;
-            $HEADER_END   = 6;  // baris 7 adalah covered cell dari rowspan baris 6
-            $DATA_END     = 38;
-
-            // Mapping kolom Excel (letter) ke index numerik relatif (mulai Q=17)
-            $startColNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('Q');
-
-            // Kolom-kolom yang termasuk "numerik" untuk diformat (kolom U ke AX, yaitu index 21-50)
-            $numericStartCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('U');
-            $numericEndCol   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('AX');
-            $totalCol        = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('AY');
-
-            // Kolom yang alignment-nya teks (kiri/center)
-            // Q=17(NO,center), R=18(hidden label,left), S=19(PERUNTUKAN,left), T=20(%,center)
-            $colQ = 17; $colR = 18; $colS = 19; $colT = 20;
-
-            // Baris yang dianggap "jumlah/total" untuk styling bold + bg
-            $isJumlahRow = function(int $rowNum, array $cells) {
-                // Baris 31 di Excel (JUMLAH) - tidak ada di output karena Q51:Q53 di baris berbeda
-                // Cek apakah peruntukan mengandung JUMLAH
-                foreach ($cells as $cell) {
-                    $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                    $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
-                    if ($colNum === 19 && stripos($cell['value'], 'JUMLAH') !== false) return true;
-                }
-                return false;
-            };
-
-            // Baris yang merupakan "100%" total akhir
-            $is100Row = function(int $rowNum, array $cells) {
-                foreach ($cells as $cell) {
-                    $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                    $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
-                    if ($colNum === 20 && $cell['value'] === '100%') return true;
-                }
-                return false;
-            };
+            $jenisList = $rekap['jenis_list'];
+            $rows      = $rekap['rows'];
         @endphp
 
         {{-- ─── Title ─── --}}
         <div class="mb-5 text-center">
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                {{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS' }}
+                REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS
             </p>
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
-                {{ $title2 ?: 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK' }}
+                YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
             </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Distribusi Biaya Per Peruntukan</p>
         </div>
@@ -151,126 +93,95 @@
         {{-- ─── Table ─── --}}
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-xs border-collapse" style="min-width: 2200px;">
-                    <colgroup>
-                        {{-- Q: NO --}}            <col style="width: 35px;">
-                        {{-- R: (label no) --}}    <col style="width: 25px;">
-                        {{-- S: PERUNTUKAN --}}    <col style="width: 300px;">
-                        {{-- T: % --}}             <col style="width: 45px;">
-                        {{-- KASASI PDT,PDTSUS,AG: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 80px;"><col style="width: 55px;"><col style="width: 110px;">
-                        {{-- KASASI TUN: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 80px;"><col style="width: 45px;"><col style="width: 90px;">
-                        {{-- KASASI NIAGA: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 40px;"><col style="width: 90px;">
-                        {{-- PK: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 45px;"><col style="width: 105px;">
-                        {{-- P-HUM: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 80px;"><col style="width: 40px;"><col style="width: 85px;">
-                        {{-- PK-PAJAK: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 55px;"><col style="width: 120px;">
-                        {{-- PK-PDT KHUSUS: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 40px;"><col style="width: 90px;">
-                        {{-- PK-AGAMA: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 40px;"><col style="width: 95px;">
-                        {{-- PK-TUN: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 40px;"><col style="width: 95px;">
-                        {{-- PK NIAGA: BIAYA|JML|SUB TOTAL --}}
-                        <col style="width: 90px;"><col style="width: 40px;"><col style="width: 95px;">
-                        {{-- AY: TOTAL --}}         <col style="width: 130px;">
-                    </colgroup>
+                @php
+                    $thBase = 'border border-neutral-300 dark:border-neutral-600 text-xs font-bold text-neutral-800 dark:text-neutral-200 text-center align-middle whitespace-nowrap px-2 py-2';
+                @endphp
+                <table class="w-full text-xs border-collapse" style="min-width: 1600px;">
+                    <thead>
+                        {{-- Baris 1: NO | label | PERUNTUKAN | PPh | Jenis Perkara ... | TOTAL --}}
+                        <tr class="bg-sky-100 dark:bg-sky-900/40">
+                            <th rowspan="2" class="{{ $thBase }}">NO</th>
+                            <th rowspan="2" class="{{ $thBase }}"></th>
+                            <th rowspan="2" class="{{ $thBase }} text-left px-3">PERUNTUKAN</th>
+                            <th rowspan="2" class="{{ $thBase }}">PPh</th>
+                            @foreach($jenisList as $jenis)
+                                <th colspan="3" class="{{ $thBase }}">{{ $jenis['label'] }}</th>
+                            @endforeach
+                            <th rowspan="2" class="{{ $thBase }}">TOTAL</th>
+                        </tr>
+                        {{-- Baris 2: BIAYA | JML | SUB TOTAL per jenis --}}
+                        <tr class="bg-sky-50 dark:bg-sky-950/40">
+                            @foreach($jenisList as $jenis)
+                                <th class="{{ $thBase }}">BIAYA</th>
+                                <th class="{{ $thBase }}">JML</th>
+                                <th class="{{ $thBase }}">SUB TOTAL</th>
+                            @endforeach
+                        </tr>
+                    </thead>
                     <tbody>
-                        @foreach($report['rows'] as $row)
+                        @php $prevNo = null; @endphp
+                        @foreach($rows as $row)
                             @php
-                                $rowNum = $row['number'];
-                                $cells  = $row['cells'];
-
-                                $isHeaderRow  = ($rowNum >= $HEADER_START && $rowNum <= $HEADER_END);
-
-                                // Skip baris kosong berdasarkan raw value (dari controller)
-                                if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
-
-                                $isJumlah     = !$isHeaderRow && $isJumlahRow($rowNum, $cells);
-                                $isTotal100   = !$isHeaderRow && !$isJumlah && $is100Row($rowNum, $cells);
-
-                                // Warna baris
-                                if ($isHeaderRow) {
-                                    $trBg = 'bg-sky-100 dark:bg-sky-900/40';
-                                } elseif ($isJumlah) {
-                                    $trBg = 'bg-neutral-100 dark:bg-neutral-800/60';
-                                } elseif ($isTotal100) {
-                                    $trBg = 'bg-amber-50 dark:bg-amber-900/20';
-                                } else {
-                                    $trBg = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
-                                }
+                                $isFirst15 = ($row['no'] !== $prevNo);
+                                $prevNo    = $row['no'];
+                                $trBg      = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
                             @endphp
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
-                                @foreach($cells as $cell)
-                                    @php
-                                        $val    = $cell['value'];
-                                        $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                                        $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
-
-                                        // ── Alignment ──
-                                        if ($isHeaderRow) {
-                                            $align = 'text-center';
-                                        } elseif ($colNum === $colQ) {
-                                            // NO: center
-                                            $align = 'text-center';
-                                        } elseif ($colNum === $colR) {
-                                            // label (a., b., dst): center
-                                            $align = 'text-center';
-                                        } elseif ($colNum === $colS) {
-                                            // PERUNTUKAN: left
-                                            $align = 'text-left';
-                                        } elseif ($colNum === $colT) {
-                                            // %: center
-                                            $align = 'text-center';
-                                        } else {
-                                            // Kolom numerik: right
-                                            $align = 'text-right';
-                                        }
-
-                                        // ── Format nilai numerik ──
-                                        $display = $val;
-                                        // Kolom numerik: U–AX dan AY (total)
-                                        $isNumericCol = ($colNum >= $numericStartCol && $colNum <= $totalCol);
-
-                                        if (!$isHeaderRow && $isNumericCol) {
-                                            // Jika nilai sudah berformat (misal "1,912" atau "19,120,000")
-                                            // konversi ke numerik dulu lalu format ulang
-                                            $numericVal = str_replace([',', '.'], '', $val);
-                                            if (is_numeric($numericVal) && (int)$numericVal !== 0) {
-                                                $display = number_format((float)$numericVal, 0, ',', '.');
-                                            } elseif ($val === '-' || $val === '') {
-                                                $display = '-';
-                                            } elseif (is_numeric($val) && (float)$val == 0) {
-                                                $display = '-';
-                                            }
-                                        }
-
-                                        // ── CSS classes ──
-                                        $tdClass = 'border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-xs ' . $align;
-
-                                        if ($isHeaderRow) {
-                                            $tdClass .= ' font-bold text-neutral-800 dark:text-neutral-200';
-                                        } elseif ($isJumlah || $isTotal100) {
-                                            $tdClass .= ' font-bold text-neutral-900 dark:text-neutral-100';
-                                        } else {
-                                            $tdClass .= ' text-neutral-800 dark:text-neutral-200';
-                                        }
-                                    @endphp
-                                    <td rowspan="{{ $cell['rowspan'] }}"
-                                        colspan="{{ $cell['colspan'] }}"
-                                        class="{{ $tdClass }}">{{ $display }}</td>
+                                {{-- NO --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
+                                    @if($isFirst15) {{ $row['no'] }} @endif
+                                </td>
+                                {{-- label_no --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
+                                    {{ $row['label_no'] }}
+                                </td>
+                                {{-- PERUNTUKAN --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-left text-xs">
+                                    {{ $row['peruntukan'] }}
+                                </td>
+                                {{-- PPh pool --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs text-neutral-500">
+                                    {{ $row['pph_pool'] }}%
+                                </td>
+                                {{-- Per jenis: BIAYA | JML | SUB TOTAL --}}
+                                @foreach($jenisList as $jenis)
+                                    @php $j = $row['per_jenis'][$jenis['key']]; @endphp
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['biaya'] > 0 ? number_format($j['biaya'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['jumlah'] > 0 ? number_format($j['jumlah'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
+                                        {{ $j['sub_total'] > 0 ? number_format($j['sub_total'], 0, ',', '.') : '-' }}
+                                    </td>
                                 @endforeach
+                                {{-- TOTAL baris --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs font-semibold">
+                                    {{ $row['total'] > 0 ? number_format($row['total'], 0, ',', '.') : '-' }}
+                                </td>
                             </tr>
                         @endforeach
+
+                        {{-- Baris JUMLAH --}}
+                        <tr class="bg-neutral-100 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 font-bold">
+                            <td colspan="4" class="border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                JUMLAH
+                            </td>
+                            @foreach($jenisList as $jenis)
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold" colspan="2"></td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                    {{ $rekap['jumlah_jenis'][$jenis['key']] > 0 ? number_format($rekap['jumlah_jenis'][$jenis['key']], 0, ',', '.') : '-' }}
+                                </td>
+                            @endforeach
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
+                                {{ $rekap['jumlah_grand'] > 0 ? number_format($rekap['jumlah_grand'], 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
 
     @else
         {{-- Empty state --}}

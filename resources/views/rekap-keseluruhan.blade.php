@@ -75,32 +75,14 @@
         </div>
     @endif
 
-    @if(!$error && isset($report))
-        @php
-            $rows = collect($report['rows'])->keyBy('number');
-            $getCellVal = function (int $rowNum, string $ref, string $default = '') use ($rows) {
-                $row  = $rows->get($rowNum);
-                $cell = $row ? collect($row['cells'] ?? [])->firstWhere('reference', $ref) : null;
-                $v    = $cell['value'] ?? '';
-                return ($v !== '' && $v !== null) ? $v : $default;
-            };
-
-            // Baris header Excel (dengan merged cells) ada di baris 4–8
-            // Baris data ada di 9–34
-            // Baris footer/ttd ada di 35+  → tidak dirender di tabel
-            $HEADER_END  = 8;   // baris terakhir header Excel
-            $DATA_END    = 34;  // baris terakhir data tabel
-
-            $romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-        @endphp
-
+    @if(!$error && isset($rekap))
         {{-- ─── Title ─── --}}
         <div class="mb-2 text-center">
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                {{ $title1 ?: 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS' }}
+                REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS
             </p>
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
-                {{ $title2 ?: 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK' }}
+                YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
             </p>
         </div>
 
@@ -108,13 +90,6 @@
 
         <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                {{--
-                    Pendekatan: render SEMUA baris Excel 4–34 langsung dari data report.
-                    Merged cells (rowspan/colspan) sudah diekstrak oleh buildRekapKeseluruhanReport().
-                    Baris 4–HEADER_END diperlakukan sebagai header (warna biru, bold, center).
-                    Baris (HEADER_END+1)–DATA_END adalah baris data.
-                    Tidak ada <thead> hardcoded — biarkan Excel yang menentukan struktur merge.
-                --}}
                 <table class="w-full text-xs border-collapse" style="min-width: 1080px;">
                     <colgroup>
                         {{-- Col A: No --}}
@@ -138,88 +113,83 @@
                         {{-- Col N: Total --}}
                         <col style="width: 7%;">
                     </colgroup>
+                    <thead>
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200">
+                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">NO.</td>
+                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">JENIS PERKARA</td>
+                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">KLASIFIKASI</td>
+                            <td colspan="10" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">JUMLAH PERKARA</td>
+                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">TOTAL JML MINUTASI TEPAT WAKTU (120 HARI)</td>
+                        </tr>
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200">
+                            <td colspan="5" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">KASASI</td>
+                            <td colspan="5" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">PENINJAUAN KEMBALI</td>
+                        </tr>
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200 text-[10px] leading-tight">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">SISA S.D TH<br>LALU</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">MASUK TH<br>INI</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">PUTUS</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">BELUM PUTUS</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">JML MINUT TEPAT WAKTU (120 HARI)</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">SISA S.D TH<br>LALU</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">MASUK TH<br>INI</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">PUTUS</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">BELUM PUTUS</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">JML MINUT TEPAT WAKTU (120 HARI)</td>
+                        </tr>
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center text-[10px] text-neutral-600 dark:text-neutral-400">
+                            @for($i = 1; $i <= 14; $i++)
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">{{ $i }}</td>
+                            @endfor
+                        </tr>
+                    </thead>
                     <tbody>
-                        @foreach($report['rows'] as $row)
+                        @foreach($rekap['rows'] as $row)
                             @php
-                                $rowNum = $row['number'];
-
-                                // Skip baris judul (1-3) dan baris ttd (35+)
-                                if ($rowNum < 4 || $rowNum > $DATA_END) continue;
-
-                                $isHeaderRow = ($rowNum <= $HEADER_END);
-
-                                // Skip baris kosong berdasarkan raw value (dari controller)
-                                if (!$isHeaderRow && !($row['hasData'] ?? true)) continue;
-
-                                $firstCell = collect($row['cells'])->first();
-                                $firstVal  = trim($firstCell['value'] ?? '');
-
-                                $isCategoryRow = !$isHeaderRow && in_array($firstVal, $romanNumerals);
-                                $isTotalRow    = !$isHeaderRow
-                                    && (stripos($firstVal, 'TOTAL') !== false
-                                     || stripos($firstVal, 'JUMLAH') !== false);
-
-                                // Warna baris
-                                if ($isHeaderRow) {
-                                    $trBg = 'bg-sky-100 dark:bg-sky-900/40';
-                                } elseif ($isCategoryRow) {
-                                    $trBg = 'bg-cyan-50 dark:bg-cyan-900/20';
-                                } elseif ($isTotalRow) {
-                                    $trBg = 'bg-neutral-100 dark:bg-neutral-800/60';
-                                } else {
-                                    $trBg = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
-                                }
+                                $trBg = $row['is_category'] 
+                                    ? 'bg-cyan-50 dark:bg-cyan-900/20 font-bold text-neutral-900 dark:text-neutral-100'
+                                    : 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30 text-neutral-800 dark:text-neutral-200';
                             @endphp
                             <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
-                                @foreach($row['cells'] as $cell)
-                                    @php
-                                        $val    = $cell['value'];
-                                        $colLtr = preg_replace('/\d+/', '', $cell['reference']);
-                                        $colNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLtr);
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-center">{{ $row['no'] }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-left">{{ $row['perkara'] }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-left">{{ $row['klasifikasi'] }}</td>
+                                
+                                {{-- Kasasi --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['sisa'] > 0 ? number_format($row['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['masuk'] > 0 ? number_format($row['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['putus'] > 0 ? number_format($row['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['blm'] > 0 ? number_format($row['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['minut'] > 0 ? number_format($row['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
 
-                                        // ── Alignment ──
-                                        if ($isHeaderRow) {
-                                            $align = 'text-center';
-                                        } elseif ($colNum === 1) {
-                                            $align = 'text-center';
-                                        } elseif ($colNum === 2) {
-                                            $align = 'text-left';
-                                        } elseif ($colNum === 3) {
-                                            $align = 'text-center';
-                                        } else {
-                                            $align = 'text-right';
-                                        }
+                                {{-- PK --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['sisa'] > 0 ? number_format($row['pk']['sisa'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['masuk'] > 0 ? number_format($row['pk']['masuk'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['putus'] > 0 ? number_format($row['pk']['putus'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['blm'] > 0 ? number_format($row['pk']['blm'], 0, ',', '.') : '-' }}</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['minut'] > 0 ? number_format($row['pk']['minut'], 0, ',', '.') : '-' }}</td>
 
-                                        // ── Format nilai ──
-                                        $display = $val;
-                                        if (!$isHeaderRow && is_numeric($val) && (float)$val != 0 && $colNum >= 4) {
-                                            $display = number_format((float)$val, 0, ',', '.');
-                                        }
-                                        // Tampilkan '-' untuk angka 0 / kosong di kolom numerik (bukan header)
-                                        if (!$isHeaderRow
-                                            && $colNum >= 4
-                                            && ($display === '' || $display === null || (string)$display === '0' || (float)($val ?? 0) == 0)
-                                        ) {
-                                            $display = '-';
-                                        }
-
-                                        // ── CSS classes ──
-                                        $tdClass = 'border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-xs ' . $align;
-
-                                        if ($isHeaderRow) {
-                                            $tdClass .= ' font-bold text-neutral-800 dark:text-neutral-200';
-                                        } elseif ($isCategoryRow || $isTotalRow) {
-                                            $tdClass .= ' font-bold text-neutral-900 dark:text-neutral-100';
-                                        } else {
-                                            $tdClass .= ' text-neutral-800 dark:text-neutral-200';
-                                        }
-                                    @endphp
-                                    <td rowspan="{{ $cell['rowspan'] }}"
-                                        colspan="{{ $cell['colspan'] }}"
-                                        class="{{ $tdClass }}">{{ $display }}</td>
-                                @endforeach
+                                {{-- Total --}}
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-bold">{{ $row['total_minut'] > 0 ? number_format($row['total_minut'], 0, ',', '.') : '-' }}</td>
                             </tr>
                         @endforeach
+                        
+                        {{-- Baris JUMLAH --}}
+                        @php $t = $rekap['total']; @endphp
+                        <tr class="bg-neutral-100 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 font-bold text-neutral-900 dark:text-neutral-100">
+                            <td colspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-center tracking-wider">TOTAL</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['sisa'] > 0 ? number_format($t['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['masuk'] > 0 ? number_format($t['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['putus'] > 0 ? number_format($t['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['blm'] > 0 ? number_format($t['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['minut'] > 0 ? number_format($t['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['sisa'] > 0 ? number_format($t['pk']['sisa'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['masuk'] > 0 ? number_format($t['pk']['masuk'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['putus'] > 0 ? number_format($t['pk']['putus'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['blm'] > 0 ? number_format($t['pk']['blm'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['minut'] > 0 ? number_format($t['pk']['minut'], 0, ',', '.') : '-' }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-bold">{{ $t['total_minut'] > 0 ? number_format($t['total_minut'], 0, ',', '.') : '-' }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -247,7 +217,7 @@
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            {{ $getCellVal(40, 'B40', 'ASEP NURSOBAH, S.Ag., M.H.') }}
+                            ASEP NURSOBAH, S.Ag., M.H.
                         </p>
                     </div>
                 </div>
@@ -259,7 +229,7 @@
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            {{ $getCellVal(40, 'F40', 'ST. KRIS NUGROHO, S.H., M.H.') }}
+                            ST. KRIS NUGROHO, S.H., M.H.
                         </p>
                     </div>
                 </div>
@@ -271,7 +241,7 @@
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            {{ $getCellVal(40, 'L40', 'FARIDA,SH') }}
+                            FARIDA,SH
                         </p>
                     </div>
                 </div>
@@ -288,7 +258,7 @@
                 </p>
                 <div class="mt-20">
                     <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                        {{ $getCellVal(49, 'F49', 'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.') }}
+                        Dr. SUDHARMAWATININGSIH, S.H., M.Hum.
                     </p>
                 </div>
             </div>
