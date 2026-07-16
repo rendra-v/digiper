@@ -1654,49 +1654,62 @@ class DashboardController extends Controller
 
             $filePath = Session::get('excel_file_path');
             $fileName = Session::get('excel_file_name');
-            $period = Session::get('excel_period', '');
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('honorarium', [
                     'fileName' => null,
-                    'sheets' => [],
-                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'sheets'   => [],
+                    'error'    => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
-            // Load hanya sheet "Data Print"
-            $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
-            $reader->setLoadSheetsOnly(['Data Print']);
-            $spreadsheet = $reader->load($filePath);
+            // Cek cache (sama dengan honorariumPrint agar shared)
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
+            $cached   = Session::get($cacheKey);
 
-            if (! $spreadsheet->sheetNameExists('Data Print')) {
+            if ($cached !== null) {
                 return view('honorarium', [
                     'fileName' => $fileName,
-                    'sheets' => [],
-                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file Excel.',
+                    'sheets'   => $cached['sheets'],
+                    'error'    => null,
                 ]);
             }
 
-            $worksheet = $spreadsheet->getSheetByName('Data Print');
-            $categories = $this->parseDataPrintSheet($worksheet);
-            $spreadsheet->disconnectWorksheets();
+            // Load semua sheet honorarium kamar (Kepaniteraan, TIM, OP - STAF)
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
 
-            $calculator = new HonorariumCalculator;
-            $sheets = $calculator->computeHonorariumSheets($categories, $period);
+            $sheets = [];
+            foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
+                $ws = $spreadsheet->getSheetByName($sheetName);
+                if (! $ws) {
+                    continue;
+                }
+                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                if (! empty($blocks)) {
+                    $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+                }
+            }
+
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            // Simpan ke cache untuk honorariumPrint juga
+            Session::put($cacheKey, compact('sheets'));
 
             if (empty($sheets)) {
                 return view('honorarium', [
                     'fileName' => $fileName,
-                    'sheets' => [],
-                    'error' => 'Tidak ada data honorarium ditemukan. Pastikan Data Print berisi data perkara.',
+                    'sheets'   => [],
+                    'error'    => null, // tampilkan empty state, bukan error
                 ]);
             }
 
             return view('honorarium', [
                 'fileName' => $fileName,
-                'sheets' => $sheets,
-                'error' => null,
+                'sheets'   => $sheets,
+                'error'    => null,
             ]);
 
         } catch (\Throwable $e) {
@@ -1704,8 +1717,8 @@ class DashboardController extends Controller
 
             return view('honorarium', [
                 'fileName' => Session::get('excel_file_name'),
-                'sheets' => [],
-                'error' => 'Error: '.$e->getMessage(),
+                'sheets'   => [],
+                'error'    => 'Error: '.$e->getMessage(),
             ]);
         }
     }
