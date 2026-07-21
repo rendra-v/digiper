@@ -5,194 +5,183 @@
 @section('content')
 <div class="min-h-screen">
 
-    {{-- ─── Header Page ─── --}}
-    <div class="mb-8 flex items-center justify-between">
+    {{-- ─── Header ─── --}}
+    <div class="mb-6 flex items-start justify-between">
         <div>
-            <h2 class="text-4xl font-semibold tracking-tight mb-3">Rekap Keseluruhan 2</h2>
-            <p class="text-neutral-500 dark:text-neutral-400">
-                Rekapitulasi biaya penyelesaian perkara – Distribusi per peruntukan
+            <h2 class="text-3xl font-semibold tracking-tight mb-2">Rekap Keseluruhan 2</h2>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">
+                Distribusi Biaya Penyelesaian Perkara per PERUNTUKAN
                 @if($fileName)
                     — <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ $fileName }}</span>
                 @endif
             </p>
         </div>
-        <div class="flex items-end gap-3">
-
-            {{-- Dropdown: Lihat Halaman Lain --}}
-            <div>
-                <label for="nav-page-select-rekap2" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Lihat halaman lain
-                </label>
-                <div class="relative">
-                    <select id="nav-page-select-rekap2"
-                        onchange="if(this.value) window.location.href = this.value"
-                        class="appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                        <option value="" disabled selected>— Pilih halaman —</option>
-                        <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
-                        <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
-                        <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan 1</option>
-                        <option value="{{ route('rekap-keseluruhan-3') }}">📋&nbsp; Rekap Keseluruhan 3</option>
-                        <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
+        <div class="flex flex-col items-end gap-2">
+            <div class="flex items-end gap-2">
+                <div>
+                    <label for="nav-rekap2" class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Halaman lain</label>
+                    <div class="relative">
+                        <select id="nav-rekap2" onchange="if(this.value) window.location.href = this.value"
+                            class="appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-3 py-2 pr-8 text-sm font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none cursor-pointer">
+                            <option value="" disabled selected>— Pilih —</option>
+                            <option value="{{ route('data-print') }}">📄 Data Print</option>
+                            <option value="{{ route('sheet-cek') }}">📋 Sheet Cek</option>
+                            <option value="{{ route('rekap-keseluruhan') }}">📊 Rekap 1</option>
+                            <option value="{{ route('rekap-keseluruhan-3') }}">📋 Rekap 3</option>
+                            <option value="{{ route('honorarium') }}">💰 Honorarium</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-emerald-600">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
                     </div>
                 </div>
+                <a href="{{ route('dashboard') }}"
+                   class="px-3 py-2 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors">
+                    Dashboard
+                </a>
+                @if(!$error && !empty($columns))
+                <a href="{{ route('rekap-keseluruhan-2.print') }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-3a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 01-2 2h-1M8 14h8v8H8z"/></svg>
+                    Print PDF
+                </a>
+                @endif
             </div>
-
-            <a href="{{ route('dashboard') }}"
-               class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
-                Dashboard
-            </a>
-            <a href="{{ route('rekap-keseluruhan-2.print') }}"
-               target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
-                </svg>
-                Print PDF
-            </a>
+            @if(!$error && !empty($columns))
             <a href="{{ route('rekap-keseluruhan-3') }}"
-               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
-                Selanjutnya
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
+               class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm">
+                Selanjutnya <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
+            @endif
         </div>
     </div>
 
-    {{-- ─── Error ─── --}}
     @if($error)
         <div class="mb-6 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg">
             <p class="text-sm text-red-700 dark:text-red-400">{{ $error }}</p>
         </div>
     @endif
 
-    @if(!$error && isset($rekap) && count($rekap['rows']) > 0)
-        @php
-            $jenisList = $rekap['jenis_list'];
-            $rows      = $rekap['rows'];
-        @endphp
+    @if(!$error && !empty($columns))
 
-        {{-- ─── Title ─── --}}
-        <div class="mb-5 text-center">
-            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS
-            </p>
-            <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
-                YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
-            </p>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Distribusi Biaya Per Peruntukan</p>
-        </div>
+        @if($recapDate)
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 text-center mb-3">Periode: {{ strtoupper($recapDate) }}</p>
+        @endif
 
-        {{-- ─── Table ─── --}}
-        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        {{-- ─── Tabel Distribusi Biaya ─── --}}
+        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden mb-8">
             <div class="overflow-x-auto">
-                @php
-                    $thBase = 'border border-neutral-300 dark:border-neutral-600 text-xs font-bold text-neutral-800 dark:text-neutral-200 text-center align-middle whitespace-nowrap px-2 py-2';
-                @endphp
-                <table class="w-full text-xs border-collapse" style="min-width: 1600px;">
+                <table class="w-full text-[10px] border-collapse whitespace-nowrap">
+                    {{-- ── Header baris 1 ── --}}
                     <thead>
-                        {{-- Baris 1: NO | label | PERUNTUKAN | PPh | Jenis Perkara ... | TOTAL --}}
-                        <tr class="bg-sky-100 dark:bg-sky-900/40">
-                            <th rowspan="2" class="{{ $thBase }}">NO</th>
-                            <th rowspan="2" class="{{ $thBase }}"></th>
-                            <th rowspan="2" class="{{ $thBase }} text-left px-3">PERUNTUKAN</th>
-                            <th rowspan="2" class="{{ $thBase }}">PPh</th>
-                            @foreach($jenisList as $jenis)
-                                <th colspan="3" class="{{ $thBase }}">{{ $jenis['label'] }}</th>
+                        <tr class="bg-blue-100 dark:bg-blue-900/40">
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-1.5 text-center font-bold text-neutral-800 dark:text-neutral-200 min-w-[28px]">NO</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-1.5 text-center font-bold text-neutral-800 dark:text-neutral-200 min-w-[200px] max-w-[220px] whitespace-normal">PERUNTUKAN</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-1.5 text-center font-bold text-neutral-800 dark:text-neutral-200 min-w-[32px]">%</th>
+                            @foreach($columns as $col)
+                            <th colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-1 py-1.5 text-center font-bold text-neutral-800 dark:text-neutral-200 min-w-[160px]">
+                                {{ $col['label'] }}<br>
+                                <span class="font-normal text-neutral-500 dark:text-neutral-400">({{ $col['rate_label'] }})</span>
+                            </th>
                             @endforeach
-                            <th rowspan="2" class="{{ $thBase }}">TOTAL</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-1.5 text-center font-bold text-neutral-800 dark:text-neutral-200 min-w-[100px]">TOTAL</th>
                         </tr>
-                        {{-- Baris 2: BIAYA | JML | SUB TOTAL per jenis --}}
-                        <tr class="bg-sky-50 dark:bg-sky-950/40">
-                            @foreach($jenisList as $jenis)
-                                <th class="{{ $thBase }}">BIAYA</th>
-                                <th class="{{ $thBase }}">JML</th>
-                                <th class="{{ $thBase }}">SUB TOTAL</th>
+                        <tr class="bg-blue-50 dark:bg-blue-900/20">
+                            @foreach($columns as $col)
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-1 text-center font-bold text-neutral-700 dark:text-neutral-300 min-w-[60px]">BIAYA</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-1 text-center font-bold text-neutral-700 dark:text-neutral-300 min-w-[36px]">JML</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-1 text-center font-bold text-neutral-700 dark:text-neutral-300 min-w-[70px]">SUB TOTAL</th>
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody>
-                        @php $prevNo = null; @endphp
-                        @foreach($rows as $row)
-                            @php
-                                $isFirst15 = ($row['no'] !== $prevNo);
-                                $prevNo    = $row['no'];
-                                $trBg      = 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30';
-                            @endphp
-                            <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
-                                {{-- NO --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
-                                    @if($isFirst15) {{ $row['no'] }} @endif
-                                </td>
-                                {{-- label_no --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs">
-                                    {{ $row['label_no'] }}
-                                </td>
-                                {{-- PERUNTUKAN --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-left text-xs">
-                                    {{ $row['peruntukan'] }}
-                                </td>
-                                {{-- PPh pool --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-xs text-neutral-500">
-                                    {{ $row['pph_pool'] }}%
-                                </td>
-                                {{-- Per jenis: BIAYA | JML | SUB TOTAL --}}
-                                @foreach($jenisList as $jenis)
-                                    @php $j = $row['per_jenis'][$jenis['key']]; @endphp
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
-                                        {{ $j['biaya'] > 0 ? number_format($j['biaya'], 0, ',', '.') : '-' }}
-                                    </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
-                                        {{ $j['jumlah'] > 0 ? number_format($j['jumlah'], 0, ',', '.') : '-' }}
-                                    </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs">
-                                        {{ $j['sub_total'] > 0 ? number_format($j['sub_total'], 0, ',', '.') : '-' }}
-                                    </td>
-                                @endforeach
-                                {{-- TOTAL baris --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-xs font-semibold">
-                                    {{ $row['total'] > 0 ? number_format($row['total'], 0, ',', '.') : '-' }}
-                                </td>
-                            </tr>
-                        @endforeach
 
-                        {{-- Baris JUMLAH --}}
-                        <tr class="bg-neutral-100 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 font-bold">
-                            <td colspan="4" class="border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                                JUMLAH
-                            </td>
-                            @foreach($jenisList as $jenis)
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold" colspan="2"></td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
-                                    {{ $rekap['jumlah_jenis'][$jenis['key']] > 0 ? number_format($rekap['jumlah_jenis'][$jenis['key']], 0, ',', '.') : '-' }}
-                                </td>
-                            @endforeach
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-xs font-bold">
-                                {{ $rekap['jumlah_grand'] > 0 ? number_format($rekap['jumlah_grand'], 0, ',', '.') : '-' }}
+                    <tbody>
+                    @foreach($rows as $row)
+                        @php
+                            $isHeader  = $row['type'] === 'header';
+                            $isJmlOnly = $row['type'] === 'jml_only';
+                            $isData    = $row['type'] === 'data';
+                            $rowTotal  = $row_totals[$row['key']] ?? 0;
+                            $colCount  = count($columns);
+                        @endphp
+
+                        @if($isHeader)
+                        <tr class="bg-gray-100 dark:bg-neutral-800/60">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-neutral-600 dark:text-neutral-400">{{ $row['no'] }}</td>
+                            <td colspan="{{ $colCount * 3 + 2 }}" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 font-bold text-neutral-800 dark:text-neutral-200">
+                                {{ $row['label'] }}
                             </td>
                         </tr>
+
+                        @elseif($isJmlOnly)
+                        <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-neutral-500 dark:text-neutral-400">{{ $row['no'] }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-neutral-700 dark:text-neutral-300">{{ $row['label'] }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">{{ $row['persen'] }}</td>
+                            @foreach($columns as $col)
+                                @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">-</td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                    {{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">-</td>
+                            @endforeach
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">-</td>
+                        </tr>
+
+                        @else {{-- data --}}
+                        <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/20 dark:hover:bg-neutral-800/20">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center text-neutral-600 dark:text-neutral-400">{{ $row['no'] }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-neutral-800 dark:text-neutral-200 max-w-[220px] whitespace-normal leading-tight">{{ $row['label'] }}</td>
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-600 dark:text-neutral-400">{{ $row['persen'] }}</td>
+                            @foreach($columns as $col)
+                                @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                    {{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                    {{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                    {{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}
+                                </td>
+                            @endforeach
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right font-medium text-neutral-800 dark:text-neutral-200">
+                                {{ $rowTotal > 0 ? number_format($rowTotal, 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
+                        @endif
+                    @endforeach
+
+                    {{-- ─── TOTAL ROW ─── --}}
+                    <tr class="bg-blue-100 dark:bg-blue-900/40 font-bold border-t-2 border-neutral-400 dark:border-neutral-600">
+                        <td colspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-left text-neutral-900 dark:text-neutral-100 uppercase tracking-wide text-[10px]"></td>
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-900 dark:text-neutral-100">100%</td>
+                        @foreach($columns as $col)
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                            {{ number_format($col['base_rate'], 0, ',', '.') }}
+                        </td>
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
+                        @endforeach
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-emerald-700 dark:text-emerald-400">
+                            {{ $grand_total > 0 ? number_format($grand_total, 0, ',', '.') : '-' }}
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
     @else
-        {{-- Empty state --}}
         <div class="text-center py-24">
             <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-700 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Belum ada data</p>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel terlebih dahulu di Dashboard</p>
+            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel yang mengandung sheet "Data Print" terlebih dahulu</p>
             <a href="{{ route('dashboard') }}"
-               class="inline-block mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+               class="inline-block mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
                 Ke Dashboard
             </a>
         </div>

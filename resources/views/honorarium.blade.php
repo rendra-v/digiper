@@ -147,9 +147,24 @@
                                     $isEven = $rowNum % 2 === 0;
                                     $bgClass = $isEven ? 'bg-slate-50/50 dark:bg-slate-800/20' : '';
 
-                                    // Cek apakah baris punya nama (kolom 2) — jika tidak, ini baris biaya saja (merged cell issue)
                                     $namaVal = $row[2] ?? '';
                                     $jabVal  = $row[3] ?? '';
+
+                                    // Skip baris yang nama kosong, jabatan ada tapi semua nilai numerik kosong
+                                    // (artefak merged-cell Excel — hanya menampilkan jabatan berulang tanpa data)
+                                    if ($namaVal === '') {
+                                        $hasValue = false;
+                                        foreach ($row as $idx => $v) {
+                                            if ($idx <= 3) continue; // skip NO, NAMA, JABATAN
+                                            $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', (string)$v));
+                                            if ($stripped !== '' && $stripped !== '0' && $stripped !== '-' && is_numeric($stripped) && (float)$stripped != 0) {
+                                                $hasValue = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!$hasValue) continue;
+                                    }
+
                                     $isDataOnlyRow = ($namaVal === '' && $jabVal === '');
                                 @endphp
                                 <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bgClass }} {{ $isDataOnlyRow ? 'opacity-70' : '' }}">

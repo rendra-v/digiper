@@ -2,104 +2,229 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print – Rekap Keseluruhan Halaman 2</title>
+    <title>Print – Rekap Keseluruhan 2</title>
     <style>
-        @page { size: A4 landscape; margin: 7mm 6mm; }
+        @page {
+            size: A4 landscape;
+            margin: 6mm 8mm;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, Helvetica, sans-serif; font-size: 6.5px; color: #111; background: #fff; }
-        .no-print { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background: #f3f4f6; border-bottom: 1px solid #d1d5db; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 6.5px;
+            color: #111;
+            background: #fff;
+        }
+
+        /* ── toolbar (screen only) ── */
+        .no-print {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
         @media print { .no-print { display: none !important; } }
-        .doc-title { text-align: center; margin-bottom: 3px; line-height: 1.4; }
-        .doc-title .t1 { font-size: 8px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 7.5px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t3 { font-size: 7px; font-weight: 400; color: #555; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { border: 0.6px solid #555; padding: 1px 2px; vertical-align: middle; font-size: 6px; line-height: 1.15; }
-        .hdr { background: #cce5ff; font-weight: 700; text-align: center; font-size: 5.5px; text-transform: uppercase; }
-        .tot { background: #f1f5f9; font-weight: 700; }
-        .c { text-align: center; } .l { text-align: left; } .r { text-align: right; } .b { font-weight: 700; }
-        .notice { margin: 30px auto; max-width: 600px; padding: 16px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+
+        /* ── title ── */
+        .doc-title {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .doc-title .t1 { font-size: 7.5px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 6.5px; color: #555; margin-top: 1px; }
+
+        /* ── table ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 0.5px solid #555;
+            padding: 1.5px 2px;
+            font-size: 6px;
+            line-height: 1.25;
+            overflow: hidden;
+        }
+        .hdr  { background: #bfdbfe; font-weight: 700; text-align: center; }
+        .hdr2 { background: #dbeafe; font-weight: 700; text-align: center; }
+        .sec  { background: #f3f4f6; font-weight: 700; }
+        .tot  { background: #bfdbfe; font-weight: 700; }
+        .c  { text-align: center; }
+        .l  { text-align: left; }
+        .r  { text-align: right; }
+        .b  { font-weight: 700; }
+        .muted { color: #aaa; text-align: center; }
+
+        /* notice */
+        .notice {
+            margin: 30px auto;
+            max-width: 400px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* period */
+        .period {
+            text-align: right;
+            font-size: 6px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
 
+    {{-- Toolbar (screen only) --}}
     <div class="no-print">
-        <span style="font-weight:600; color:#1f2937;">🖨️ Preview – Rekap Keseluruhan 2 (Distribusi Biaya Per Peruntukan)</span>
-        <div style="display:flex; gap:10px;">
-            <button onclick="window.print()" style="padding:7px 22px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Print / Save PDF</button>
-            <button onclick="window.close()" style="padding:7px 16px; background:#e5e7eb; color:#374151; border:none; border-radius:6px; cursor:pointer; font-size:13px;">Tutup</button>
+        <span style="font-weight:600; color:#1f2937;">🖨️ Print – Rekap Keseluruhan 2 (Distribusi Biaya)</span>
+        <div style="display:flex; gap:8px;">
+            <button onclick="window.print()"
+                style="padding:6px 18px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
+                Print / Save PDF
+            </button>
+            <button onclick="window.close()"
+                style="padding:6px 14px; background:#e5e7eb; color:#374151; border:none; border-radius:6px; cursor:pointer;">
+                Tutup
+            </button>
         </div>
     </div>
 
     @if($error)
         <div class="notice">{{ $error }}</div>
-    @elseif(!isset($rekap) || !$rekap)
-        <div class="notice">Belum ada data. Silakan buka halaman Rekap Keseluruhan 2 terlebih dahulu.</div>
+    @elseif(empty($columns))
+        <div class="notice">Belum ada data. Silakan upload file Excel terlebih dahulu.</div>
     @else
-        @php
-            $jenisList = $rekap['jenis_list'];
-            $rows      = $rekap['rows'];
-        @endphp
 
         <div class="doc-title">
-            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS</div>
-            <div class="t2">YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
-            <div class="t3">Distribusi Biaya Per Peruntukan</div>
+            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
+            @if($recapDate)
+            <div class="t2">{{ strtoupper($recapDate) }}</div>
+            @endif
         </div>
 
+        @php
+            // Column widths: NO(2%)+PERUNTUKAN(10%)+%(2%)+10×(BIAYA4+JML3+SUB5=12%)+TOTAL(6%) → harus ≈100%
+            // 10 kolom × 12% = 120% terlalu lebar → gunakan ukuran minimal, biarkan overflow
+            $colW_no    = '2%';
+            $colW_label = '9%';
+            $colW_pct   = '2%';
+            $colW_biaya = '3.5%';
+            $colW_jml   = '2.5%';
+            $colW_sub   = '4.5%';
+            $colW_total = '5%';
+        @endphp
+
         <table>
+            {{-- Colgroup --}}
+            <colgroup>
+                <col style="width:{{ $colW_no }}">
+                <col style="width:{{ $colW_label }}">
+                <col style="width:{{ $colW_pct }}">
+                @foreach($columns as $col)
+                <col style="width:{{ $colW_biaya }}">
+                <col style="width:{{ $colW_jml }}">
+                <col style="width:{{ $colW_sub }}">
+                @endforeach
+                <col style="width:{{ $colW_total }}">
+            </colgroup>
+
+            {{-- ── Header row 1 ── --}}
             <thead>
                 <tr class="hdr">
-                    <th rowspan="2">NO</th>
-                    <th rowspan="2"></th>
-                    <th rowspan="2" class="l">PERUNTUKAN</th>
-                    <th rowspan="2">PPh</th>
-                    @foreach($jenisList as $jenis)
-                        <th colspan="3">{{ $jenis['label'] }}</th>
+                    <th rowspan="2" class="c">NO</th>
+                    <th rowspan="2" class="c">PERUNTUKAN</th>
+                    <th rowspan="2" class="c">%</th>
+                    @foreach($columns as $col)
+                    <th colspan="3" class="c">{{ $col['label'] }}<br>({{ $col['rate_label'] }})</th>
                     @endforeach
-                    <th rowspan="2">TOTAL</th>
+                    <th rowspan="2" class="c">TOTAL</th>
                 </tr>
-                <tr class="hdr">
-                    @foreach($jenisList as $jenis)
-                        <th>BIAYA</th><th>JML</th><th>SUB TOTAL</th>
+                <tr class="hdr2">
+                    @foreach($columns as $col)
+                    <th class="c">BIAYA</th>
+                    <th class="c">JML</th>
+                    <th class="c">SUB TOTAL</th>
                     @endforeach
                 </tr>
             </thead>
+
             <tbody>
-                @php $prevNo = null; @endphp
-                @foreach($rows as $row)
-                    <tr>
-                        <td class="c">@if($row['no'] !== $prevNo){{ $row['no'] }}@endif</td>
-                        <td class="c">{{ $row['label_no'] }}</td>
-                        <td class="l">{{ $row['peruntukan'] }}</td>
-                        <td class="c">{{ $row['pph_pool'] }}%</td>
-                        @foreach($jenisList as $jenis)
-                            @php $j = $row['per_jenis'][$jenis['key']]; @endphp
-                            <td class="r">{{ $j['biaya'] > 0 ? number_format($j['biaya'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $j['jumlah'] > 0 ? number_format($j['jumlah'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $j['sub_total'] > 0 ? number_format($j['sub_total'], 0, ',', '.') : '-' }}</td>
-                        @endforeach
-                        <td class="r b">{{ $row['total'] > 0 ? number_format($row['total'], 0, ',', '.') : '-' }}</td>
-                    </tr>
-                    @php $prevNo = $row['no']; @endphp
-                @endforeach
-                <tr class="tot">
-                    <td colspan="4" class="b">JUMLAH</td>
-                    @foreach($jenisList as $jenis)
-                        <td colspan="2"></td>
-                        <td class="r b">{{ $rekap['jumlah_jenis'][$jenis['key']] > 0 ? number_format($rekap['jumlah_jenis'][$jenis['key']], 0, ',', '.') : '-' }}</td>
-                    @endforeach
-                    <td class="r b">{{ $rekap['jumlah_grand'] > 0 ? number_format($rekap['jumlah_grand'], 0, ',', '.') : '-' }}</td>
+            @foreach($rows as $row)
+                @php
+                    $isHeader  = $row['type'] === 'header';
+                    $isJmlOnly = $row['type'] === 'jml_only';
+                    $isData    = $row['type'] === 'data';
+                    $rowTotal  = $row_totals[$row['key']] ?? 0;
+                    $colCount  = count($columns);
+                @endphp
+
+                @if($isHeader)
+                <tr class="sec">
+                    <td class="c">{{ $row['no'] }}</td>
+                    <td colspan="{{ $colCount * 3 + 2 }}" class="l b">{{ $row['label'] }}</td>
                 </tr>
+
+                @elseif($isJmlOnly)
+                <tr>
+                    <td class="c">{{ $row['no'] }}</td>
+                    <td class="l">{{ $row['label'] }}</td>
+                    <td class="c">{{ $row['persen'] }}</td>
+                    @foreach($columns as $col)
+                        @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
+                        <td class="muted">-</td>
+                        <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
+                        <td class="muted">-</td>
+                    @endforeach
+                    <td class="muted">-</td>
+                </tr>
+
+                @else
+                <tr>
+                    <td class="c">{{ $row['no'] }}</td>
+                    <td class="l">{{ $row['label'] }}</td>
+                    <td class="c">{{ $row['persen'] }}</td>
+                    @foreach($columns as $col)
+                        @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
+                        <td class="r">{{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
+                    @endforeach
+                    <td class="r b">{{ $rowTotal > 0 ? number_format($rowTotal, 0, ',', '.') : '-' }}</td>
+                </tr>
+                @endif
+            @endforeach
+
+            {{-- Total row --}}
+            <tr class="tot">
+                <td colspan="2" class="c b"></td>
+                <td class="c b">100%</td>
+                @foreach($columns as $col)
+                <td class="r b">{{ number_format($col['base_rate'], 0, ',', '.') }}</td>
+                <td class="muted">-</td>
+                <td class="muted">-</td>
+                @endforeach
+                <td class="r b">{{ $grand_total > 0 ? number_format($grand_total, 0, ',', '.') : '-' }}</td>
+            </tr>
             </tbody>
         </table>
-    @endif
 
-    <script>
-        @if(!$error && isset($rekap) && $rekap)
-        window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 400); });
+        @if($recapDate)
+        <div class="period">{{ $recapDate }}</div>
         @endif
-    </script>
+
+        <script>
+            window.addEventListener('load', function () {
+                setTimeout(function () { window.print(); }, 400);
+            });
+        </script>
+
+    @endif
 </body>
 </html>

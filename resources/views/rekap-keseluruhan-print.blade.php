@@ -51,7 +51,8 @@
             table-layout: fixed;
         }
 
-        .recap-table td {
+        .recap-table td,
+        .recap-table th {
             border: 0.6px solid #555;
             padding: 1.5px 2px;
             vertical-align: middle;
@@ -60,7 +61,7 @@
             line-height: 1.2;
         }
 
-        /* Header rows (baris 4–8 dari Excel) */
+        /* Header rows */
         .recap-table .hdr {
             background: #cce5ff;
             font-weight: 700;
@@ -69,11 +70,14 @@
             text-transform: uppercase;
         }
 
-        /* Category rows (I, II, III, IV...) */
+        /* Category / group label rows */
         .recap-table .cat { background: #dbeafe; font-weight: 700; }
 
-        /* Total / Jumlah rows */
-        .recap-table .tot { background: #f1f5f9; font-weight: 700; }
+        /* Sub-total per kelompok */
+        .recap-table .subtot { background: #f1f5f9; font-weight: 700; }
+
+        /* Grand total */
+        .recap-table .gtot { background: #bfdbfe; font-weight: 700; }
 
         /* Alignment helpers */
         .c { text-align: center; }
@@ -152,6 +156,8 @@
     @if($error)
         <div class="notice">{{ $error }}</div>
     @else
+        @php $pejabat = config('tarif.pejabat'); @endphp
+
         {{-- Title --}}
         <div class="doc-title">
             <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS</div>
@@ -160,129 +166,124 @@
 
         <table class="recap-table">
             <colgroup>
-                {{-- A: No --}}              <col style="width:3%;">
-                {{-- B: Jenis Perkara --}}   <col style="width:15%;">
-                {{-- C: Klasifikasi --}}     <col style="width:7%;">
-                {{-- D–H: KASASI (5) --}}
-                <col style="width:5%;">
-                <col style="width:5%;">
-                <col style="width:5%;">
-                <col style="width:7.5%;">
-                <col style="width:5.5%;">
-                {{-- I–M: PK (5) --}}
-                <col style="width:5%;">
-                <col style="width:5%;">
-                <col style="width:5%;">
-                <col style="width:7.5%;">
-                <col style="width:5.5%;">
-                {{-- N: Total --}}           <col style="width:7%;">
+                <col style="width:3%">      {{-- No --}}
+                <col style="width:14%">     {{-- Jenis Perkara --}}
+                <col style="width:10%">     {{-- Klasifikasi --}}
+                <col style="width:6%">      {{-- Kasasi: Jumlah --}}
+                <col style="width:9%">      {{-- Kasasi: Biaya --}}
+                <col style="width:11%">     {{-- Kasasi: Total --}}
+                <col style="width:6%">      {{-- PK: Jumlah --}}
+                <col style="width:9%">      {{-- PK: Biaya --}}
+                <col style="width:11%">     {{-- PK: Total --}}
+                <col style="width:11%">     {{-- Grand Total --}}
             </colgroup>
             <thead>
                 <tr class="hdr">
-                    <td rowspan="3">NO.</td>
-                    <td rowspan="3">JENIS PERKARA</td>
-                    <td rowspan="3">KLASIFIKASI</td>
-                    <td colspan="10">JUMLAH PERKARA</td>
-                    <td rowspan="3">TOTAL JML MINUTASI TEPAT WAKTU (120 HARI)</td>
+                    <th rowspan="2" class="c">No</th>
+                    <th rowspan="2" class="c">Jenis Perkara</th>
+                    <th rowspan="2" class="c">Klasifikasi</th>
+                    <th colspan="3" class="c">KASASI</th>
+                    <th colspan="3" class="c">PENINJAUAN KEMBALI (PK)</th>
+                    <th rowspan="2" class="c">Grand Total (Rp)</th>
                 </tr>
                 <tr class="hdr">
-                    <td colspan="5">KASASI</td>
-                    <td colspan="5">PENINJAUAN KEMBALI</td>
-                </tr>
-                <tr class="hdr" style="font-size: 5.5px;">
-                    <td>SISA S.D TH<br>LALU</td>
-                    <td>MASUK TH<br>INI</td>
-                    <td>PUTUS</td>
-                    <td>BELUM PUTUS</td>
-                    <td>JML MINUT TEPAT WAKTU (120 HARI)</td>
-                    <td>SISA S.D TH<br>LALU</td>
-                    <td>MASUK TH<br>INI</td>
-                    <td>PUTUS</td>
-                    <td>BELUM PUTUS</td>
-                    <td>JML MINUT TEPAT WAKTU (120 HARI)</td>
-                </tr>
-                <tr class="hdr" style="color: #666; font-size: 5px;">
-                    @for($i = 1; $i <= 14; $i++)
-                        <td>{{ $i }}</td>
-                    @endfor
+                    <th class="c">Jumlah</th>
+                    <th class="c">Biaya (Rp)</th>
+                    <th class="c">Jumlah Biaya (Rp)</th>
+                    <th class="c">Jumlah</th>
+                    <th class="c">Biaya (Rp)</th>
+                    <th class="c">Jumlah Biaya (Rp)</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($rekap['rows'] as $row)
-                    @php
-                        $trClass = $row['is_category'] ? 'cat' : '';
-                    @endphp
-                    <tr class="{{ $trClass }}">
-                        <td class="c">{{ $row['no'] }}</td>
-                        <td class="l">{{ $row['perkara'] }}</td>
-                        <td class="l">{{ $row['klasifikasi'] }}</td>
-                        
-                        {{-- Kasasi --}}
-                        <td class="r">{{ $row['kasasi']['sisa'] > 0 ? number_format($row['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['kasasi']['masuk'] > 0 ? number_format($row['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['kasasi']['putus'] > 0 ? number_format($row['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['kasasi']['blm'] > 0 ? number_format($row['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['kasasi']['minut'] > 0 ? number_format($row['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
+                @foreach($groups as $group)
+                    @php $rowCount = count($group['rows']); @endphp
 
-                        {{-- PK --}}
-                        <td class="r">{{ $row['pk']['sisa'] > 0 ? number_format($row['pk']['sisa'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['pk']['masuk'] > 0 ? number_format($row['pk']['masuk'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['pk']['putus'] > 0 ? number_format($row['pk']['putus'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['pk']['blm'] > 0 ? number_format($row['pk']['blm'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $row['pk']['minut'] > 0 ? number_format($row['pk']['minut'], 0, ',', '.') : '-' }}</td>
+                    @foreach($group['rows'] as $i => $row)
+                        <tr>
+                            @if($i === 0)
+                                <td rowspan="{{ $rowCount }}" class="c b cat">{{ $group['no'] }}</td>
+                                <td rowspan="{{ $rowCount }}" class="l b cat">{{ $group['label'] }}</td>
+                            @endif
+                            <td class="l">{{ $row['label'] }}</td>
+                            {{-- Kasasi --}}
+                            <td class="r">{{ $row['kasasi_jumlah'] > 0 ? number_format($row['kasasi_jumlah'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $row['kasasi_biaya'] > 0 ? number_format($row['kasasi_biaya'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $row['kasasi_total'] > 0 ? number_format($row['kasasi_total'], 0, ',', '.') : '-' }}</td>
+                            {{-- PK --}}
+                            <td class="r">{{ $row['pk_jumlah'] > 0 ? number_format($row['pk_jumlah'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}</td>
+                            {{-- Grand Total per row --}}
+                            <td class="r">{{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}</td>
+                        </tr>
+                    @endforeach
 
-                        {{-- Total --}}
-                        <td class="r b">{{ $row['total_minut'] > 0 ? number_format($row['total_minut'], 0, ',', '.') : '-' }}</td>
+                    {{-- Sub-total per kelompok --}}
+                    <tr class="subtot">
+                        <td colspan="3" class="l">Total {{ $group['label'] }}</td>
+                        <td class="r">{{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">—</td>
+                        <td class="r">{{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">—</td>
+                        <td class="r">{{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}</td>
+                        <td class="r">{{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}</td>
                     </tr>
                 @endforeach
-                
-                {{-- Baris JUMLAH --}}
-                @php $t = $rekap['total']; @endphp
-                <tr class="tot">
-                    <td colspan="3" class="c" style="letter-spacing: 1px;">TOTAL</td>
-                    <td class="r">{{ $t['kasasi']['sisa'] > 0 ? number_format($t['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['kasasi']['masuk'] > 0 ? number_format($t['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['kasasi']['putus'] > 0 ? number_format($t['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['kasasi']['blm'] > 0 ? number_format($t['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['kasasi']['minut'] > 0 ? number_format($t['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['pk']['sisa'] > 0 ? number_format($t['pk']['sisa'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['pk']['masuk'] > 0 ? number_format($t['pk']['masuk'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['pk']['putus'] > 0 ? number_format($t['pk']['putus'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['pk']['blm'] > 0 ? number_format($t['pk']['blm'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $t['pk']['minut'] > 0 ? number_format($t['pk']['minut'], 0, ',', '.') : '-' }}</td>
-                    <td class="r b">{{ $t['total_minut'] > 0 ? number_format($t['total_minut'], 0, ',', '.') : '-' }}</td>
+
+                {{-- Grand Total --}}
+                @if($final_total)
+                <tr class="gtot">
+                    <td colspan="3" class="l">JUMLAH TOTAL KESELURUHAN</td>
+                    <td class="r">{{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">—</td>
+                    <td class="r">{{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">—</td>
+                    <td class="r">{{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
                 </tr>
+                @endif
             </tbody>
         </table>
 
-        {{-- ── Tanda Tangan ── --}}
+        {{-- ══ Signature Area ══ --}}
         <div class="sig-wrap">
-            <div class="sig-date">
-                {{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}
-            </div>
 
+            {{-- Tanggal kanan --}}
+            <div class="sig-date">{{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}</div>
+
+            {{-- 3 kolom --}}
             <div class="sig-row">
+
                 <div class="sig-col left">
                     <div class="sig-label">Kuasa Pengelola Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">ASEP NURSOBAH, S.Ag., M.H.</div>
+                    <div class="sig-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                 </div>
+
                 <div class="sig-col center">
                     <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">ST. KRIS NUGROHO, S.H., M.H.</div>
+                    <div class="sig-name">{{ $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                 </div>
+
                 <div class="sig-col right">
                     <div class="sig-label">Bendahara Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">FARIDA,SH</div>
+                    <div class="sig-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                 </div>
+
             </div>
 
+            {{-- Mengetahui --}}
             <div class="sig-bottom">
-                <div class="sig-label">Mengetahui,<br>Panitera MA-RI</div>
+                <div class="sig-label">Mengetahui,</div>
+                <div class="sig-label">Panitera MA-RI</div>
                 <div class="sig-name">Dr. SUDHARMAWATININGSIH, S.H., M.Hum.</div>
             </div>
+
         </div>
     @endif
 

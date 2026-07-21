@@ -501,8 +501,7 @@ class HonorariumCalculator
                     $allData = $categories[$catId]['data'];
                     if (isset($sg['filter'])) {
                         foreach ($allData as $row) {
-                            $klas = strtoupper(trim($row['KLASIFIKASI'] ?? ''));
-                            if (in_array($klas, ['HKI', 'HAKI'])) $klas = 'HAKI';
+                            $klas = $this->resolveKlasifikasi($row);
                             if ($klas === $sg['filter']) {
                                 $count++;
                             }
@@ -596,5 +595,534 @@ public function countHakimFromRows(array $rows): int
             if ($val !== '' && $val !== '0' && $val !== '-') $count++;
         }
         return $count;
+    }
+
+
+    /**
+     * Hitung Rekap Keseluruhan 2 — tabel distribusi biaya per PERUNTUKAN × jenis perkara.
+     *
+     * Struktur output:
+     *   columns   — 10 jenis perkara dengan JML masing-masing
+     *   rows      — definisi baris PERUNTUKAN (label, %, type)
+     *   cells     — [row_key][col_key] = ['biaya', 'jml', 'sub_total']
+     *   row_totals— total per baris lintas kolom
+     *   grand_total
+     *
+     * Kelas tarif (5 kelas):
+     *   kasasi_500  : Kasasi PDT/TUN/Agama/PHI/dll  (base 500.000)
+     *   kasasi_niaga: Kasasi Niaga HKI+Kepailitan    (base 5.000.000)
+     *   pk_250      : PK semua kecuali Niaga          (base 2.500.000)
+     *   phum        : P-HUM / P-KHS                   (base 1.000.000)
+     *   pk_niaga    : PK Niaga HKI+Kepailitan         (base 10.000.000)
+     *
+     * Semua nilai BIAYA per komponen × kelas sudah diverifikasi:
+     *   sum(semua komponen) === base_rate untuk setiap kelas ✓
+     */
+    public function computeRekapKeseluruhan2(array $categories, string $period = ''): array
+    {
+        // ── Key categories ──────────────────────────────────────────────────
+        $keyed = [];
+        foreach ($categories as $cat) {
+            if (isset($cat['id'])) $keyed[$cat['id']] = $cat;
+        }
+
+        $count = function (string $catId, ?string $klas = null) use ($keyed): int {
+            if (!isset($keyed[$catId])) return 0;
+            if ($klas === null) return count($keyed[$catId]['data']);
+            $t = strtoupper($klas);
+            $n = 0;
+            foreach ($keyed[$catId]['data'] as $row) {
+                if ($this->resolveKlasifikasi($row) === $t) $n++;
+            }
+            return $n;
+        };
+
+        $nonNiaga = function (string $catId) use ($keyed): int {
+            $niaga = ['HKI', 'KEPAILITAN'];
+            $n = 0;
+            foreach ($keyed[$catId]['data'] ?? [] as $row) {
+                if (!in_array($this->resolveKlasifikasi($row), $niaga)) $n++;
+            }
+            return $n;
+        };
+
+        // ── Column definitions (10 jenis perkara) ──────────────────────────
+        $columns = [
+            ['key' => 'kasasi_pdt_ag',   'label' => 'KASASI PDT, PDTSUS, AG', 'rate_label' => 'Rp. 500 Rb', 'base_rate' => 500000,   'class' => 'kasasi_500',
+             'jml' => $count('kasasi-pdt-umum') + $nonNiaga('kasasi-pdt-khusus') + $count('kasasi-pdt-agama')],
+            ['key' => 'kasasi_tun',       'label' => 'KASASI TUN',              'rate_label' => 'Rp. 500 Rb', 'base_rate' => 500000,   'class' => 'kasasi_500',
+             'jml' => $count('kasasi-tun')],
+            ['key' => 'kasasi_niaga',     'label' => 'KASASI NIAGA',            'rate_label' => 'Rp. 5jt',   'base_rate' => 5000000,  'class' => 'kasasi_niaga',
+             'jml' => $count('kasasi-pdt-khusus', 'HKI') + $count('kasasi-pdt-khusus', 'KEPAILITAN')],
+            ['key' => 'pk',               'label' => 'PK',                      'rate_label' => 'Rp. 2,5 Jt','base_rate' => 2500000,  'class' => 'pk_250',
+             'jml' => $count('pk-pdt-umum')],
+            ['key' => 'phum',             'label' => 'P-HUM (TUN)',             'rate_label' => 'Rp. 1jt',   'base_rate' => 1000000,  'class' => 'phum',
+             'jml' => $count('phum') + $count('pkhs')],
+            ['key' => 'pk_pajak',         'label' => 'PK-PAJAK',               'rate_label' => 'Rp. 2,5 Jt','base_rate' => 2500000,  'class' => 'pk_250',
+             'jml' => $count('pk-pajak')],
+            ['key' => 'pk_pdt_khusus',   'label' => 'PK-PDT KHUSUS',          'rate_label' => 'Rp. 2,5 Jt','base_rate' => 2500000,  'class' => 'pk_250',
+             'jml' => $nonNiaga('pk-pdt-khusus')],
+            ['key' => 'pk_agama',         'label' => 'PK-AGAMA',               'rate_label' => 'Rp. 2,5 Jt','base_rate' => 2500000,  'class' => 'pk_250',
+             'jml' => $count('pk-pdt-agama')],
+            ['key' => 'pk_tun',           'label' => 'PK-TUN',                 'rate_label' => 'Rp. 2,5 Jt','base_rate' => 2500000,  'class' => 'pk_250',
+             'jml' => $count('pk-tun')],
+            ['key' => 'pk_niaga',         'label' => 'PK NIAGA',               'rate_label' => 'Rp. 10 Jt', 'base_rate' => 10000000, 'class' => 'pk_niaga',
+             'jml' => $count('pk-pdt-khusus', 'HKI') + $count('pk-pdt-khusus', 'KEPAILITAN')],
+        ];
+
+        // ── BIAYA komponen per kelas tarif ──────────────────────────────────
+        // Setiap baris sum === base_rate kelasnya (sudah diverifikasi dari Excel)
+        //
+        // kasasi_500  : sum = 500.000
+        // kasasi_niaga: sum = 5.000.000
+        // pk_250      : sum = 2.500.000
+        // phum        : sum = 1.000.000
+        // pk_niaga    : sum = 10.000.000
+        $biayaKelas = [
+            'kasasi_500' => [
+                'materai'       => 10000,
+                'redaksi'       => 10000,
+                'atk'           => 50000,
+                'fotocopy'      => 20000,
+                'konsumsi'      => 25000,
+                'penggandaan'   => 20000,
+                'pemberitahuan' => 35000,
+                'pemberkasan'   => 0,
+                'penyelesaian'  => 250000,   // pph15(210.000) + pph5(40.000)
+                'insentif'      => 0,
+                'pengarsipan'   => 15000,
+                'monitoring'    => 65000,    // residual = 500.000 - 435.000
+            ],
+            'kasasi_niaga' => [
+                'materai'       => 10000,
+                'redaksi'       => 10000,
+                'atk'           => 50000,
+                'fotocopy'      => 25000,
+                'konsumsi'      => 25000,
+                'penggandaan'   => 25000,
+                'pemberitahuan' => 75000,
+                'pemberkasan'   => 0,
+                'penyelesaian'  => 2835000,  // pph15(2.381.400) + pph5(453.600)
+                'insentif'      => 0,
+                'pengarsipan'   => 100000,
+                'monitoring'    => 1845000,  // residual = 5.000.000 - 3.155.000
+            ],
+            'pk_250' => [
+                'materai'       => 10000,
+                'redaksi'       => 10000,
+                'atk'           => 50000,
+                'fotocopy'      => 25000,
+                'konsumsi'      => 25000,
+                'penggandaan'   => 25000,
+                'pemberitahuan' => 75000,
+                'pemberkasan'   => 0,
+                'penyelesaian'  => 1330000,  // pph15(1.117.200) + pph5(212.800)
+                'insentif'      => 0,
+                'pengarsipan'   => 150000,
+                'monitoring'    => 800000,   // residual = 2.500.000 - 1.700.000
+            ],
+            'phum' => [
+                'materai'       => 10000,
+                'redaksi'       => 10000,
+                'atk'           => 50000,
+                'fotocopy'      => 25000,
+                'konsumsi'      => 25000,
+                'penggandaan'   => 25000,
+                'pemberitahuan' => 75000,
+                'pemberkasan'   => 0,
+                'penyelesaian'  => 500000,   // pph15(420.000) + pph5(80.000)
+                'insentif'      => 0,
+                'pengarsipan'   => 15000,
+                'monitoring'    => 265000,   // residual = 1.000.000 - 735.000
+            ],
+            'pk_niaga' => [
+                'materai'       => 10000,
+                'redaksi'       => 10000,
+                'atk'           => 50000,
+                'fotocopy'      => 25000,
+                'konsumsi'      => 25000,
+                'penggandaan'   => 25000,
+                'pemberitahuan' => 75000,
+                'pemberkasan'   => 0,
+                'penyelesaian'  => 5335000,  // pph15(4.481.400) + pph5(853.600)
+                'insentif'      => 0,
+                'pengarsipan'   => 100000,
+                'monitoring'    => 4345000,  // residual = 10.000.000 - 5.655.000
+            ],
+        ];
+
+        // ── Baris PERUNTUKAN ────────────────────────────────────────────────
+        // type: 'data'     — row normal (BIAYA×JML = SUB TOTAL)
+        //       'jml_only' — hanya tampilkan JML (BIAYA & SUB TOTAL = -)
+        //       'header'   — judul bagian, tanpa nilai numerik
+        $rowDefs = [
+            ['key' => 'materai',       'no' => '1',   'label' => 'MATERAI',         'persen' => '2%',  'type' => 'data'],
+            ['key' => 'redaksi',       'no' => '2',   'label' => 'REDAKSI',          'persen' => '2%',  'type' => 'data'],
+            ['key' => 'relaas_pmh',    'no' => '3',   'label' => 'RELAAS KEPADA PEMOHON',  'persen' => '', 'type' => 'jml_only'],
+            ['key' => 'relaas_trm',    'no' => '4',   'label' => 'RELAAS KEPADA TERMOHON', 'persen' => '', 'type' => 'jml_only'],
+            ['key' => 'administrasi',  'no' => '5',   'label' => 'ADMINISTRASI :',   'persen' => '', 'type' => 'header'],
+            ['key' => 'atk',           'no' => 'a.',  'label' => 'ATK',              'persen' => '10%', 'type' => 'data'],
+            ['key' => 'fotocopy',      'no' => 'b.',  'label' => 'PENGGADAAN/FOTO COPY BERKAS (SEWA MESIN FOTOKOPI)',      'persen' => '4%',  'type' => 'data'],
+            ['key' => 'konsumsi',      'no' => 'c.',  'label' => 'KONSUMSI PERSIDANGAN',                                   'persen' => '5%',  'type' => 'data'],
+            ['key' => 'penggandaan',   'no' => 'd.',  'label' => 'PENGGANDAAN SALINAN PUTUSAN (SEWA MESIN FOTO KOPI)',     'persen' => '4%',  'type' => 'data'],
+            ['key' => 'pemberitahuan', 'no' => 'e.',  'label' => 'PEMBERITAHUAN/PENGIRIMAN',                               'persen' => '7%',  'type' => 'data'],
+            ['key' => 'pemberkasan',   'no' => 'f.',  'label' => 'PEMBERKASAN DAN PENJILIDAN',                             'persen' => '',    'type' => 'jml_only'],
+            ['key' => 'penyelesaian',  'no' => 'g.',  'label' => 'BIAYA PENYELESAIAN PERKARA',                             'persen' => '50%', 'type' => 'data'],
+            ['key' => 'insentif',      'no' => 'h.',  'label' => 'INSENTIF TIM',                                           'persen' => '',    'type' => 'jml_only'],
+            ['key' => 'pengarsipan',   'no' => 'i.',  'label' => 'PENGARSIPAN BERKAS PERKARA',                             'persen' => '3%',  'type' => 'data'],
+            ['key' => 'monitoring',    'no' => 'j.',  'label' => 'MONITORING DAN EVALUASI PELAKSANAAN PENYELESAIAN PERKARA', 'persen' => '13%', 'type' => 'data'],
+        ];
+
+        // ── Hitung cells ────────────────────────────────────────────────────
+        $cells      = [];
+        $rowTotals  = [];
+        $grandTotal = 0;
+
+        foreach ($rowDefs as $row) {
+            $cells[$row['key']] = [];
+            $rowTotal = 0;
+
+            foreach ($columns as $col) {
+                if ($row['type'] === 'header') {
+                    $cells[$row['key']][$col['key']] = null;
+                    continue;
+                }
+
+                if ($row['type'] === 'jml_only') {
+                    $cells[$row['key']][$col['key']] = ['biaya' => null, 'jml' => $col['jml'], 'sub_total' => null];
+                    continue;
+                }
+
+                // 'data' type
+                $biayaVal = $biayaKelas[$col['class']][$row['key']] ?? 0;
+                $subTotal = $biayaVal * $col['jml'];
+                $cells[$row['key']][$col['key']] = [
+                    'biaya'     => $biayaVal,
+                    'jml'       => $col['jml'],
+                    'sub_total' => $subTotal,
+                ];
+                $rowTotal   += $subTotal;
+                $grandTotal += $subTotal;
+            }
+
+            $rowTotals[$row['key']] = $rowTotal;
+        }
+
+        return [
+            'columns'     => $columns,
+            'rows'        => $rowDefs,
+            'cells'       => $cells,
+            'row_totals'  => $rowTotals,
+            'grand_total' => $grandTotal,
+            'period'      => $period,
+        ];
+    }
+
+
+    /**
+     * Resolve klasifikasi perdata khusus dari satu baris Data Print.
+     *
+     * Urutan prioritas:
+     *  1. Kolom 'klasifikasi' (atau 'KLASIFIKASI') — jika berisi nilai spesifik
+     *  2. Kolom 'Jenis Permohonan' — keyword matching (misal "pdt-sus-pailit" → KEPAILITAN)
+     *
+     * Mengembalikan string UPPERCASE yang siap dibandingkan dengan filter.
+     */
+    private function resolveKlasifikasi(array $row): string
+    {
+        // --- 1. Cek kolom klasifikasi (multi-case fallback) ---
+        $klas = strtoupper(trim(
+            $row['KLASIFIKASI'] ?? $row['klasifikasi'] ?? $row['Klasifikasi'] ?? ''
+        ));
+
+        // Normalisasi alias HKI
+        if (in_array($klas, ['HKI', 'HAKI'])) return 'HKI';
+        // Normalisasi alias KEPAILITAN — PKPU (Penundaan Kewajiban Pembayaran Utang) termasuk kepailitan
+        if (in_array($klas, ['KEPAILITAN', 'PAILIT', 'PKPU', 'PDT-SUS-PAILIT', 'PDT-SUS-PKPU'])) return 'KEPAILITAN';
+
+        // Nilai spesifik yang valid langsung dikembalikan
+        if ($klas !== '' && !in_array($klas, [
+            'PERDATA KHUSUS', 'PERDATA', 'KHUSUS', 'PDT', 'PDT-SUS',
+        ])) {
+            return $klas;
+        }
+
+        // --- 2. Fallback: kolom Jenis Permohonan ---
+        $jp = strtolower(trim(
+            $row['Jenis Permohonan'] ?? $row['JENIS PERMOHONAN'] ??
+            $row['jenis permohonan'] ?? $row['Jenis'] ?? ''
+        ));
+
+        if ($jp !== '') {
+            if (str_contains($jp, 'pailit') || str_contains($jp, 'pkpu')) return 'KEPAILITAN';
+            if (str_contains($jp, 'phi'))       return 'PHI';
+            if (str_contains($jp, 'haki') || str_contains($jp, 'hki')) return 'HKI';
+            if (str_contains($jp, 'arbitrase')) return 'ARBITRASE';
+            if (str_contains($jp, 'parpol'))    return 'PARPOL';
+            if (str_contains($jp, 'kppu'))      return 'KPPU';
+            if (str_contains($jp, 'bpsk'))      return 'BPSK';
+            if (str_contains($jp, 'kip'))       return 'KIP';
+        }
+
+        return $klas;
+    }
+
+    // ======================================================================
+    // REKAP KESELURUHAN — auto-generate dari Data Print
+    // ======================================================================
+
+    /**
+     * Hitung rekapitulasi biaya penyelesaian perkara dari Data Print.
+     *
+     * @param  array  $categories  Output dari parseDataPrintSheet()
+     * @return array  Data siap render: groups[], final_total, period
+     */
+    public function computeRekapKeseluruhan(array $categories, string $period = ''): array
+    {
+        // Key categories by id
+        $keyed = [];
+        foreach ($categories as $cat) {
+            if (isset($cat['id'])) {
+                $keyed[$cat['id']] = $cat;
+            }
+        }
+
+        $biaya = config('tarif.biaya_perkara');
+
+        // Count rows dari kategori, dengan opsional filter KLASIFIKASI
+        $countRows = function (string $catId, ?string $klasFilter = null) use ($keyed): int {
+            if (!isset($keyed[$catId])) return 0;
+            if ($klasFilter === null) return count($keyed[$catId]['data']);
+            $target = strtoupper($klasFilter);
+            $n = 0;
+            foreach ($keyed[$catId]['data'] as $row) {
+                if ($this->resolveKlasifikasi($row) === $target) $n++;
+            }
+            return $n;
+        };
+
+        // Buat satu baris data
+        $makeRow = function (string $label, int $jmlK, int $biayaK, int $jmlPK, int $biayaPK): array {
+            return [
+                'label'         => $label,
+                'kasasi_jumlah' => $jmlK,
+                'kasasi_biaya'  => $biayaK,
+                'kasasi_total'  => $jmlK * $biayaK,
+                'pk_jumlah'     => $jmlPK,
+                'pk_biaya'      => $biayaPK,
+                'pk_total'      => $jmlPK * $biayaPK,
+                'grand_total'   => ($jmlK * $biayaK) + ($jmlPK * $biayaPK),
+            ];
+        };
+
+        // Hitung total dari sekumpulan baris
+        $groupTotals = function (array $rows): array {
+            $kasasiJml = $kasasiTotal = $pkJml = $pkTotal = $grand = 0;
+            foreach ($rows as $r) {
+                $kasasiJml   += $r['kasasi_jumlah'];
+                $kasasiTotal += $r['kasasi_total'];
+                $pkJml       += $r['pk_jumlah'];
+                $pkTotal     += $r['pk_total'];
+                $grand       += $r['grand_total'];
+            }
+            return compact('kasasiJml', 'kasasiTotal', 'pkJml', 'pkTotal', 'grand');
+        };
+
+        $groups = [];
+
+        // === I. PERDATA UMUM ===
+        $rows1 = [
+            $makeRow('Perdata Umum',
+                $countRows('kasasi-pdt-umum'), $biaya['PERDATA']['kasasi'],
+                $countRows('pk-pdt-umum'),     $biaya['PERDATA']['pk']
+            ),
+        ];
+        $groups[] = ['no' => 'I', 'label' => 'PERDATA UMUM', 'rows' => $rows1] + $groupTotals($rows1);
+
+        // === II. PERDATA KHUSUS ===
+        // Setiap sub-klasifikasi punya biaya berbeda (500rb atau 5jt kasasi, 2.5jt atau 10jt PK)
+        $pdtKhususDefs = [
+            ['label' => 'PHI',        'filter' => 'PHI',        'biayaK' => $biaya['PHI']['kasasi'],        'biayaPK' => 2500000],
+            ['label' => 'HKI',        'filter' => 'HKI',        'biayaK' => $biaya['HKI']['kasasi'],        'biayaPK' => $biaya['HKI']['pk']],
+            ['label' => 'Kepailitan', 'filter' => 'KEPAILITAN', 'biayaK' => $biaya['KEPAILITAN']['kasasi'], 'biayaPK' => $biaya['KEPAILITAN']['pk']],
+            ['label' => 'Arbitrase',  'filter' => 'ARBITRASE',  'biayaK' => $biaya['ARBITRASE']['kasasi'],  'biayaPK' => $biaya['ARBITRASE']['pk']],
+            ['label' => 'Parpol',     'filter' => 'PARPOL',     'biayaK' => $biaya['PARPOL']['kasasi'],     'biayaPK' => $biaya['PARPOL']['pk']],
+            ['label' => 'KPPU',       'filter' => 'KPPU',       'biayaK' => $biaya['KPPU']['kasasi'],       'biayaPK' => $biaya['KPPU']['pk']],
+            ['label' => 'BPSK',       'filter' => 'BPSK',       'biayaK' => $biaya['BPSK']['kasasi'],       'biayaPK' => $biaya['BPSK']['pk']],
+            ['label' => 'KIP',        'filter' => 'KIP',        'biayaK' => $biaya['KIP']['kasasi'],        'biayaPK' => $biaya['KIP']['pk']],
+        ];
+        $rows2 = [];
+        foreach ($pdtKhususDefs as $def) {
+            $jmlK  = $countRows('kasasi-pdt-khusus', $def['filter']);
+            $jmlPK = $countRows('pk-pdt-khusus',     $def['filter']);
+            $rows2[] = $makeRow($def['label'], $jmlK, $def['biayaK'], $jmlPK, $def['biayaPK']);
+        }
+        $groups[] = ['no' => 'II', 'label' => 'PERDATA KHUSUS', 'rows' => $rows2] + $groupTotals($rows2);
+
+        // === III. AGAMA ===
+        $rows3 = [
+            $makeRow('Agama',
+                $countRows('kasasi-pdt-agama'), $biaya['AGAMA']['kasasi'],
+                $countRows('pk-pdt-agama'),     $biaya['AGAMA']['pk']
+            ),
+        ];
+        $groups[] = ['no' => 'III', 'label' => 'AGAMA', 'rows' => $rows3] + $groupTotals($rows3);
+
+        // === IV. TUN ===
+        $rows4 = [
+            $makeRow('TUN',
+                $countRows('kasasi-tun'), $biaya['TUN']['kasasi'],
+                $countRows('pk-tun'),     $biaya['TUN']['pk']
+            ),
+            $makeRow('P-HUM',   $countRows('phum'),     $biaya['HUM']['kasasi'],    0, 0),
+            $makeRow('PK-PJK',  0,                      0, $countRows('pk-pajak'),  $biaya['PAJAK']['pk']),
+            $makeRow('P-KHS',   $countRows('pkhs'),     $biaya['KHUSUS']['kasasi'], 0, 0),
+        ];
+        $groups[] = ['no' => 'IV', 'label' => 'TUN', 'rows' => $rows4] + $groupTotals($rows4);
+
+        // Grand total dari semua baris
+        $allRows    = array_merge(...array_map(fn ($g) => $g['rows'], $groups));
+        $finalTotal = $groupTotals($allRows);
+
+        return [
+            'groups'      => $groups,
+            'final_total' => $finalTotal,
+            'period'      => $period,
+        ];
+    }
+
+    /**
+     * Hitung Rekap Keseluruhan 3 — distribusi honor per jabatan × jenis perkara.
+     *
+     * Input: hasil computeRekapKeseluruhan2() (columns + cells untuk row 'penyelesaian')
+     *
+     * Untuk setiap jabatan dan setiap kolom perkara:
+     *   BIAYA      = biaya_penyelesaian_kolom × persen_jabatan
+     *   SUB TOTAL  = BIAYA × JML (dari rekap2)
+     *   BRUTO      = Σ sub_total semua kolom
+     *
+     * Aturan pajak:
+     *   'pph15' : PPh 15% = BRUTO × 15%, PPh 5% = 0
+     *   'pph5'  : PPh 15% = 0, PPh 5% = BRUTO × 5%
+     *   'mixed' : Rumpun A (TUN,PHUM,PKPAJAK,PKTUN) → PPh 5%
+     *             Rumpun B (sisanya) → PPh 15%
+     */
+    public function computeRekapKeseluruhan3(array $rekap2): array
+    {
+        $columns = $rekap2['columns'];    // [{key,label,rate_label,base_rate,class,jml}]
+        $cells2  = $rekap2['cells'];      // [row_key][col_key] = {biaya,jml,sub_total}
+
+        // JML per kolom (sama dengan rekap2)
+        $jml = [];
+        foreach ($columns as $col) {
+            $jml[$col['key']] = $col['jml'];
+        }
+
+        // BIAYA PENYELESAIAN per kolom (dari rekap2 row 'penyelesaian')
+        $penyelesaian = [];
+        foreach ($columns as $col) {
+            $penyelesaian[$col['key']] = $cells2['penyelesaian'][$col['key']]['biaya'] ?? 0;
+        }
+
+        // ── Rumpun pajak untuk 'mixed' ──────────────────────────────────────
+        // Rumpun A = PPh 5%: kasasi_tun, phum, pk_pajak, pk_tun
+        $rumpunA = ['kasasi_tun', 'phum', 'pk_pajak', 'pk_tun'];
+        // Rumpun B = PPh 15%: sisanya
+        $colKeys = array_column($columns, 'key');
+        $rumpunB = array_diff($colKeys, $rumpunA);
+
+        // ── Definisi jabatan ────────────────────────────────────────────────
+        $jabatanList = [
+            ['key' => 'ketua_ma',        'label' => 'Ketua Mahkamah Agung',                                               'persen' => 0.03,  'pajak' => 'pph15'],
+            ['key' => 'waka_yudisial',   'label' => 'Wakil Ketua MA Bidang Yudisial',                                     'persen' => 0.02,  'pajak' => 'pph15'],
+            ['key' => 'waka_non_yud',    'label' => 'Wakil Ketua MA Bidang Non-Yudisial',                                 'persen' => 0.02,  'pajak' => 'pph15'],
+            ['key' => 'ketua_kamar',     'label' => 'Ketua Kamar',                                                        'persen' => 0.025, 'pajak' => 'pph15'],
+            ['key' => 'majelis_hakim',   'label' => 'Majelis Hakim',                                                      'persen' => 0.30,  'pajak' => 'pph15'],
+            ['key' => 'panitera_ma',     'label' => 'Panitera Mahkamah Agung',                                            'persen' => 0.06,  'pajak' => 'pph15'],
+            ['key' => 'panmud_perkara',  'label' => 'Panitera Muda Perkara',                                              'persen' => 0.06,  'pajak' => 'pph15'],
+            ['key' => 'hakim_pemilah',   'label' => 'Hakim Pemilah',                                                      'persen' => 0.06,  'pajak' => 'pph15'],
+            ['key' => 'panmud_staf_tim', 'label' => 'Panitera Muda dan Staf Tim',                                         'persen' => 0.05,  'pajak' => 'pph15'],
+            ['key' => 'pp',              'label' => 'Panitera Pengganti',                                                  'persen' => 0.085, 'pajak' => 'pph15'],
+            ['key' => 'operator',        'label' => 'Operator / Pengetik',                                                 'persen' => 0.05,  'pajak' => 'pph5'],
+            ['key' => 'tim_penelaah',    'label' => 'Tim Penelaah Kelengkapan/Formalitas Berkas',                         'persen' => 0.06,  'pajak' => 'mixed'],
+            ['key' => 'staf_panmud',     'label' => 'Staf Panitera Muda Perkara',                                         'persen' => 0.06,  'pajak' => 'mixed'],
+            ['key' => 'tim_data',        'label' => 'Tim Pendukung Pengolah Data, Pelaporan, dan Sistem Informasi',        'persen' => 0.05,  'pajak' => 'pph15'],
+            ['key' => 'tim_biaya',       'label' => 'Tim Pengelola Biaya Proses',                                          'persen' => 0.05,  'pajak' => 'pph15'],
+            ['key' => 'tim_penerima',    'label' => 'Tim Penerima Berkas',                                                  'persen' => 0.02,  'pajak' => 'pph15'],
+        ];
+
+        // ── Hitung cells ────────────────────────────────────────────────────
+        $rows       = [];
+        $grandBruto = 0;
+        $grandPph15 = 0;
+        $grandPph5  = 0;
+        $grandNetto = 0;
+
+        // Untuk total kolom: sub_total per kolom lintas semua jabatan
+        $colGrandTotal = array_fill_keys($colKeys, 0);
+
+        foreach ($jabatanList as $jab) {
+            $cells = [];
+            $bruto = 0;
+
+            foreach ($columns as $col) {
+                $biayaJab = (int) round($penyelesaian[$col['key']] * $jab['persen']);
+                $subTotal = $biayaJab * $jml[$col['key']];
+                $cells[$col['key']] = [
+                    'biaya'     => $biayaJab,
+                    'jml'       => $jml[$col['key']],
+                    'sub_total' => $subTotal,
+                ];
+                $bruto                    += $subTotal;
+                $colGrandTotal[$col['key']] += $subTotal;
+            }
+
+            // Hitung pajak
+            $pph15 = 0;
+            $pph5  = 0;
+
+            if ($jab['pajak'] === 'pph15') {
+                $pph15 = (int) round($bruto * 0.15);
+            } elseif ($jab['pajak'] === 'pph5') {
+                $pph5 = (int) round($bruto * 0.05);
+            } elseif ($jab['pajak'] === 'mixed') {
+                $subA = 0;
+                $subB = 0;
+                foreach ($rumpunA as $ck) $subA += $cells[$ck]['sub_total'] ?? 0;
+                foreach ($rumpunB as $ck) $subB += $cells[$ck]['sub_total'] ?? 0;
+                $pph5  = (int) round($subA * 0.05);
+                $pph15 = (int) round($subB * 0.15);
+            }
+
+            $netto = $bruto - $pph15 - $pph5;
+
+            $rows[] = [
+                'key'    => $jab['key'],
+                'label'  => $jab['label'],
+                'persen' => $jab['persen'],
+                'pajak'  => $jab['pajak'],
+                'cells'  => $cells,
+                'bruto'  => $bruto,
+                'pph15'  => $pph15,
+                'pph5'   => $pph5,
+                'netto'  => $netto,
+            ];
+
+            $grandBruto += $bruto;
+            $grandPph15 += $pph15;
+            $grandPph5  += $pph5;
+            $grandNetto += $netto;
+        }
+
+        return [
+            'columns'         => $columns,
+            'jabatan'         => $jabatanList,
+            'rows'            => $rows,
+            'col_grand_total' => $colGrandTotal,
+            'grand_bruto'     => $grandBruto,
+            'grand_pph15'     => $grandPph15,
+            'grand_pph5'      => $grandPph5,
+            'grand_netto'     => $grandNetto,
+        ];
     }
 }

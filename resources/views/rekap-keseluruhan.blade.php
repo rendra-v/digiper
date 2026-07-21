@@ -47,6 +47,7 @@
                    class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                     Dashboard
                 </a>
+                @if(!$error && !empty($groups))
                 <a href="{{ route('rekap-keseluruhan.print') }}"
                    target="_blank" rel="noopener"
                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
@@ -57,7 +58,9 @@
                     </svg>
                     Print PDF
                 </a>
+                @endif
             </div>
+            @if(!$error && !empty($groups))
             <a href="{{ route('rekap-keseluruhan-2') }}"
                class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
                 Selanjutnya
@@ -65,6 +68,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
+            @endif
         </div>
     </div>
 
@@ -75,194 +79,217 @@
         </div>
     @endif
 
-    @if(!$error && isset($rekap))
+    @if(!$error && !empty($groups))
+
         {{-- ─── Title ─── --}}
-        <div class="mb-2 text-center">
+        <div class="mb-4 text-center">
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
                 REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS
             </p>
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
                 YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
             </p>
+            @if($recapDate)
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Periode: {{ strtoupper($recapDate) }}</p>
+            @endif
         </div>
 
         {{-- ─── Table ─── --}}
-
-        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden mb-10">
             <div class="overflow-x-auto">
-                <table class="w-full text-xs border-collapse" style="min-width: 1080px;">
+                <table class="w-full text-xs border-collapse" style="min-width: 960px;">
                     <colgroup>
-                        {{-- Col A: No --}}
-                        <col style="width: 3%;">
-                        {{-- Col B: Jenis Perkara --}}
-                        <col style="width: 15%;">
-                        {{-- Col C: Klasifikasi --}}
-                        <col style="width: 7%;">
-                        {{-- Col D-H: KASASI (5 kolom) --}}
-                        <col style="width: 5%;">
-                        <col style="width: 5%;">
-                        <col style="width: 5%;">
-                        <col style="width: 7.5%;">
-                        <col style="width: 5.5%;">
-                        {{-- Col I-M: PENINJAUAN KEMBALI (5 kolom) --}}
-                        <col style="width: 5%;">
-                        <col style="width: 5%;">
-                        <col style="width: 5%;">
-                        <col style="width: 7.5%;">
-                        <col style="width: 5.5%;">
-                        {{-- Col N: Total --}}
-                        <col style="width: 7%;">
+                        <col style="width:3%">      {{-- No --}}
+                        <col style="width:14%">     {{-- Jenis Perkara --}}
+                        <col style="width:10%">     {{-- Klasifikasi --}}
+                        <col style="width:6%">      {{-- Kasasi: Jumlah --}}
+                        <col style="width:9%">      {{-- Kasasi: Biaya (Rp) --}}
+                        <col style="width:11%">     {{-- Kasasi: Total --}}
+                        <col style="width:6%">      {{-- PK: Jumlah --}}
+                        <col style="width:9%">      {{-- PK: Biaya (Rp) --}}
+                        <col style="width:11%">     {{-- PK: Total --}}
+                        <col style="width:11%">     {{-- Grand Total --}}
                     </colgroup>
                     <thead>
-                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200">
-                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">NO.</td>
-                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">JENIS PERKARA</td>
-                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">KLASIFIKASI</td>
-                            <td colspan="10" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">JUMLAH PERKARA</td>
-                            <td rowspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 align-middle">TOTAL JML MINUTASI TEPAT WAKTU (120 HARI)</td>
+                        {{-- Baris header 1 --}}
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200 align-middle">No</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200 align-middle">Jenis Perkara</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200 align-middle">Klasifikasi</th>
+                            <th colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200">KASASI</th>
+                            <th colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200">PENINJAUAN KEMBALI (PK)</th>
+                            <th rowspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-800 dark:text-neutral-200 align-middle">Grand Total (Rp)</th>
                         </tr>
-                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200">
-                            <td colspan="5" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">KASASI</td>
-                            <td colspan="5" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5">PENINJAUAN KEMBALI</td>
-                        </tr>
-                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center font-bold text-neutral-800 dark:text-neutral-200 text-[10px] leading-tight">
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">SISA S.D TH<br>LALU</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">MASUK TH<br>INI</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">PUTUS</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">BELUM PUTUS</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">JML MINUT TEPAT WAKTU (120 HARI)</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">SISA S.D TH<br>LALU</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">MASUK TH<br>INI</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">PUTUS</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">BELUM PUTUS</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1">JML MINUT TEPAT WAKTU (120 HARI)</td>
-                        </tr>
-                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-200 dark:border-neutral-800 text-center text-[10px] text-neutral-600 dark:text-neutral-400">
-                            @for($i = 1; $i <= 14; $i++)
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">{{ $i }}</td>
-                            @endfor
+                        {{-- Baris header 2 --}}
+                        <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Biaya (Rp)</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Biaya (Rp)</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Biaya (Rp)</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Biaya (Rp)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($rekap['rows'] as $row)
-                            @php
-                                $trBg = $row['is_category'] 
-                                    ? 'bg-cyan-50 dark:bg-cyan-900/20 font-bold text-neutral-900 dark:text-neutral-100'
-                                    : 'hover:bg-blue-50/30 dark:hover:bg-neutral-800/30 text-neutral-800 dark:text-neutral-200';
-                            @endphp
-                            <tr class="border-b border-neutral-200 dark:border-neutral-800 {{ $trBg }}">
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-center">{{ $row['no'] }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-left">{{ $row['perkara'] }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-left">{{ $row['klasifikasi'] }}</td>
-                                
-                                {{-- Kasasi --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['sisa'] > 0 ? number_format($row['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['masuk'] > 0 ? number_format($row['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['putus'] > 0 ? number_format($row['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['blm'] > 0 ? number_format($row['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['kasasi']['minut'] > 0 ? number_format($row['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
+                        @php
+                            $fmt = fn($v) => $v > 0 ? number_format($v, 0, ',', '.') : '-';
+                            $fmtN = fn($v) => $v > 0 ? number_format($v, 0, ',', '.') : '-';
+                        @endphp
 
-                                {{-- PK --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['sisa'] > 0 ? number_format($row['pk']['sisa'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['masuk'] > 0 ? number_format($row['pk']['masuk'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['putus'] > 0 ? number_format($row['pk']['putus'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['blm'] > 0 ? number_format($row['pk']['blm'], 0, ',', '.') : '-' }}</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $row['pk']['minut'] > 0 ? number_format($row['pk']['minut'], 0, ',', '.') : '-' }}</td>
+                        @foreach($groups as $group)
+                            @php $rowCount = count($group['rows']); @endphp
 
-                                {{-- Total --}}
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-bold">{{ $row['total_minut'] > 0 ? number_format($row['total_minut'], 0, ',', '.') : '-' }}</td>
+                            @foreach($group['rows'] as $i => $row)
+                                <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-blue-50/30 dark:hover:bg-neutral-800/30">
+                                    @if($i === 0)
+                                        {{-- No & Jenis Perkara hanya muncul di baris pertama, span seluruh data rows --}}
+                                        <td rowspan="{{ $rowCount }}"
+                                            class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center font-bold text-neutral-900 dark:text-neutral-100 align-middle bg-cyan-50 dark:bg-cyan-900/20">
+                                            {{ $group['no'] }}
+                                        </td>
+                                        <td rowspan="{{ $rowCount }}"
+                                            class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-left font-bold text-neutral-900 dark:text-neutral-100 align-middle bg-cyan-50 dark:bg-cyan-900/20">
+                                            {{ $group['label'] }}
+                                        </td>
+                                    @endif
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-left text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['label'] }}
+                                    </td>
+                                    {{-- Kasasi --}}
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['kasasi_jumlah'] > 0 ? number_format($row['kasasi_jumlah'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['kasasi_biaya'] > 0 ? number_format($row['kasasi_biaya'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['kasasi_total'] > 0 ? number_format($row['kasasi_total'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    {{-- PK --}}
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['pk_jumlah'] > 0 ? number_format($row['pk_jumlah'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}
+                                    </td>
+                                    {{-- Grand Total per row --}}
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                        {{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            {{-- Baris total per kelompok --}}
+                            <tr class="border-b border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800/60 font-bold">
+                                <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-left text-neutral-900 dark:text-neutral-100">
+                                    Total {{ $group['label'] }}
+                                </td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                    {{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                    {{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                    {{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                    {{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                    {{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}
+                                </td>
                             </tr>
                         @endforeach
-                        
-                        {{-- Baris JUMLAH --}}
-                        @php $t = $rekap['total']; @endphp
-                        <tr class="bg-neutral-100 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 font-bold text-neutral-900 dark:text-neutral-100">
-                            <td colspan="3" class="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-center tracking-wider">TOTAL</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['sisa'] > 0 ? number_format($t['kasasi']['sisa'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['masuk'] > 0 ? number_format($t['kasasi']['masuk'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['putus'] > 0 ? number_format($t['kasasi']['putus'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['blm'] > 0 ? number_format($t['kasasi']['blm'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['kasasi']['minut'] > 0 ? number_format($t['kasasi']['minut'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['sisa'] > 0 ? number_format($t['pk']['sisa'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['masuk'] > 0 ? number_format($t['pk']['masuk'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['putus'] > 0 ? number_format($t['pk']['putus'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['blm'] > 0 ? number_format($t['pk']['blm'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right">{{ $t['pk']['minut'] > 0 ? number_format($t['pk']['minut'], 0, ',', '.') : '-' }}</td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-bold">{{ $t['total_minut'] > 0 ? number_format($t['total_minut'], 0, ',', '.') : '-' }}</td>
+
+                        {{-- Baris Grand Total --}}
+                        @if($final_total)
+                        <tr class="bg-blue-100 dark:bg-blue-900/40 font-bold border-t-2 border-neutral-400 dark:border-neutral-600">
+                            <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-left text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">
+                                JUMLAH TOTAL KESELURUHAN
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}
+                            </td>
                         </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════
-             SIGNATURE AREA — format dokumen resmi MA
-             ══════════════════════════════════════════════════ --}}
+        {{-- ══ Signature Area ══ --}}
+        @php $pejabat = config('tarif.pejabat'); @endphp
         <div class="mt-12 mb-16">
-
-            {{-- Tanggal → rata kanan --}}
             <div class="flex justify-end mb-8">
                 <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200">
                     {{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}
                 </p>
             </div>
 
-            {{-- 3 kolom tanda tangan --}}
             <div class="grid grid-cols-3">
-
-                {{-- Kiri --}}
                 <div class="flex flex-col items-start">
                     <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 leading-snug">
                         Kuasa Pengelola Biaya Proses
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            ASEP NURSOBAH, S.Ag., M.H.
+                            {{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}
                         </p>
                     </div>
                 </div>
 
-                {{-- Tengah --}}
                 <div class="flex flex-col items-center text-center">
                     <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 leading-snug">
                         Petugas Pembuat Komitmen<br>Biaya Proses
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            ST. KRIS NUGROHO, S.H., M.H.
+                            {{ $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}
                         </p>
                     </div>
                 </div>
 
-                {{-- Kanan --}}
                 <div class="flex flex-col items-end text-right">
                     <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 leading-snug">
                         Bendahara Biaya Proses
                     </p>
                     <div class="mt-20">
                         <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
-                            FARIDA,SH
+                            {{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}
                         </p>
                     </div>
                 </div>
-
             </div>
 
-            {{-- Mengetahui — Panitera MA-RI (tengah) --}}
             <div class="mt-14 flex flex-col items-center text-center">
-                <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300">
-                    Mengetahui,
-                </p>
-                <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 mt-0.5">
-                    Panitera MA-RI
-                </p>
+                <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300">Mengetahui,</p>
+                <p class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 mt-0.5">Panitera MA-RI</p>
                 <div class="mt-20">
                     <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-2">
                         Dr. SUDHARMAWATININGSIH, S.H., M.Hum.
                     </p>
                 </div>
             </div>
-
         </div>
 
     @else
@@ -272,7 +299,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Belum ada data</p>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel terlebih dahulu di Dashboard</p>
+            <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">Harap upload file Excel yang mengandung sheet "Data Print" terlebih dahulu</p>
             <a href="{{ route('dashboard') }}"
                class="inline-block mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
                 Ke Dashboard
