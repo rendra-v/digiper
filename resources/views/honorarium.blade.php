@@ -63,7 +63,69 @@
         @foreach($sheets as $si => $sheet)
         <div x-show="activeSheet === {{ $si }}" x-cloak>
 
-            {{-- Block filter: dropdown pilih dokumen --}}
+            @if($sheet['sheetName'] === 'TIM' && !empty($timData))
+                {{-- TIM: tampilkan computed blocks dari Data Print --}}
+                @foreach($timData as $block)
+                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
+                        <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                            HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
+                        </p>
+                        <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
+                            Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[160px]">NAMA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">JABATAN</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">JUMLAH BIAYA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">NETTO</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $rowNum = 0; @endphp
+                                @foreach($block['rows'] as $row)
+                                    @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
+                                    <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['no'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-800 dark:text-neutral-200 font-medium">{{ $row['nama'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['jumlah_biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
+                                    </tr>
+                                @endforeach
+                                <tr class="bg-slate-100 dark:bg-slate-700/40 border-t-2 border-slate-400 dark:border-slate-500 font-bold">
+                                    <td colspan="5" class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 text-neutral-900 dark:text-neutral-100 text-right">JUMLAH</td>
+                                    <td class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">Rp {{ number_format($block['total']['jumlah_biaya'], 0, ',', '.') }}</td>
+                                    <td class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">{{ $block['total']['pph15'] > 0 ? 'Rp ' . number_format($block['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                                    <td class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                                    <td class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                                    <td class="border border-slate-300 dark:border-slate-600 px-2 py-2.5"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endforeach
+
+            @else
+                {{-- Kepaniteraan / OP-STAF / TIM tanpa computed data: tampilkan Excel blocks --}}
+
+                {{-- Block filter: dropdown pilih dokumen --}}
             <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
                 <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                     Pilih Dokumen — {{ $sheet['sheetName'] }}
@@ -287,28 +349,89 @@
             </div>
             @endforeach
 
+            @endif {{-- @if($sheet['sheetName'] === 'TIM' && !empty($timData)) --}}
+
         </div>
         @endforeach
 
     @else
-        {{-- ─── Empty State ─── --}}
-        <div class="text-center py-24">
-            <div class="w-20 h-20 mx-auto mb-6 bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
-                <svg class="w-10 h-10 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
+        {{-- ─── Fallback: tidak ada Excel → tampilkan computed TIM ─── --}}
+        <div x-data="{ active: 1 }">
+            <div class="flex gap-2 mb-6 flex-wrap">
+                @php $staticTabs = ['Kepaniteraan', 'TIM', 'OP - STAF']; @endphp
+                @foreach($staticTabs as $i => $label)
+                    <button @click="active = {{ $i }}"
+                            :class="active === {{ $i }}
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'"
+                            class="px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200">
+                        {{ $label }}
+                    </button>
+                @endforeach
             </div>
-            @if(!$error)
-                <p class="text-neutral-500 dark:text-neutral-400 text-lg font-medium">Tidak ada data honorarium kamar</p>
-                <p class="text-neutral-400 dark:text-neutral-500 text-sm mt-2">
-                    Pastikan file Excel memiliki sheet Kepaniteraan, TIM, atau OP - STAF dengan data honorarium.
-                </p>
-            @endif
-            <div class="flex gap-3 justify-center mt-6">
-                <a href="{{ route('dashboard') }}"
-                   class="inline-block px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium">
-                    Upload File
-                </a>
+
+            {{-- TIM Tab --}}
+            <div x-show="active === 1" x-cloak>
+                @if(!empty($timData))
+                    @foreach($timData as $block)
+                    <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
+                            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                                HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
+                            </p>
+                            <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
+                                Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
+                            </p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[160px]">NAMA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">JABATAN</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">JUMLAH BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">NETTO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $rowNum = 0; @endphp
+                                    @foreach($block['rows'] as $row)
+                                        @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
+                                        <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['no'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 font-medium">{{ $row['nama'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2">{{ $row['jabatan'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['jumlah_biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="bg-slate-100 dark:bg-slate-700/40 border-t-2 border-slate-400 font-bold">
+                                        <td colspan="5" class="border border-slate-300 px-2 py-2.5 text-right">JUMLAH</td>
+                                        <td class="border border-slate-300 px-2 py-2.5 text-right">Rp {{ number_format($block['total']['jumlah_biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-slate-300 px-2 py-2.5 text-right">{{ $block['total']['pph15'] > 0 ? 'Rp ' . number_format($block['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-slate-300 px-2 py-2.5 text-right">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-slate-300 px-2 py-2.5 text-right">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                                        <td class="border border-slate-300 px-2 py-2.5"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endforeach
+                @else
+                    <p class="text-sm text-neutral-500 text-center py-8">Tidak ada data honorarium TIM.</p>
+                @endif
             </div>
         </div>
     @endif

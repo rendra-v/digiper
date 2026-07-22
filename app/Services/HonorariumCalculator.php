@@ -872,6 +872,278 @@ public function countHakimFromRows(array $rows): int
     // ======================================================================
 
     /**
+     * Hitung tabel honorarium TIM per jenis perkara dari Data Print.
+     *
+     * Menghasilkan 1 blok per jenis perkara dengan 4 jabatan:
+     *  1. TIM KOREKTOR / HAKIM AGUNG  – per nama dari Nama P1/P2/P3, PPH 15%
+     *  2. PANITERA MUDA KAMAR DAN STAF – 1 baris, jumlah = total perkara, PPH 15%
+     *  3. ASISTEN / PANITERA PENGGANTI – per nama dari Nama Panitera Pengganti, PPH 15%
+     *  4. OPERATOR/ PENGETIK           – 1 baris, jumlah = total perkara, PPH 5%
+     *
+     * @param  array  $categories  Output dari parseDataPrintSheet()
+     * @return array  Array of blocks: ['label', 'jumlah_perkara', 'rows', 'total']
+     */
+    public function computeTimHonorariumBlocks(array $categories): array
+    {
+        // Index by id
+        $keyed = [];
+        foreach ($categories as $cat) {
+            if (isset($cat['id'])) $keyed[$cat['id']] = $cat;
+        }
+
+        // Tarif penyelesaian per kelas
+        $tc = $this->tarif['tarif_cek'];
+        $penyelesaian = [
+            'kasasi_500'   => $tc['kasasi_pdt']['pph15']        + $tc['kasasi_pdt']['pph5'],
+            'kasasi_niaga' => $tc['kasasi_pdtsus_5jt']['pph15'] + $tc['kasasi_pdtsus_5jt']['pph5'],
+            'pk_250'       => $tc['pk_pdt']['pph15']            + $tc['pk_pdt']['pph5'],
+            'phum'         => $tc['phum']['pph15']              + $tc['phum']['pph5'],
+            'pk_niaga'     => $tc['pk_pdtsus_10jt']['pph15']    + $tc['pk_pdtsus_10jt']['pph5'],
+        ];
+
+        // Persentase per jabatan
+        $persenHakim    = 0.30 / 3;   // majelis hakim 30% dibagi 3
+        $persenPanmud   = 0.05;
+        $persenPP       = 0.085;
+        $persenOperator = 0.05;       // PPH 5%
+
+        // Klasifikasi untuk filtering niaga (cek kolom 'klasifikasi' di data)
+        $niagaKeywords = ['HAKI', 'PATEN', 'KEPAILITAN', 'NIAGA'];
+        $isNiaga = function (array $row) use ($niagaKeywords): bool {
+            $klas = strtoupper(trim((string) ($row['klasifikasi'] ?? '')));
+            $jenis = strtoupper(trim((string) ($row['Jenis Perkara'] ?? '')));
+            foreach ($niagaKeywords as $kw) {
+                if (str_contains($klas, $kw) || str_contains($jenis, $kw)) return true;
+            }
+            return false;
+        };
+
+        // Hitung frekuensi nama per kolom (case-insensitive key lookup)
+        $countByName = function (array $rows, array $columns): array {
+            $counts = [];
+            foreach ($rows as $row) {
+                // Build case-insensitive key map sekali per row
+                $rowUpper = [];
+                foreach ($row as $k => $v) {
+                    $rowUpper[strtoupper($k)] = $v;
+                }
+                foreach ($columns as $col) {
+                    $name = trim((string) ($rowUpper[strtoupper($col)] ?? ''));
+                    if ($name === '' || $name === '-' || $name === '0') continue;
+                    $counts[$name] = ($counts[$name] ?? 0) + 1;
+                }
+            }
+            arsort($counts);
+            return $counts;
+        };
+
+        // Urutan mengikuti dropdown data-print
+        $jenisDefs = [
+            [
+                'label'   => 'KASASI PERDATA UMUM',
+                'tarif'   => 'kasasi_500',
+                'sources' => [['id' => 'kasasi-pdt-umum', 'filter' => null]],
+            ],
+            [
+                'label'   => 'PENINJAUAN KEMBALI PERDATA UMUM',
+                'tarif'   => 'pk_250',
+                'sources' => [['id' => 'pk-pdt-umum', 'filter' => null]],
+            ],
+            [
+                'label'   => 'KASASI PERDATA KHUSUS',
+                'tarif'   => 'kasasi_500',
+                'sources' => [['id' => 'kasasi-pdt-khusus', 'filter' => 'non-niaga']],
+            ],
+            [
+                'label'   => 'PENINJAUAN KEMBALI PERDATA KHUSUS',
+                'tarif'   => 'pk_250',
+                'sources' => [['id' => 'pk-pdt-khusus', 'filter' => 'non-niaga']],
+            ],
+            [
+                'label'   => 'KASASI PERDATA AGAMA',
+                'tarif'   => 'kasasi_500',
+                'sources' => [['id' => 'kasasi-pdt-agama', 'filter' => null]],
+            ],
+            [
+                'label'   => 'PENINJAUAN KEMBALI PERDATA AGAMA',
+                'tarif'   => 'pk_250',
+                'sources' => [['id' => 'pk-pdt-agama', 'filter' => null]],
+            ],
+            [
+                'label'   => 'KASASI TATA USAHA NEGARA (K-TUN)',
+                'tarif'   => 'kasasi_500',
+                'sources' => [['id' => 'kasasi-tun', 'filter' => null]],
+            ],
+            [
+                'label'   => 'P-HUM (PERMOHONAN HAK UJI MATERIL)',
+                'tarif'   => 'phum',
+                'sources' => [
+                    ['id' => 'phum', 'filter' => null],
+                ],
+            ],
+            [
+                'label'   => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',
+                'tarif'   => 'phum',
+                'sources' => [
+                    ['id' => 'pkhs', 'filter' => null],
+                ],
+            ],
+            [
+                'label'   => 'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)',
+                'tarif'   => 'pk_250',
+                'sources' => [['id' => 'pk-tun', 'filter' => null]],
+            ],
+            [
+                'label'   => 'PENINJAUAN KEMBALI PAJAK (PK-PJK)',
+                'tarif'   => 'pk_250',
+                'sources' => [['id' => 'pk-pajak', 'filter' => null]],
+            ],
+            [
+                'label'   => 'KASASI NIAGA',
+                'tarif'   => 'kasasi_niaga',
+                'sources' => [['id' => 'kasasi-pdt-khusus', 'filter' => 'niaga']],
+            ],
+            [
+                'label'   => 'PK NIAGA',
+                'tarif'   => 'pk_niaga',
+                'sources' => [['id' => 'pk-pdt-khusus', 'filter' => 'niaga']],
+            ],
+        ];
+
+        $blocks = [];
+
+        foreach ($jenisDefs as $def) {
+            // Kumpulkan baris dari sumber yang relevan
+            $rows = [];
+            foreach ($def['sources'] as $src) {
+                if (! isset($keyed[$src['id']])) continue;
+                $cat = $keyed[$src['id']];
+                if (empty($cat['data'])) continue;
+
+                $srcRows = $cat['data'];
+                if ($src['filter'] === 'niaga') {
+                    $srcRows = array_values(array_filter($srcRows, $isNiaga));
+                } elseif ($src['filter'] === 'non-niaga') {
+                    $srcRows = array_values(array_filter($srcRows, fn($r) => ! $isNiaga($r)));
+                }
+                $rows = array_merge($rows, $srcRows);
+            }
+
+            if (empty($rows)) continue;
+
+            // Hitung total perkara dari count asli kategori (sesuai angka di data-print)
+            $totalPerkara = 0;
+            foreach ($def['sources'] as $src) {
+                if (! isset($keyed[$src['id']])) continue;
+                $cat = $keyed[$src['id']];
+                if ($src['filter'] === null) {
+                    // Gunakan count($cat['data']) agar konsisten dengan yang tampil di data-print
+                    $totalPerkara += count($cat['data']);
+                } else {
+                    // Filter niaga/non-niaga: hitung dari data aktual
+                    foreach ($cat['data'] as $r) {
+                        $isN = $isNiaga($r);
+                        if ($src['filter'] === 'niaga' && $isN) $totalPerkara++;
+                        if ($src['filter'] === 'non-niaga' && !$isN) $totalPerkara++;
+                    }
+                }
+            }
+
+            $penyel       = $penyelesaian[$def['tarif']];
+
+            $biayaHakim    = (int) round($penyel * $persenHakim);
+            $biayaPanmud   = (int) round($penyel * $persenPanmud);
+            $biayaPP       = (int) round($penyel * $persenPP);
+            $biayaOperator = (int) round($penyel * $persenOperator);
+
+            // Kolom nama hakim sesuai struktur Excel aktual (sama dengan countHakimFromRows)
+            $hakimCounts = $countByName($rows, ['NAMA P1', 'NAMA P2', 'NAMA P3']);
+            $ppCounts    = $countByName($rows, ['NAMA PANITERA PENGGANTI']);
+
+            $tableRows = [];
+            $no = 1;
+
+            // 1. TIM KOREKTOR / HAKIM AGUNG — per nama, PPH 15%
+            foreach ($hakimCounts as $nama => $jmlPerkara) {
+                $jumlahBiaya = $jmlPerkara * $biayaHakim;
+                $pph15 = (int) round($jumlahBiaya * 0.15);
+                $tableRows[] = [
+                    'no'             => $no++,
+                    'nama'           => $nama,
+                    'jabatan'        => 'TIM KOREKTOR / HAKIM AGUNG',
+                    'jumlah_perkara' => $jmlPerkara,
+                    'biaya'          => $biayaHakim,
+                    'jumlah_biaya'   => $jumlahBiaya,
+                    'pph15'          => $pph15,
+                    'pph5'           => 0,
+                    'netto'          => $jumlahBiaya - $pph15,
+                ];
+            }
+
+            // 2. PANITERA MUDA KAMAR DAN STAF — 1 baris, PPH 15%
+            $jbPanmud    = $totalPerkara * $biayaPanmud;
+            $pph15Panmud = (int) round($jbPanmud * 0.15);
+            $tableRows[] = [
+                'no'             => $no++,
+                'nama'           => '',
+                'jabatan'        => 'PANITERA MUDA KAMAR DAN STAF',
+                'jumlah_perkara' => $totalPerkara,
+                'biaya'          => $biayaPanmud,
+                'jumlah_biaya'   => $jbPanmud,
+                'pph15'          => $pph15Panmud,
+                'pph5'           => 0,
+                'netto'          => $jbPanmud - $pph15Panmud,
+            ];
+
+            // 3. ASISTEN / PANITERA PENGGANTI — per nama, PPH 15%
+            foreach ($ppCounts as $nama => $jmlPerkara) {
+                $jumlahBiaya = $jmlPerkara * $biayaPP;
+                $pph15 = (int) round($jumlahBiaya * 0.15);
+                $tableRows[] = [
+                    'no'             => $no++,
+                    'nama'           => $nama,
+                    'jabatan'        => 'ASISTEN / PANITERA PENGGANTI',
+                    'jumlah_perkara' => $jmlPerkara,
+                    'biaya'          => $biayaPP,
+                    'jumlah_biaya'   => $jumlahBiaya,
+                    'pph15'          => $pph15,
+                    'pph5'           => 0,
+                    'netto'          => $jumlahBiaya - $pph15,
+                ];
+            }
+
+            // 4. OPERATOR/ PENGETIK — 1 baris, PPH 5%
+            $jbOperator   = $totalPerkara * $biayaOperator;
+            $pph5Operator = (int) round($jbOperator * 0.05);
+            $tableRows[] = [
+                'no'             => $no++,
+                'nama'           => '',
+                'jabatan'        => 'OPERATOR/ PENGETIK',
+                'jumlah_perkara' => $totalPerkara,
+                'biaya'          => $biayaOperator,
+                'jumlah_biaya'   => $jbOperator,
+                'pph15'          => 0,
+                'pph5'           => $pph5Operator,
+                'netto'          => $jbOperator - $pph5Operator,
+            ];
+
+            $blocks[] = [
+                'label'          => $def['label'],
+                'jumlah_perkara' => $totalPerkara,
+                'rows'           => $tableRows,
+                'total'          => [
+                    'jumlah_biaya' => array_sum(array_column($tableRows, 'jumlah_biaya')),
+                    'pph15'        => array_sum(array_column($tableRows, 'pph15')),
+                    'pph5'         => array_sum(array_column($tableRows, 'pph5')),
+                    'netto'        => array_sum(array_column($tableRows, 'netto')),
+                ],
+            ];
+        }
+
+        return $blocks;
+    }
+
+    /**
      * Hitung rekapitulasi biaya penyelesaian perkara dari Data Print.
      *
      * @param  array  $categories  Output dari parseDataPrintSheet()

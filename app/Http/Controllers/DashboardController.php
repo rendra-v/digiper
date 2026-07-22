@@ -465,7 +465,7 @@ class DashboardController extends Controller
                 ]);
             }
 
-            // Load hanya sheet "Data Print" — sumber data satu-satunya
+            // Load hanya sheet "Data Print" â€” sumber data satu-satunya
             $reader = IOFactory::createReaderForFile($filePath);
             $reader->setReadDataOnly(true);
             $reader->setLoadSheetsOnly(['Data Print']);
@@ -499,7 +499,7 @@ class DashboardController extends Controller
 
     public function sheetCekPrint()
     {
-        // Reuse sheetCek() — grab the view data and redirect to print view
+        // Reuse sheetCek() â€” grab the view data and redirect to print view
         $response = $this->sheetCek();
         $viewData = $response->getData();
 
@@ -686,7 +686,7 @@ class DashboardController extends Controller
     {
         $highestRow = $worksheet->getHighestRow();
         $highestColumnLetter = $worksheet->getHighestColumn();
-        $rowsPerCategory = 10000; // Simpan semua — dibutuhkan untuk hitung honorarium per nama
+        $rowsPerCategory = 10000; // Simpan semua â€” dibutuhkan untuk hitung honorarium per nama
 
         $indexToColumn = function ($index) {
             $letter = '';
@@ -1378,12 +1378,12 @@ class DashboardController extends Controller
 
     /**
      * Build tabel kanan atas dari sheet Rekap Keseluruhan.
-     * Membaca kolom Q(17)–AY(51), baris 4–38.
-     * Struktur: NO | PERUNTUKAN | % | 10×(BIAYA|JML|SUB TOTAL) | TOTAL
+     * Membaca kolom Q(17)â€“AY(51), baris 4â€“38.
+     * Struktur: NO | PERUNTUKAN | % | 10Ã—(BIAYA|JML|SUB TOTAL) | TOTAL
      */
     private function buildRekapKananReport($worksheet): array
     {
-        // Kolom Q=17 s/d AY=51, baris 4–38
+        // Kolom Q=17 s/d AY=51, baris 4â€“38
         $startColIdx = Coordinate::columnIndexFromString('Q'); // 17
         $endColIdx = Coordinate::columnIndexFromString('AY'); // 51
         $startRow = 4;
@@ -1570,6 +1570,69 @@ class DashboardController extends Controller
         return response()->json($result, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
+    /**
+     * Load & compute TIM honorarium blocks dari Data Print (dengan cache session).
+     */
+    private function computeTimData(string $filePath): array
+    {
+        try {
+            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v6');
+            $cached   = Session::get($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            // Gunakan data_print cache jika ada (supaya jumlah perkara konsisten dengan halaman data-print)
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
+            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+                $categories = $dataPrintCache['categories'];
+            } else {
+                // Fallback: parse ulang dari file
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(true);
+                if (method_exists($reader, 'setLoadSheetsOnly')) {
+                    $reader->setLoadSheetsOnly(['Data Print']);
+                }
+                $spreadsheet = $reader->load($filePath);
+
+                $ws = $spreadsheet->getSheetByName('Data Print');
+                if (! $ws) {
+                    // Coba nama alternatif
+                    foreach ($spreadsheet->getAllSheets() as $sheet) {
+                        $lower = strtolower($sheet->getTitle());
+                        if (str_contains($lower, 'data') && str_contains($lower, 'print')) {
+                            $ws = $sheet;
+                            break;
+                        }
+                    }
+                }
+
+                if (! $ws) {
+                    $spreadsheet->disconnectWorksheets();
+                    return [];
+                }
+
+                $categories = $this->parseDataPrintSheet($ws);
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+
+                if (empty($categories)) {
+                    return [];
+                }
+            }
+
+            $calculator = new \App\Services\HonorariumCalculator();
+            $blocks     = $calculator->computeTimHonorariumBlocks($categories);
+
+            Session::put($cacheKey, $blocks);
+            return $blocks;
+
+        } catch (\Throwable $e) {
+            \Log::error('computeTimData error', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
     public function honorarium()
     {
         try {
@@ -1584,6 +1647,7 @@ class DashboardController extends Controller
                 return view('honorarium', [
                     'fileName' => null,
                     'sheets'   => [],
+                    'timData'  => [],
                     'error'    => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
@@ -1592,10 +1656,14 @@ class DashboardController extends Controller
             $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
             $cached   = Session::get($cacheKey);
 
+            // Compute TIM honorarium dari Data Print (terpisah dari cache Excel sheets)
+            $timData = $this->computeTimData($filePath);
+
             if ($cached !== null) {
                 return view('honorarium', [
                     'fileName' => $fileName,
                     'sheets'   => $cached['sheets'],
+                    'timData'  => $timData,
                     'error'    => null,
                 ]);
             }
@@ -1627,13 +1695,15 @@ class DashboardController extends Controller
                 return view('honorarium', [
                     'fileName' => $fileName,
                     'sheets'   => [],
-                    'error'    => null, // tampilkan empty state, bukan error
+                    'timData'  => $timData,
+                    'error'    => null,
                 ]);
             }
 
             return view('honorarium', [
                 'fileName' => $fileName,
                 'sheets'   => $sheets,
+                'timData'  => $timData,
                 'error'    => null,
             ]);
 
@@ -1643,6 +1713,7 @@ class DashboardController extends Controller
             return view('honorarium', [
                 'fileName' => Session::get('excel_file_name'),
                 'sheets'   => [],
+                'timData'  => [],
                 'error'    => 'Error: '.$e->getMessage(),
             ]);
         }
@@ -1739,7 +1810,7 @@ class DashboardController extends Controller
         $highestColumn = $worksheet->getHighestColumn();
         $highestColIdx = Coordinate::columnIndexFromString($highestColumn);
 
-        // ── 1. Cari SEMUA baris header (mengandung NO dan NAMA) ──────────────
+        // â”€â”€ 1. Cari SEMUA baris header (mengandung NO dan NAMA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $headerRows = [];
         for ($r = 1; $r <= $highestRow; $r++) {
             $rowHasNo = false;
@@ -1768,7 +1839,7 @@ class DashboardController extends Controller
             return null; // Sheet tanpa tabel
         }
 
-        // ── 2. Ambil headers dari tabel PERTAMA (digunakan sebagai standar) ──
+        // â”€â”€ 2. Ambil headers dari tabel PERTAMA (digunakan sebagai standar) â”€â”€
         $firstHRow = $headerRows[0];
         $masterHeaders = [];
         for ($c = 1; $c <= $highestColIdx; $c++) {
@@ -1782,7 +1853,7 @@ class DashboardController extends Controller
             $masterHeaders[$c] = $val !== '' ? $val : Coordinate::stringFromColumnIndex($c);
         }
 
-        // ── 3. Ambil judul dari baris 1 s/d firstHRow-1 (judul utama sheet) ─
+        // â”€â”€ 3. Ambil judul dari baris 1 s/d firstHRow-1 (judul utama sheet) â”€
         $mainTitleLines = [];
         for ($r = 1; $r < $firstHRow; $r++) {
             $rowText = '';
@@ -1798,7 +1869,7 @@ class DashboardController extends Controller
             }
         }
 
-        // ── 4. Gabungkan semua sub-tabel menjadi satu ────────────────────────
+        // â”€â”€ 4. Gabungkan semua sub-tabel menjadi satu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $colHasContent = array_fill(1, $highestColIdx, false);
         $allRows = [];
         $footerKeywords = [
@@ -1924,7 +1995,7 @@ class DashboardController extends Controller
             return null;
         }
 
-        // ── 5. Hapus kolom sepenuhnya kosong ────────────────────────────────
+        // â”€â”€ 5. Hapus kolom sepenuhnya kosong â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $activeHeaders = [];
         foreach ($masterHeaders as $c => $hName) {
             if ($colHasContent[$c]) {
@@ -1932,7 +2003,7 @@ class DashboardController extends Controller
             }
         }
 
-        // ── 6. Filter rows agar hanya kolom aktif ────────────────────────────
+        // â”€â”€ 6. Filter rows agar hanya kolom aktif â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $filteredRows = array_map(function ($row) use ($activeHeaders) {
             $out = [];
             foreach ($activeHeaders as $hName) {
@@ -1943,7 +2014,7 @@ class DashboardController extends Controller
             return $out;
         }, $allRows);
 
-        // ── 7. Deteksi kolom jabatan & auto-koding kode_kuitansi ─────────────
+        // â”€â”€ 7. Deteksi kolom jabatan & auto-koding kode_kuitansi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $jabatanColName = null;
         foreach ($activeHeaders as $hName) {
             $up = strtoupper(trim($hName));
@@ -2270,20 +2341,20 @@ class DashboardController extends Controller
         $highestCol = $worksheet->getHighestColumn();
         $highestColIdx = Coordinate::columnIndexFromString($highestCol);
 
-        // ══════════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         // Layout sheet Excel di bawah baris 38:
-        //   Kolom A–P  (kiri)  : Blok tanda tangan (Jakarta, Bendahara, nama)
-        //   Kolom Q–AY (kanan) : TABEL HONORARIUM yang kita inginkan
+        //   Kolom Aâ€“P  (kiri)  : Blok tanda tangan (Jakarta, Bendahara, nama)
+        //   Kolom Qâ€“AY (kanan) : TABEL HONORARIUM yang kita inginkan
         //
         // Strategi:
         //  1. Cari header row dari baris 39+ yang memuat PERUNTUKAN + BRUTO/NETTO/PPH
-        //  2. Cari posisi kolom PERUNTUKAN/PEJABATAN → startColIdx
-        //  3. Cari posisi kolom NETTO → lastColIdx
-        //  4. Baca HANYA kolom startColIdx–lastColIdx, baris 39–tableEnd
+        //  2. Cari posisi kolom PERUNTUKAN/PEJABATAN â†’ startColIdx
+        //  3. Cari posisi kolom NETTO â†’ lastColIdx
+        //  4. Baca HANYA kolom startColIdxâ€“lastColIdx, baris 39â€“tableEnd
         //  5. Hentikan di baris footer (Jakarta / Mengetahui / dll)
-        // ══════════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-        // ── Step 1: Cari baris header (mulai dari baris 39, setelah rekap kiri/kanan) ──
+        // â”€â”€ Step 1: Cari baris header (mulai dari baris 39, setelah rekap kiri/kanan) â”€â”€
         $searchFrom = 39;
         $headerRow = null;
 
@@ -2333,7 +2404,7 @@ class DashboardController extends Controller
             ];
         }
 
-        // ── Step 2: Cari kolom PERUNTUKAN/PEJABATAN → startColIdx ──
+        // â”€â”€ Step 2: Cari kolom PERUNTUKAN/PEJABATAN â†’ startColIdx â”€â”€
         // Scan HANYA dari headerRow ke bawah (bukan ke atas), agar tidak
         // menyentuh baris rekap kiri/kanan (yang berakhir di baris 38).
         $peruntukanCol = null;
@@ -2370,7 +2441,7 @@ class DashboardController extends Controller
             $startColIdx = 1;
         }
 
-        // ── Step 3: Cari kolom NETTO → lastColIdx ──
+        // â”€â”€ Step 3: Cari kolom NETTO â†’ lastColIdx â”€â”€
         $nettoCol = null;
         for ($c = $highestColIdx; $c >= $startColIdx; $c--) {
             for ($checkRow = $headerRow; $checkRow <= min($highestRow, $headerRow + 3); $checkRow++) {
@@ -2398,7 +2469,7 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Step 4: Tentukan range baris ──
+        // â”€â”€ Step 4: Tentukan range baris â”€â”€
         // tableStart: minimal baris 39, mundur maks 2 baris untuk judul
         $tableStart = max(39, $headerRow - 2);
         $tableEnd = $highestRow;
@@ -2445,7 +2516,7 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Step 5: Kumpulkan merged cells dalam area tabel ──
+        // â”€â”€ Step 5: Kumpulkan merged cells dalam area tabel â”€â”€
         $mergedRanges = [];
         $coveredCells = [];
 
@@ -2479,7 +2550,7 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Step 6: Baca baris data ──
+        // â”€â”€ Step 6: Baca baris data â”€â”€
         $rows = [];
         for ($row = $tableStart; $row <= $tableEnd; $row++) {
             $cells = [];
@@ -2542,7 +2613,7 @@ class DashboardController extends Controller
         $highestRow = $ws->getHighestRow();
         $blocks = [];
 
-        // Footer keywords – baris ini dan setelahnya adalah footer (tanda tangan)
+        // Footer keywords â€“ baris ini dan setelahnya adalah footer (tanda tangan)
         $footerKeywords = ['jakarta', 'mengetahui', 'petugas pembuat', 'bendahara', 'kuasa pengelola'];
 
         for ($r = 1; $r <= $highestRow; $r++) {
@@ -2683,11 +2754,11 @@ class DashboardController extends Controller
 
             // Hanya simpan blok yang punya data baris
             if (! empty($dataRows)) {
-                // ── Transformasi khusus OP - STAF ──────────────────────────
+                // â”€â”€ Transformasi khusus OP - STAF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (stripos($sheetName, 'OP') !== false && stripos($sheetName, 'STAF') !== false) {
                     // Cari kolom yang perlu dimanipulasi
-                    $colAsisten = null; // "NAMA ASISTEN / PANITERA PENGGANTI" → hapus
-                    $colOperator = null; // "NAMA OPERATOR" → isinya diganti jadi "OPERATOR"
+                    $colAsisten = null; // "NAMA ASISTEN / PANITERA PENGGANTI" â†’ hapus
+                    $colOperator = null; // "NAMA OPERATOR" â†’ isinya diganti jadi "OPERATOR"
 
                     foreach ($colHeaders as $ci => $hName) {
                         $hUp = strtoupper(trim((string) $hName));
@@ -2718,7 +2789,7 @@ class DashboardController extends Controller
 
                     // Sisipkan kolom JABATAN setelah NAMA OPERATOR, kosongkan isi NAMA OPERATOR
                     if ($colOperator !== null) {
-                        // Bangun peta indeks lama → baru (sisipkan slot jabatan setelah colOperator)
+                        // Bangun peta indeks lama â†’ baru (sisipkan slot jabatan setelah colOperator)
                         $keyMap = [];
                         $jabatanIdx = null;
                         $newIdx = 1;
@@ -2763,7 +2834,7 @@ class DashboardController extends Controller
 
                     $numCols = count($colHeaders);
                 }
-                // ── Akhir transformasi OP - STAF ───────────────────────────
+                // â”€â”€ Akhir transformasi OP - STAF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
                 $blocks[] = [
                     'title1' => $title1,
