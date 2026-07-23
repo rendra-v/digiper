@@ -894,11 +894,12 @@ public function countHakimFromRows(array $rows): int
         // Tarif penyelesaian per kelas
         $tc = $this->tarif['tarif_cek'];
         $penyelesaian = [
-            'kasasi_500'   => $tc['kasasi_pdt']['pph15']        + $tc['kasasi_pdt']['pph5'],
-            'kasasi_niaga' => $tc['kasasi_pdtsus_5jt']['pph15'] + $tc['kasasi_pdtsus_5jt']['pph5'],
-            'pk_250'       => $tc['pk_pdt']['pph15']            + $tc['pk_pdt']['pph5'],
-            'phum'         => $tc['phum']['pph15']              + $tc['phum']['pph5'],
-            'pk_niaga'     => $tc['pk_pdtsus_10jt']['pph15']    + $tc['pk_pdtsus_10jt']['pph5'],
+            'kasasi_500'   => $tc['kasasi_pdt']['pph15']        + $tc['kasasi_pdt']['pph5'],        // 250.000
+            'kasasi_niaga' => $tc['kasasi_pdtsus_5jt']['pph15'] + $tc['kasasi_pdtsus_5jt']['pph5'], // 2.835.000
+            'pk_250'       => $tc['pk_pdt']['pph15']            + $tc['pk_pdt']['pph5'],             // 1.330.000
+            'phum'         => $tc['phum']['pph15']              + $tc['phum']['pph5'],               // 500.000
+            'pk_niaga'     => $tc['pk_pdtsus_10jt']['pph15']    + $tc['pk_pdtsus_10jt']['pph5'],    // 5.335.000
+            'pkhs'         => $tc['pkhs']['pph15']              + $tc['pkhs']['pph5'],               // 500.000
         ];
 
         // Persentase per jabatan
@@ -970,7 +971,7 @@ public function countHakimFromRows(array $rows): int
             ['label' => 'PENINJAUAN KEMBALI PERDATA AGAMA',         'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pdt-agama',              'filter' => null]]],
             ['label' => 'KASASI TATA USAHA NEGARA (K-TUN)',         'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-tun',                'filter' => null]]],
             ['label' => 'P-HUM (PERMOHONAN HAK UJI MATERIL)',       'tarif' => 'phum',         'sources' => [['id' => 'phum',                      'filter' => null]]],
-            ['label' => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',      'tarif' => 'phum',         'sources' => [['id' => 'pkhs',                      'filter' => null]]],
+            ['label' => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',      'tarif' => 'pkhs',         'sources' => [['id' => 'pkhs',                      'filter' => null]]],
             ['label' => 'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)', 'tarif' => 'pk_250',  'sources' => [['id' => 'pk-tun',                    'filter' => null]]],
             ['label' => 'PENINJAUAN KEMBALI PAJAK (PK-PJK)',        'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pajak',                  'filter' => null]]],
         ];
@@ -1010,12 +1011,24 @@ public function countHakimFromRows(array $rows): int
                 }
             }
 
-            $penyel       = $penyelesaian[$def['tarif']];
+            $penyel = $penyelesaian[$def['tarif']];
 
-            $biayaHakim    = (int) round($penyel * $persenHakim);
-            $biayaPanmud   = (int) round($penyel * $persenPanmud);
-            $biayaPP       = (int) round($penyel * $persenPP);
-            $biayaOperator = (int) round($penyel * $persenOperator);
+            // P-KHS punya struktur % berbeda (dari Rekap Keseluruhan 3):
+            //   hakim   = (majelis_hakim 30% + ketua_ma 3%) / 3 = 11%  → 500.000 × 0.11 = 55.000
+            //   panmud  = panmud_perkara 6% (bukan panmud_staf_tim 5%) → 500.000 × 0.06 = 30.000
+            //   PP      = 5%                                             → 500.000 × 0.05 = 25.000
+            //   operator= 5%                                             → 500.000 × 0.05 = 25.000
+            if ($def['tarif'] === 'pkhs') {
+                $biayaHakim    = (int) round($penyel * (0.33 / 3));   // 55.000
+                $biayaPanmud   = (int) round($penyel * 0.06);         // 30.000
+                $biayaPP       = (int) round($penyel * 0.05);         // 25.000
+                $biayaOperator = (int) round($penyel * $persenOperator); // 25.000
+            } else {
+                $biayaHakim    = (int) round($penyel * $persenHakim);
+                $biayaPanmud   = (int) round($penyel * $persenPanmud);
+                $biayaPP       = (int) round($penyel * $persenPP);
+                $biayaOperator = (int) round($penyel * $persenOperator);
+            }
 
             // Kolom nama hakim sesuai struktur Excel aktual (sama dengan countHakimFromRows)
             $hakimCounts = $countByName($rows, ['NAMA P1', 'NAMA P2', 'NAMA P3']);
