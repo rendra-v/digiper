@@ -272,17 +272,64 @@
 {{-- ── Content ─────────────────────────────────────────────────────────── --}}
 <div class="pages">
 
-    @if($computedType === 'op-staf')
-        @php
-            $sheets = [['sheetName' => 'OP - STAF', 'blocks' => $opStafData]];
-        @endphp
-    @endif
-
     @if($error)
         <div class="notice">
             <h3>⚠ Gagal memuat dokumen</h3>
             <p>{{ $error }}</p>
         </div>
+
+    @elseif($computedType === 'op-staf')
+        @foreach($opStafData as $oi => $block)
+            @if(count($block['rows']) >= 1)
+            <div class="page">
+                <div class="doc-title-wrap">
+                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['title'] }}</div>
+                    <div class="title-sub">(SEBAGAI OPERATOR / STAF)</div>
+                    <div class="title-info">Sebanyak {{ number_format($block['total_perkara'], 0, ',', '.') }} Perkara</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="td-no">NO</th>
+                            <th class="td-nama">NAMA OPERATOR / STAF</th>
+                            <th class="td-jab">JABATAN</th>
+                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-num">BIAYA</th>
+                            <th class="td-num">JUMLAH BIAYA</th>
+                            <th class="td-num">PPH 15%</th>
+                            <th class="td-num">PPH 5%</th>
+                            <th class="td-num">NETTO</th>
+                            <th class="td-ttd">TANDA TANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($block['rows'] as $row)
+                            <tr>
+                                <td class="td-no">{{ $row['no'] }}</td>
+                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-jab">PANITERA PENGGANTI</td>
+                                <td class="td-count">{{ number_format($row['jml'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['bruto'], 0, ',', '.') }}</td>
+                                <td class="td-num">-</td>
+                                <td class="td-num">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                <td class="td-ttd"></td>
+                            </tr>
+                        @endforeach
+                        <tr class="row-total">
+                            <td colspan="5" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['bruto'], 0, ',', '.') }}</td>
+                            <td class="td-num">-</td>
+                            <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                            <td class="td-ttd"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        @endforeach
 
     @elseif($computedType === 'tim')
         @foreach($timData as $ti => $block)
@@ -345,8 +392,8 @@
             @if(count($block['rows']) >= 1)
             <div class="page">
                 <div class="doc-title-wrap">
-                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}</div>
-                    <div class="title-sub">Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara</div>
+                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['title'] }}</div>
+                    <div class="title-sub">Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara</div>
                 </div>
                 <table>
                     <thead>
