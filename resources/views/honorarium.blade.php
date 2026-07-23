@@ -750,7 +750,7 @@
                     </div>
 
                     @foreach($opStafData as $oi => $block)
-                    @if(count($block['rows']) >= 11)
+                    @if(($block['total_perkara'] ?? count($block['rows'])) > 0)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="opBlock === '' || opBlock === '{{ $oi }}'">
 
@@ -761,7 +761,7 @@
                                 {{ $block['title'] }}
                             </p>
                             <p class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                Yang Usianya Kurang dari 120 Hari — Sebanyak {{ number_format($block['total']['jml'], 0, ',', '.') }} Perkara — Yang Diterima Operator
+                                Sebanyak {{ number_format($block['total_perkara'] ?? $block['total']['jml'], 0, ',', '.') }} Perkara — Yang Diterima Operator
                             </p>
                         </div>
 

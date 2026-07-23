@@ -1682,7 +1682,7 @@ class DashboardController extends Controller
     private function computeOpStafData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v1');
+            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v4');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) return $cached;
 
