@@ -5,7 +5,7 @@
     <title>Cetak Data Print</title>
     <style>
         @page {
-            size: 330mm 215.9mm;
+            size: landscape;
             margin: 8mm 10mm;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,7 +40,7 @@
         /* ── Judul ── */
         .cat-title {
             text-align: center;
-            font-size: 8px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 4px;
@@ -49,7 +49,7 @@
         }
         .cat-subtitle {
             text-align: center;
-            font-size: 7px;
+            font-size: 9px;
             margin-bottom: 4px;
         }
 
@@ -60,15 +60,14 @@
             table-layout: auto;
         }
         th, td {
-            border: 0.5px solid #555;
-            padding: 1.5px 3px;
-            font-size: 7px;
-            line-height: 1.3;
+            border: 0.8px solid #555;
+            padding: 3px 4px;
+            font-size: 9px;
+            line-height: 1.35;
             vertical-align: middle;
         }
         thead tr { background: #d9d9d9; }
         thead th { font-weight: 700; text-align: center; }
-        tbody tr:nth-child(even) { background: #f5f5f5; }
         .td-no  { text-align: center; width: 22px; }
         .td-l   { text-align: left; }
         .td-c   { text-align: center; }

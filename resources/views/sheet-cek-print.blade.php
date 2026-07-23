@@ -77,34 +77,14 @@
             padding: 16mm 14mm 12mm;
         }
 
-        /* ── Kop Surat ──────────────────────────────────────────────────── */
-        .kop {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 3px double var(--accent);
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-        }
-        .kop-logo {
-            width: 58px; height: 58px; flex-shrink: 0;
-        }
-        .kop-text { flex: 1; text-align: center; }
-        .kop-text .instansi  { font-size: 9.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
-        .kop-text .sub       { font-size: 8.5pt; color: #4a4a6a; }
-
         /* ── Judul ─────────────────────────────────────────────────────── */
         .doc-title {
-            background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
-            color: #fff;
             text-align: center;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            border-radius: 2px;
+            margin-bottom: 8px;
+            line-height: 1.45;
         }
-        .doc-title .t1 { font-size: 9.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
-        .doc-title .t2 { font-size: 8.5pt; color: rgba(255,255,255,.85); margin-top: 2px; }
-        .doc-title .t3 { font-size: 8pt; color: var(--gold); margin-top: 2px; font-weight: 600; }
+        .doc-title .t1 { font-size: 12pt; font-weight: 700; text-transform: uppercase; color: #111; }
+        .doc-title .t2 { font-size: 11pt; font-weight: 700; color: #111; }
 
         /* ── Tabel ─────────────────────────────────────────────────────── */
         table {
@@ -112,21 +92,18 @@
             border-collapse: collapse;
             font-size: 11pt;
             table-layout: auto;
+            color: #111;
         }
-        thead tr { background: var(--accent); color: #fff; }
-        thead th {
-            border: 1px solid var(--accent);
-            padding: 4px 5px;
-            font-weight: 700;
-            text-align: center;
-            white-space: normal;
+        th, td {
+            border: 0.8px solid #555;
+            padding: 3px 4px;
+            vertical-align: middle;
             word-break: break-word;
         }
-        tbody tr:nth-child(even) { background: var(--bg-alt); }
-        tbody td {
-            border: 1px solid var(--border);
-            padding: 3px 5px;
-            vertical-align: middle;
+        thead th {
+            background: #d9d9d9;
+            font-weight: 700;
+            text-align: center;
         }
         .td-right { text-align: right; white-space: nowrap; }
         .td-center { text-align: center; }
@@ -215,27 +192,13 @@
 @else
 <div class="page">
 
-    {{-- Kop Surat --}}
-    <div class="kop">
-        <svg class="kop-logo" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="40" cy="40" r="38" fill="#1e3a5f" stroke="#c8a84b" stroke-width="2.5"/>
-            <text x="40" y="46" text-anchor="middle" font-size="22" font-family="serif" fill="#c8a84b" font-weight="bold">⚖</text>
-        </svg>
-        <div class="kop-text">
-            <div class="instansi">Mahkamah Agung Republik Indonesia</div>
-            <div class="sub">Pengadilan Tinggi / Pengadilan Negeri</div>
-            @if(Session::has('excel_period') && Session::get('excel_period') !== '')
-                <div class="sub" style="color:#1e3a5f;font-weight:600;">Periode: {{ strtoupper(Session::get('excel_period')) }}</div>
-            @elseif(Session::has('excel_file_name'))
-                <div class="sub">{{ Session::get('excel_file_name') }}</div>
-            @endif
-        </div>
-    </div>
-
     {{-- Judul --}}
     <div class="doc-title">
-        <div class="t1">Rekap Total Penyerahan ke Masing-Masing Panmud</div>
+        <div class="t1">REKAP TOTAL PENYERAHAN KE MASING-MASING PANMUD</div>
         <div class="t2">Honorarium Biaya Penyelesaian Perkara</div>
+        @if(Session::has('excel_period') && Session::get('excel_period') !== '')
+            <div class="t2" style="font-weight:normal;margin-top:2px;font-size:10pt;">Periode: {{ strtoupper(Session::get('excel_period')) }}</div>
+        @endif
     </div>
 
     {{-- Tabel --}}
@@ -282,7 +245,7 @@
                     @endphp
 
                     @if($sg['label'])
-                    <tr style="background:#93c5fd;font-weight:bold;">
+                    <tr style="background:#d9d9d9;font-weight:bold;">
                         <td class="td-center">{{ $index === 0 ? $group['no'] : '' }}</td>
                         <td class="td-left">{{ $sg['label'] }}</td>
                         <td class="td-left">{{ $sg['jenis'] }}</td>
@@ -290,7 +253,7 @@
                     </tr>
                     @endif
 
-                    <tr style="background:#dbeafe;font-weight:bold;">
+                    <tr style="background:#f3f4f6;font-weight:bold;">
                         <td class="td-center">{{ $index === 0 && !$sg['label'] ? $group['no'] : '' }}</td>
                         <td class="td-left">{{ $index === 0 && !$sg['label'] ? $group['perkara'] : '' }}</td>
                         <td class="td-left">{{ $sg['label'] ? '' : $sg['jenis'] }}</td>
@@ -308,7 +271,7 @@
                         <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['biaya_15'] > 0 ? number_format($sg['biaya_15'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['total_15'] > 0 ? number_format($sg['total_15'], 0, ',', '.') : '-' }}</td>
-                        <td class="td-center" style="background:#9ca3af;">PAJAK 15 %</td>
+                        <td class="td-center" style="background:#e9e9e9;font-weight:bold;">PAJAK 15 %</td>
                         <td class="td-right">{{ $sg['tim_15'] > 0 ? number_format($sg['tim_15'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['majelis5_15'] > 0 ? number_format($sg['majelis5_15'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['kepaniteraan_15'] > 0 ? number_format($sg['kepaniteraan_15'], 0, ',', '.') : '-' }}</td>
@@ -323,7 +286,7 @@
                         <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['biaya_5'] > 0 ? number_format($sg['biaya_5'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['total_5'] > 0 ? number_format($sg['total_5'], 0, ',', '.') : '-' }}</td>
-                        <td class="td-center" style="background:#9ca3af;">PAJAK 5 %</td>
+                        <td class="td-center" style="background:#e9e9e9;font-weight:bold;">PAJAK 5 %</td>
                         <td class="td-right">{{ $sg['tim_5'] > 0 ? number_format($sg['tim_5'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['majelis5_5'] > 0 ? number_format($sg['majelis5_5'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['kepaniteraan_5'] > 0 ? number_format($sg['kepaniteraan_5'], 0, ',', '.') : '-' }}</td>
