@@ -64,9 +64,36 @@
         <div x-show="activeSheet === {{ $si }}" x-cloak>
 
             @if($sheet['sheetName'] === 'TIM' && !empty($timData))
-                {{-- TIM: tampilkan computed blocks dari Data Print --}}
-                @foreach($timData as $block)
-                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                {{-- TIM: filter kategori + computed blocks dari Data Print --}}
+                @php
+                    $timVisibleCount = count($timData);
+                @endphp
+                <div x-data="{ timCat: '' }">
+
+                {{-- ── Dropdown Pilih Kategori ── --}}
+                <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+                        Pilih Kategori Perkara
+                    </label>
+                    <div class="relative">
+                        <select x-model="timCat"
+                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
+                            <option value="">— Semua Kategori ({{ $timVisibleCount }}) —</option>
+                            @foreach($timData as $ti => $tBlock)
+                            <option value="{{ $ti }}">{{ $tBlock['label'] }} ({{ number_format($tBlock['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                @foreach($timData as $ti => $block)
+                @if(count($block['rows']) >= 1)
+                <div x-show="timCat === '' || timCat === '{{ $ti }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
                         <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
                             HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
@@ -97,7 +124,19 @@
                                     @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                     <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['no'] }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-800 dark:text-neutral-200 font-medium">{{ $row['nama'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                            x-data="{ editing: false, val: @js($row['nama']) }"
+                                            @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-800 dark:text-neutral-200"></span>
+                                            <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                <input x-model="val" type="text"
+                                                       x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                       @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                       class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                            </div>
+                                        </td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
@@ -120,11 +159,16 @@
                         </table>
                     </div>
                 </div>
+                @endif
                 @endforeach
+
+                </div>{{-- /x-data timCat --}}
+
 
             @elseif($sheet['sheetName'] === 'Kepaniteraan' && !empty($kepaniteraanData))
                 {{-- KEPANITERAAN: tampilkan computed blocks dari Data Print --}}
                 @foreach($kepaniteraanData as $block)
+                @if(count($block['rows']) >= 11)
                 <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
                     {{-- Header --}}
                     <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-b border-emerald-100 dark:border-emerald-900/50 px-6 py-4">
@@ -171,7 +215,19 @@
                                     @php $rn++; $bg = $rn % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                     <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-emerald-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 font-medium text-neutral-900 dark:text-neutral-100">{{ $row['nama'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                            x-data="{ editing: false, val: @js($row['nama']) }"
+                                            @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-900 dark:text-neutral-100"></span>
+                                            <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                <input x-model="val" type="text"
+                                                       x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                       @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                       class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                            </div>
+                                        </td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300 text-center">{{ $row['jabatan'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
@@ -195,6 +251,7 @@
                         </table>
                     </div>
                 </div>
+                @endif
                 @endforeach
 
             @else
@@ -237,6 +294,7 @@
 
             {{-- Dokumen per blok --}}
             @foreach($sheet['blocks'] as $bi => $block)
+            @if(count($block['rows']) >= 11)
             <div x-show="activeBlock[{{ $si }}] === null || activeBlock[{{ $si }}] === {{ $bi }}"
                  class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
 
@@ -279,7 +337,7 @@
                         {{-- Body --}}
                         <tbody>
                             @php $rowNum = 0; @endphp
-                            @foreach($block['rows'] as $row)
+                            @foreach($block['rows'] as $ri => $row)
                                 @php
                                     $rowNum++;
                                     $isEven = $rowNum % 2 === 0;
@@ -329,9 +387,25 @@
                                             $tdAlign = $isNo ? 'text-center' : ($isNum ? 'text-right' : 'text-left');
                                             $tdFont  = ($isNo || $isNama) ? 'font-medium' : '';
                                         @endphp
+                                        @if($isNama)
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 {{ $tdFont }}"
+                                            x-data="{ editing: false, val: @js((string)($val ?? '')) }"
+                                            @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-800 dark:text-neutral-200 min-h-[1rem]"></span>
+                                            <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                <input x-model="val" type="text"
+                                                       x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                       @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                       class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                            </div>
+                                        </td>
+                                        @else
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-800 dark:text-neutral-200 {{ $tdAlign }} {{ $tdFont }}">
                                             {{ $val }}
                                         </td>
+                                        @endif
                                     @endforeach
                                 </tr>
                             @endforeach
@@ -423,6 +497,7 @@
                 </div>
 
             </div>
+            @endif
             @endforeach
 
             @endif {{-- @if($sheet['sheetName'] === 'TIM' && !empty($timData)) --}}
@@ -466,6 +541,7 @@
                     </div>
 
                     @foreach($kepaniteraanData as $ki => $block)
+                    @if(count($block['rows']) >= 11)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="kepBlock === '' || kepBlock === '{{ $ki }}'">
 
@@ -511,7 +587,19 @@
                                         @php $rn++; $bg = $rn % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-emerald-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 font-medium text-neutral-900 dark:text-neutral-100">{{ $row['nama'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                                x-data="{ editing: false, val: @js($row['nama']) }"
+                                                @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-900 dark:text-neutral-100"></span>
+                                                <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                    <input x-model="val" type="text"
+                                                           x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                           @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                           class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                    <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                    <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                                </div>
+                                            </td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300 text-center">{{ $row['jabatan'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
@@ -534,6 +622,7 @@
                             </table>
                         </div>
                     </div>
+                    @endif
                     @endforeach
                 @else
                     <p class="text-sm text-neutral-500 text-center py-8">Tidak ada data honorarium Kepaniteraan.</p>
@@ -543,8 +632,32 @@
             {{-- TIM Tab --}}
             <div x-show="active === 1" x-cloak>
                 @if(!empty($timData))
-                    @foreach($timData as $block)
-                    <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                <div x-data="{ timCat3: '' }">
+
+                {{-- ── Dropdown Pilih Kategori ── --}}
+                <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+                        Pilih Kategori Perkara
+                    </label>
+                    <div class="relative">
+                        <select x-model="timCat3"
+                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
+                            <option value="">— Semua Kategori ({{ count($timData) }}) —</option>
+                            @foreach($timData as $ti3 => $tBlock3)
+                            <option value="{{ $ti3 }}">{{ $tBlock3['label'] }} ({{ number_format($tBlock3['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                    @foreach($timData as $ti3 => $block)
+                    @if(count($block['rows']) >= 1)
+                    <div x-show="timCat3 === '' || timCat3 === '{{ $ti3 }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
                         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
                             <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
                                 HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
@@ -575,7 +688,19 @@
                                         @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['no'] }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 font-medium">{{ $row['nama'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                                x-data="{ editing: false, val: @js($row['nama']) }"
+                                                @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1"></span>
+                                                <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                    <input x-model="val" type="text"
+                                                           x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                           @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                           class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                    <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                    <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                                </div>
+                                            </td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2">{{ $row['jabatan'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
@@ -598,7 +723,10 @@
                             </table>
                         </div>
                     </div>
+                    @endif
                     @endforeach
+
+                </div>{{-- /x-data timCat3 --}}
                 @else
                     <p class="text-sm text-neutral-500 text-center py-8">Tidak ada data honorarium TIM.</p>
                 @endif
@@ -622,6 +750,7 @@
                     </div>
 
                     @foreach($opStafData as $oi => $block)
+                    @if(count($block['rows']) >= 11)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="opBlock === '' || opBlock === '{{ $oi }}'">
 
@@ -682,6 +811,7 @@
                             </table>
                         </div>
                     </div>
+                    @endif
                     @endforeach
 
                 @else

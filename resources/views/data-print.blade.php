@@ -137,11 +137,16 @@
                                 ];
 
                                 $visibleColumns = collect($category['columns'] ?? [])
-                                    ->filter(
-                                        fn($colName) => $colName &&
-                                            $colName !== 'No' &&
-                                            !in_array($colName, $excludedColumns, true),
-                                    )
+                                    ->filter(function ($colName) use ($excludedColumns) {
+                                        if (!$colName || $colName === 'No') return false;
+                                        // Kolom berisi formula Excel (=R1744 dll)
+                                        if (str_starts_with($colName, '=')) return false;
+                                        // Kolom berisi huruf Excel saja (A–Z, AA–AZ) atau angka saja (1, 2, dst.)
+                                        if (preg_match('/^[A-Z]{1,3}$/', $colName)) return false;
+                                        if (is_numeric($colName)) return false;
+                                        if (in_array($colName, $excludedColumns, true)) return false;
+                                        return true;
+                                    })
                                     ->values();
                             @endphp
 

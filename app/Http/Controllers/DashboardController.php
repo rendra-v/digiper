@@ -389,7 +389,7 @@ class DashboardController extends Controller
             }
 
             // Ambil dari cache session jika tersedia
-            $cacheKey = $this->getCacheKey($filePath, 'data_print');
+            $cacheKey = $this->getCacheKey($filePath, 'data_print_v2');
             $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
@@ -423,6 +423,8 @@ class DashboardController extends Controller
 
             $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
+            // Pecah PERDATA KHUSUS per sub-klasifikasi agar muncul di filter dropdown
+            $categories = $this->expandPerdataKhusus($categories);
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
@@ -682,6 +684,77 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Pecah kasasi-pdt-khusus dan pk-pdt-khusus menjadi sub-kategori per klasifikasi
+     * dan sisipkan tepat setelah kategori induknya. KPUD dikecualikan.
+     */
+    private function expandPerdataKhusus(array $categories): array
+    {
+        $subKlasifikasi = ['PHI', 'HKI', 'KEPAILITAN', 'ARBITRASE', 'PARPOL', 'KPPU', 'BPSK', 'KIP'];
+
+        $aliasMap = [
+            'HAKI'           => 'HKI',
+            'PAILIT'         => 'KEPAILITAN',
+            'PKPU'           => 'KEPAILITAN',
+            'PDT-SUS-PAILIT' => 'KEPAILITAN',
+            'PDT-SUS-PKPU'   => 'KEPAILITAN',
+        ];
+
+        $resolveKlas = function (array $row) use ($aliasMap): string {
+            $klas = strtoupper(trim(
+                $row['KLASIFIKASI'] ?? $row['klasifikasi'] ?? $row['Klasifikasi'] ?? ''
+            ));
+            return $aliasMap[$klas] ?? $klas;
+        };
+
+        // Index by id
+        $byId = [];
+        foreach ($categories as $cat) {
+            $byId[$cat['id']] = $cat;
+        }
+
+        // [parent_id => title_prefix]
+        $pairs = [
+            'kasasi-pdt-khusus' => 'DATA PERKARA KASASI PERDATA KHUSUS',
+            'pk-pdt-khusus'     => 'DATA PERKARA PENINJAUAN KEMBALI PERDATA KHUSUS',
+        ];
+
+        $insertions = [];
+        foreach ($pairs as $parentId => $titlePrefix) {
+            if (!isset($byId[$parentId])) continue;
+            $parent = $byId[$parentId];
+            $subs   = [];
+            foreach ($subKlasifikasi as $klas) {
+                $rows = array_values(array_filter($parent['data'], function ($row) use ($klas, $resolveKlas) {
+                    return $resolveKlas($row) === $klas;
+                }));
+                $cnt    = count($rows);
+                $subs[] = [
+                    'id'      => "{$parentId}-{$klas}",
+                    'title'   => "{$titlePrefix} ({$klas})",
+                    'data'    => $rows,
+                    'count'   => $cnt,
+                    'columns' => $parent['columns'],
+                    'total'   => $cnt > 0 ? $cnt : null,
+                ];
+            }
+            $insertions[$parentId] = $subs;
+        }
+
+        // Rebuild: tiap parent diikuti sub-kategorinya
+        $result = [];
+        foreach ($categories as $cat) {
+            $result[] = $cat;
+            if (isset($insertions[$cat['id']])) {
+                foreach ($insertions[$cat['id']] as $sub) {
+                    $result[] = $sub;
+                }
+            }
+        }
+
+        return $result;
+    }
+
     private function parseDataPrintSheet($worksheet)
     {
         $highestRow = $worksheet->getHighestRow();
@@ -806,6 +879,10 @@ class DashboardController extends Controller
                 for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
                     $col = $indexToColumn($colIndex);
                     $header = trim($worksheet->getCell($col.$row)->getValue() ?? '');
+                    // Jika header berisi formula Excel (=R1744 dll), anggap tidak ada nama
+                    if (str_starts_with($header, '=')) {
+                        $header = '';
+                    }
                     $currentHeaders[$col] = $header ?: $col;
                 }
                 if ($currentSection) {
@@ -1661,14 +1738,14 @@ class DashboardController extends Controller
     private function computeTimData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v6');
+            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v9');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) {
                 return $cached;
             }
 
             // Gunakan data_print cache jika ada (supaya jumlah perkara konsisten dengan halaman data-print)
-            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v2'));
             if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
@@ -1697,7 +1774,7 @@ class DashboardController extends Controller
                     return [];
                 }
 
-                $categories = $this->parseDataPrintSheet($ws);
+                $categories = $this->expandPerdataKhusus($this->parseDataPrintSheet($ws));
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
 

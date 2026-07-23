@@ -937,77 +937,42 @@ public function countHakimFromRows(array $rows): int
             return $counts;
         };
 
-        // Urutan mengikuti dropdown data-print
+        // Urutan mengikuti dropdown data-print (27 kategori)
         $jenisDefs = [
-            [
-                'label'   => 'KASASI PERDATA UMUM',
-                'tarif'   => 'kasasi_500',
-                'sources' => [['id' => 'kasasi-pdt-umum', 'filter' => null]],
-            ],
-            [
-                'label'   => 'PENINJAUAN KEMBALI PERDATA UMUM',
-                'tarif'   => 'pk_250',
-                'sources' => [['id' => 'pk-pdt-umum', 'filter' => null]],
-            ],
-            [
-                'label'   => 'KASASI PERDATA KHUSUS',
-                'tarif'   => 'kasasi_500',
-                'sources' => [['id' => 'kasasi-pdt-khusus', 'filter' => 'non-niaga']],
-            ],
-            [
-                'label'   => 'PENINJAUAN KEMBALI PERDATA KHUSUS',
-                'tarif'   => 'pk_250',
-                'sources' => [['id' => 'pk-pdt-khusus', 'filter' => 'non-niaga']],
-            ],
-            [
-                'label'   => 'KASASI PERDATA AGAMA',
-                'tarif'   => 'kasasi_500',
-                'sources' => [['id' => 'kasasi-pdt-agama', 'filter' => null]],
-            ],
-            [
-                'label'   => 'PENINJAUAN KEMBALI PERDATA AGAMA',
-                'tarif'   => 'pk_250',
-                'sources' => [['id' => 'pk-pdt-agama', 'filter' => null]],
-            ],
-            [
-                'label'   => 'KASASI TATA USAHA NEGARA (K-TUN)',
-                'tarif'   => 'kasasi_500',
-                'sources' => [['id' => 'kasasi-tun', 'filter' => null]],
-            ],
-            [
-                'label'   => 'P-HUM (PERMOHONAN HAK UJI MATERIL)',
-                'tarif'   => 'phum',
-                'sources' => [
-                    ['id' => 'phum', 'filter' => null],
-                ],
-            ],
-            [
-                'label'   => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',
-                'tarif'   => 'phum',
-                'sources' => [
-                    ['id' => 'pkhs', 'filter' => null],
-                ],
-            ],
-            [
-                'label'   => 'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)',
-                'tarif'   => 'pk_250',
-                'sources' => [['id' => 'pk-tun', 'filter' => null]],
-            ],
-            [
-                'label'   => 'PENINJAUAN KEMBALI PAJAK (PK-PJK)',
-                'tarif'   => 'pk_250',
-                'sources' => [['id' => 'pk-pajak', 'filter' => null]],
-            ],
-            [
-                'label'   => 'KASASI NIAGA',
-                'tarif'   => 'kasasi_niaga',
-                'sources' => [['id' => 'kasasi-pdt-khusus', 'filter' => 'niaga']],
-            ],
-            [
-                'label'   => 'PK NIAGA',
-                'tarif'   => 'pk_niaga',
-                'sources' => [['id' => 'pk-pdt-khusus', 'filter' => 'niaga']],
-            ],
+            // 1
+            ['label' => 'KASASI PERDATA UMUM',                      'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-umum',             'filter' => null]]],
+            // 2
+            ['label' => 'PENINJAUAN KEMBALI PERDATA UMUM',          'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pdt-umum',                'filter' => null]]],
+            // 3  parent (all 98)
+            ['label' => 'KASASI PERDATA KHUSUS',                    'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus',          'filter' => null]]],
+            // 4-11 sub
+            ['label' => 'KASASI PERDATA KHUSUS (PHI)',              'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-PHI',      'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (HKI)',              'tarif' => 'kasasi_niaga', 'sources' => [['id' => 'kasasi-pdt-khusus-HKI',      'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (KEPAILITAN)',       'tarif' => 'kasasi_niaga', 'sources' => [['id' => 'kasasi-pdt-khusus-KEPAILITAN','filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (ARBITRASE)',        'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-ARBITRASE', 'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (PARPOL)',           'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-PARPOL',   'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (KPPU)',             'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-KPPU',     'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (BPSK)',             'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-BPSK',     'filter' => null]]],
+            ['label' => 'KASASI PERDATA KHUSUS (KIP)',              'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-khusus-KIP',      'filter' => null]]],
+            // 12 parent PK Khusus
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS',        'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pdt-khusus',              'filter' => null]]],
+            // 13-20 sub PK Khusus
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (PHI)',       'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-PHI',      'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (HKI)',       'tarif' => 'pk_niaga', 'sources' => [['id' => 'pk-pdt-khusus-HKI',      'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KEPAILITAN)','tarif' => 'pk_niaga', 'sources' => [['id' => 'pk-pdt-khusus-KEPAILITAN','filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (ARBITRASE)', 'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-ARBITRASE', 'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (PARPOL)',    'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-PARPOL',   'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KPPU)',      'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-KPPU',     'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (BPSK)',      'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-BPSK',     'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KIP)',       'tarif' => 'pk_250',   'sources' => [['id' => 'pk-pdt-khusus-KIP',      'filter' => null]]],
+            // 21-27 sisa
+            ['label' => 'KASASI PERDATA AGAMA',                     'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-pdt-agama',           'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PERDATA AGAMA',         'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pdt-agama',              'filter' => null]]],
+            ['label' => 'KASASI TATA USAHA NEGARA (K-TUN)',         'tarif' => 'kasasi_500',   'sources' => [['id' => 'kasasi-tun',                'filter' => null]]],
+            ['label' => 'P-HUM (PERMOHONAN HAK UJI MATERIL)',       'tarif' => 'phum',         'sources' => [['id' => 'phum',                      'filter' => null]]],
+            ['label' => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',      'tarif' => 'phum',         'sources' => [['id' => 'pkhs',                      'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)', 'tarif' => 'pk_250',  'sources' => [['id' => 'pk-tun',                    'filter' => null]]],
+            ['label' => 'PENINJAUAN KEMBALI PAJAK (PK-PJK)',        'tarif' => 'pk_250',       'sources' => [['id' => 'pk-pajak',                  'filter' => null]]],
         ];
 
         $blocks = [];
@@ -1029,21 +994,17 @@ public function countHakimFromRows(array $rows): int
                 $rows = array_merge($rows, $srcRows);
             }
 
-            if (empty($rows)) continue;
-
-            // Hitung total perkara dari count asli kategori (sesuai angka di data-print)
+            // Hitung total perkara (termasuk kategori dengan 0 baris)
             $totalPerkara = 0;
             foreach ($def['sources'] as $src) {
                 if (! isset($keyed[$src['id']])) continue;
                 $cat = $keyed[$src['id']];
                 if ($src['filter'] === null) {
-                    // Gunakan count($cat['data']) agar konsisten dengan yang tampil di data-print
-                    $totalPerkara += count($cat['data']);
+                    $totalPerkara += count($cat['data'] ?? []);
                 } else {
-                    // Filter niaga/non-niaga: hitung dari data aktual
-                    foreach ($cat['data'] as $r) {
+                    foreach ($cat['data'] ?? [] as $r) {
                         $isN = $isNiaga($r);
-                        if ($src['filter'] === 'niaga' && $isN) $totalPerkara++;
+                        if ($src['filter'] === 'niaga'     && $isN)  $totalPerkara++;
                         if ($src['filter'] === 'non-niaga' && !$isN) $totalPerkara++;
                     }
                 }
@@ -1064,20 +1025,35 @@ public function countHakimFromRows(array $rows): int
             $no = 1;
 
             // 1. TIM KOREKTOR / HAKIM AGUNG — per nama, PPH 15%
-            foreach ($hakimCounts as $nama => $jmlPerkara) {
-                $jumlahBiaya = $jmlPerkara * $biayaHakim;
-                $pph15 = (int) round($jumlahBiaya * 0.15);
+            if (empty($hakimCounts)) {
+                // Tidak ada data hakim — taro 1 baris kosong
                 $tableRows[] = [
                     'no'             => $no++,
-                    'nama'           => $nama,
+                    'nama'           => '',
                     'jabatan'        => 'TIM KOREKTOR / HAKIM AGUNG',
-                    'jumlah_perkara' => $jmlPerkara,
+                    'jumlah_perkara' => 0,
                     'biaya'          => $biayaHakim,
-                    'jumlah_biaya'   => $jumlahBiaya,
-                    'pph15'          => $pph15,
+                    'jumlah_biaya'   => 0,
+                    'pph15'          => 0,
                     'pph5'           => 0,
-                    'netto'          => $jumlahBiaya - $pph15,
+                    'netto'          => 0,
                 ];
+            } else {
+                foreach ($hakimCounts as $nama => $jmlPerkara) {
+                    $jumlahBiaya = $jmlPerkara * $biayaHakim;
+                    $pph15 = (int) round($jumlahBiaya * 0.15);
+                    $tableRows[] = [
+                        'no'             => $no++,
+                        'nama'           => $nama,
+                        'jabatan'        => 'TIM KOREKTOR / HAKIM AGUNG',
+                        'jumlah_perkara' => $jmlPerkara,
+                        'biaya'          => $biayaHakim,
+                        'jumlah_biaya'   => $jumlahBiaya,
+                        'pph15'          => $pph15,
+                        'pph5'           => 0,
+                        'netto'          => $jumlahBiaya - $pph15,
+                    ];
+                }
             }
 
             // 2. PANITERA MUDA KAMAR DAN STAF — 1 baris, PPH 15%
@@ -1096,20 +1072,35 @@ public function countHakimFromRows(array $rows): int
             ];
 
             // 3. ASISTEN / PANITERA PENGGANTI — per nama, PPH 15%
-            foreach ($ppCounts as $nama => $jmlPerkara) {
-                $jumlahBiaya = $jmlPerkara * $biayaPP;
-                $pph15 = (int) round($jumlahBiaya * 0.15);
+            if (empty($ppCounts)) {
+                // Tidak ada data PP — taro 1 baris kosong
                 $tableRows[] = [
                     'no'             => $no++,
-                    'nama'           => $nama,
+                    'nama'           => '',
                     'jabatan'        => 'ASISTEN / PANITERA PENGGANTI',
-                    'jumlah_perkara' => $jmlPerkara,
+                    'jumlah_perkara' => 0,
                     'biaya'          => $biayaPP,
-                    'jumlah_biaya'   => $jumlahBiaya,
-                    'pph15'          => $pph15,
+                    'jumlah_biaya'   => 0,
+                    'pph15'          => 0,
                     'pph5'           => 0,
-                    'netto'          => $jumlahBiaya - $pph15,
+                    'netto'          => 0,
                 ];
+            } else {
+                foreach ($ppCounts as $nama => $jmlPerkara) {
+                    $jumlahBiaya = $jmlPerkara * $biayaPP;
+                    $pph15 = (int) round($jumlahBiaya * 0.15);
+                    $tableRows[] = [
+                        'no'             => $no++,
+                        'nama'           => $nama,
+                        'jabatan'        => 'ASISTEN / PANITERA PENGGANTI',
+                        'jumlah_perkara' => $jmlPerkara,
+                        'biaya'          => $biayaPP,
+                        'jumlah_biaya'   => $jumlahBiaya,
+                        'pph15'          => $pph15,
+                        'pph5'           => 0,
+                        'netto'          => $jumlahBiaya - $pph15,
+                    ];
+                }
             }
 
             // 4. OPERATOR/ PENGETIK — 1 baris, PPH 5%
