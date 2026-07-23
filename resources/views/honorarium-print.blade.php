@@ -5,31 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Honorarium — {{ $fileName ?? 'Dokumen' }}</title>
     <style>
-        /* ── Reset & Base ─────────────────────────────────────────────── */
+        /* ── Reset ─────────────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        :root {
-            --ink:        #1a1a2e;
-            --ink-light:  #4a4a6a;
-            --accent:     #1e3a5f;
-            --accent-mid: #2e5999;
-            --border:     #b0bdd6;
-            --bg-head:    #1e3a5f;
-            --bg-alt:     #f4f6fb;
-            --gold:       #c8a84b;
-            --page-w:     297mm;  /* landscape A4 width */
-        }
-
         html, body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 10pt;
-            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000;
             background: #e8ecf3;
-            line-height: 1.45;
-            overflow-x: auto;
+            line-height: 1.3;
         }
 
-        /* ── Screen: action bar ───────────────────────────────────────── */
+        /* ── Action Bar (screen only) ─────────────────────────── */
         .action-bar {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -46,19 +33,15 @@
             color: #fff;
             font-size: 13pt;
             font-weight: 700;
-            letter-spacing: .03em;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .action-bar .brand svg { flex-shrink: 0; }
         .action-bar .hint {
             color: rgba(255,255,255,.65);
-            font-family: Arial, sans-serif;
             font-size: 8.5pt;
         }
         .action-bar .btn-group { display: flex; gap: 10px; align-items: center; }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -74,19 +57,12 @@
             text-decoration: none;
         }
         .btn:hover { filter: brightness(1.12); }
-        .btn-print {
-            background: #f4a418;
-            color: #1a1a2e;
-        }
-        .btn-back {
-            background: rgba(255,255,255,.18);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,.35);
-        }
+        .btn-print { background: #f4a418; color: #1a1a2e; }
+        .btn-back  { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.35); }
 
-        /* ── Screen: page wrapper ─────────────────────────────────────── */
+        /* ── Screen: page wrapper ─────────────────────────────── */
         .pages {
-            margin-top: 72px; /* below fixed bar */
+            margin-top: 72px;
             padding: 24px 16px 48px;
             display: flex;
             flex-direction: column;
@@ -94,105 +70,94 @@
             gap: 28px;
         }
 
-        /* ── Paper page ───────────────────────────────────────────────── */
+        /* ── Paper page (screen preview) ─────────────────────── */
         .page {
-            width: var(--page-w);
-            min-height: 210mm;  /* landscape A4 height */
+            width: 330mm;
+            min-height: 215.9mm;
             background: #fff;
             box-shadow: 0 4px 32px rgba(0,0,0,.18), 0 1px 6px rgba(0,0,0,.08);
             border-radius: 3px;
-            padding: 14mm 16mm 12mm;
+            padding: 12mm 14mm 10mm;
             position: relative;
-            overflow: visible;
         }
 
-        /* ── Kop Surat (header) ───────────────────────────────────────── */
-        .kop {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 3px double var(--accent);
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+        /* ── Judul dokumen ────────────────────────────────────── */
+        .doc-title-wrap {
+            text-align: center;
+            margin-bottom: 8px;
         }
-        .kop-logo {
-            width: 62px; height: 62px;
-            flex-shrink: 0;
-        }
-        .kop-text { flex: 1; text-align: center; }
-        .kop-text .instansi {
-            font-size: 9.5pt;
+        .doc-title-wrap .title-main {
+            font-size: 11pt;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            color: var(--accent);
+            line-height: 1.3;
         }
-        .kop-text .sub-instansi {
-            font-size: 8.5pt;
-            color: var(--ink-light);
+        .doc-title-wrap .title-sub {
+            font-size: 11pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.3;
         }
-        .kop-text .kota {
-            font-size: 8pt;
-            color: var(--ink-light);
+        .doc-title-wrap .title-info {
+            font-size: 11pt;
+            font-weight: 400;
+            margin-top: 2px;
         }
 
-
-
-        /* ── Tabel ────────────────────────────────────────────────────── */
+        /* ── Tabel ────────────────────────────────────────────── */
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8.5pt;
+            font-size: 11pt;
+            font-family: Arial, Helvetica, sans-serif;
             table-layout: auto;
+            margin-top: 6px;
         }
         thead tr {
-            background: var(--accent);
-            color: #fff;
+            background: #d9d9d9;
         }
         thead th {
-            border: 1px solid var(--accent);
-            padding: 6px 8px;
+            border: 1px solid #000;
+            padding: 5px 6px;
             font-weight: 700;
             text-align: center;
-            white-space: nowrap;
+            font-size: 11pt;
         }
-        tbody tr:nth-child(even) { background: var(--bg-alt); }
-        tbody tr:hover { background: #e3eaf7; }
         tbody td {
-            border: 1px solid var(--border);
-            padding: 5px 8px;
+            border: 1px solid #000;
+            padding: 4px 6px;
             vertical-align: middle;
+            font-size: 11pt;
         }
-        .td-no    { text-align: center; width: 28px;  white-space: nowrap; }
-        .td-nama  { text-align: left;   min-width: 130px; }
-        .td-jab   { text-align: left;   min-width: 150px; }
-        .td-num   { text-align: right;  white-space: nowrap; min-width: 72px; }
-        .td-count { text-align: center; white-space: nowrap; min-width: 72px; }
+        tbody tr:nth-child(even) { background: #f5f5f5; }
+
+        .td-no    { text-align: center; width: 30px;  white-space: nowrap; }
+        .td-nama  { text-align: left;   min-width: 140px; }
+        .td-jab   { text-align: left;   min-width: 160px; }
+        .td-num   { text-align: right;  white-space: nowrap; min-width: 80px; }
+        .td-count { text-align: center; white-space: nowrap; min-width: 70px; }
+        .td-ttd   { text-align: center; min-width: 80px; }
 
         tr.row-total {
-            background: #d0daea !important;
+            background: #d9d9d9 !important;
             font-weight: 700;
-            border-top: 2px solid var(--accent);
         }
-        tr.row-total td { border-color: var(--accent-mid); }
+        tr.row-total td { border: 1px solid #000; }
 
-        /* ── Footer / Tanda Tangan ────────────────────────────────────── */
+        /* ── Footer / Tanda Tangan ────────────────────────────── */
         .footer-wrap {
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
+            margin-top: 16px;
         }
         .footer-date {
             text-align: right;
-            font-size: 8.5pt;
-            margin-bottom: 10px;
-            color: var(--ink-light);
+            font-size: 11pt;
+            margin-bottom: 8px;
         }
         .ttd-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            font-size: 8pt;
+            gap: 8px;
+            font-size: 11pt;
         }
         .ttd-item { }
         .ttd-item.center { text-align: center; }
@@ -200,26 +165,15 @@
         .ttd-label {
             font-weight: 700;
             text-transform: uppercase;
-            color: var(--accent);
             line-height: 1.4;
         }
         .ttd-space {
-            height: 48px;
-            border-bottom: 1px dashed var(--border);
-            margin: 8px 0 4px;
+            height: 50px;
+            margin: 6px 0 4px;
         }
-        .ttd-name { color: var(--ink-light); font-style: italic; }
+        .ttd-name { }
 
-        /* ── Page break separator ─────────────────────────────────────── */
-        .page-label {
-            font-family: Arial, sans-serif;
-            font-size: 7.5pt;
-            color: #999;
-            text-align: center;
-            letter-spacing: .08em;
-        }
-
-        /* ── Error / empty state ──────────────────────────────────────── */
+        /* ── Notice / Error ───────────────────────────────────── */
         .notice {
             margin: 40px auto;
             max-width: 520px;
@@ -228,22 +182,25 @@
             border-radius: 8px;
             padding: 24px;
             text-align: center;
-            font-family: Arial, sans-serif;
         }
         .notice h3 { color: #b45309; margin-bottom: 8px; }
         .notice p  { color: #78350f; font-size: 9pt; }
 
-        /* ══════════════════════════════════════════════════════════════
-           PRINT STYLES — override everything for clean paper output
-        ══════════════════════════════════════════════════════════════ */
+        /* ══════════════════════════════════════════════════════
+           PRINT STYLES — bersih hitam-putih, persis seperti contoh
+        ══════════════════════════════════════════════════════ */
         @page {
-            size: 297mm 210mm;  /* A4 landscape: lebar 297mm × tinggi 210mm */
-            margin: 10mm 12mm 10mm;
+            size: 330mm 215.9mm landscape;
+            margin: 10mm 12mm 10mm 12mm;
         }
         @media print {
-            html, body { background: #fff; font-size: 8pt; }
+            html, body {
+                background: #fff;
+                font-size: 11pt;
+                font-family: Arial, Helvetica, sans-serif;
+                color: #000;
+            }
             .action-bar { display: none !important; }
-            .kop         { display: none !important; }  /* Sembunyikan kop surat di PDF */
             .pages { margin-top: 0; padding: 0; gap: 0; background: none; }
 
             .page {
@@ -257,29 +214,29 @@
             }
             .page:last-child { page-break-after: avoid; break-after: avoid; }
 
-            table {
-                font-size: 8pt;
-                width: 100% !important;
-                table-layout: auto;
-            }
-            thead th {
-                padding: 5px 8px;
-                white-space: nowrap;
-            }
-            tbody td {
-                padding: 4px 8px;
-            }
-            .td-nama, .td-jab {
-                white-space: normal;
-                word-break: break-word;
-            }
-            .td-num {
-                white-space: nowrap;
-                text-align: right;
-            }
+            /* Tabel hitam-putih bersih */
+            table { font-size: 11pt; width: 100% !important; table-layout: auto; }
+            thead tr { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            thead th { border: 1px solid #000; padding: 4px 5px; font-weight: 700; }
+            tbody td { border: 1px solid #000; padding: 3px 5px; }
+            tbody tr:nth-child(even) { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr.row-total { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
             thead { display: table-header-group; }
             tbody tr:hover { background: inherit; }
-            .page-label { display: none; }
+
+            /* Judul */
+            .doc-title-wrap .title-main,
+            .doc-title-wrap .title-sub,
+            .doc-title-wrap .title-info {
+                font-size: 11pt;
+            }
+
+            /* Footer */
+            .footer-wrap { margin-top: 10px; }
+            .footer-date { font-size: 11pt; }
+            .ttd-grid { font-size: 11pt; }
+            .ttd-space { height: 46px; }
         }
     </style>
 </head>
@@ -293,7 +250,6 @@
             <polyline points="14 2 14 8 20 8"/>
             <line x1="16" y1="13" x2="8" y2="13"/>
             <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
         </svg>
         Cetak Honorarium
         @if($fileName)
@@ -325,19 +281,28 @@
     @elseif(empty($sheets))
         <div class="notice">
             <h3>Tidak ada data</h3>
-            <p>Tidak ditemukan data honorarium yang bisa dicetak. Pastikan file Excel sudah diupload dan memiliki data honorarium.</p>
+            <p>Tidak ditemukan data honorarium yang bisa dicetak.</p>
         </div>
 
     @else
         @foreach($sheets as $sheetIdx => $sheet)
             @foreach($sheet['blocks'] as $blockIdx => $block)
 
-            {{-- Satu blok = satu halaman --}}
+            {{-- Satu blok = satu halaman cetak --}}
             <div class="page">
 
-
-
-
+                {{-- Judul --}}
+                <div class="doc-title-wrap">
+                    @if(!empty($block['title1']))
+                        <div class="title-main">{{ $block['title1'] }}</div>
+                    @endif
+                    @if(!empty($block['title2']))
+                        <div class="title-sub">{{ $block['title2'] }}</div>
+                    @endif
+                    @if(!empty($block['title3']))
+                        <div class="title-info">{{ $block['title3'] }}</div>
+                    @endif
+                </div>
 
                 {{-- Tabel Data --}}
                 <table>
@@ -345,42 +310,42 @@
                         <tr>
                             @foreach($block['headers'] as $colIdx => $hdr)
                                 @php
-                                    $hdrUp  = strtoupper(trim($hdr ?? ''));
-                                    $isNo   = in_array($hdrUp, ['NO', 'NO.']);
-                                    $isNama = str_starts_with($hdrUp, 'NAMA');
-                                    $isJab  = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
+                                    $hdrUp   = strtoupper(trim($hdr ?? ''));
+                                    $isNo    = in_array($hdrUp, ['NO', 'NO.']);
+                                    $isNama  = str_starts_with($hdrUp, 'NAMA');
+                                    $isJab   = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
                                     $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
-                                    $isNum  = !$isNo && !$isNama && !$isJab && !$isCount;
-                                    $cls    = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
+                                    $isTtd   = str_contains($hdrUp, 'TANDA TANGAN');
+                                    $cls     = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : ($isTtd ? 'td-ttd' : 'td-num'))));
                                 @endphp
                                 <th class="{{ $cls }}">{{ $hdr ?? '' }}</th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
-                        @php $rowNum = 0; @endphp
                         @foreach($block['rows'] as $row)
-                            @php $rowNum++; @endphp
                             <tr>
                                 @foreach($block['headers'] as $colIdx => $hdr)
                                     @php
-                                        $val    = $row[$colIdx] ?? '';
-                                        $hdrUp  = strtoupper(trim($hdr ?? ''));
-                                        $isNo   = in_array($hdrUp, ['NO', 'NO.']);
-                                        $isNama = str_starts_with($hdrUp, 'NAMA');
-                                        $isJab  = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
-                                        $isNum  = !$isNo && !$isNama && !$isJab;
-
+                                        $val     = $row[$colIdx] ?? '';
+                                        $hdrUp   = strtoupper(trim($hdr ?? ''));
+                                        $isNo    = in_array($hdrUp, ['NO', 'NO.']);
+                                        $isNama  = str_starts_with($hdrUp, 'NAMA');
+                                        $isJab   = str_contains($hdrUp, 'JABATAN') || str_contains($hdrUp, 'NAMA OPERATOR');
                                         $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
-                                        if ($isNum && !$isCount && $val !== '' && $val !== '-') {
-                                            $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
+                                        $isTtd   = str_contains($hdrUp, 'TANDA TANGAN');
+                                        $isNum   = !$isNo && !$isNama && !$isJab && !$isCount && !$isTtd;
+
+                                        // Format rupiah untuk kolom angka (bukan jumlah perkara)
+                                        if ($isNum && $val !== '' && $val !== '-') {
+                                            $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', (string)$val));
                                             if (is_numeric($stripped) && (float)$stripped != 0) {
                                                 $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');
                                             } elseif (in_array($val, ['0', 'Rp -', 'Rp 0'])) {
-                                                $val = 'Rp -';
+                                                $val = '-';
                                             }
                                         }
-                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
+                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : ($isTtd ? 'td-ttd' : 'td-num'))));
                                     @endphp
                                     <td class="{{ $cls }}">{{ $val }}</td>
                                 @endforeach
@@ -392,21 +357,22 @@
                             <tr class="row-total">
                                 @foreach($block['headers'] as $colIdx => $hdr)
                                     @php
-                                        $val    = $block['totalRow'][$colIdx] ?? '';
-                                        $hdrUp  = strtoupper(trim($hdr ?? ''));
-                                        $isNo   = in_array($hdrUp, ['NO', 'NO.']);
-                                        $isNama = str_starts_with($hdrUp, 'NAMA');
-                                        $isJab  = str_contains($hdrUp, 'JABATAN');
-                                        $isNum  = !$isNo && !$isNama && !$isJab;
-
+                                        $val     = $block['totalRow'][$colIdx] ?? '';
+                                        $hdrUp   = strtoupper(trim($hdr ?? ''));
+                                        $isNo    = in_array($hdrUp, ['NO', 'NO.']);
+                                        $isNama  = str_starts_with($hdrUp, 'NAMA');
+                                        $isJab   = str_contains($hdrUp, 'JABATAN');
                                         $isCount = str_contains($hdrUp, 'JUMLAH PERKARA');
-                                        if ($isNum && !$isCount && $val !== '' && $val !== '-') {
-                                            $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', $val));
+                                        $isTtd   = str_contains($hdrUp, 'TANDA TANGAN');
+                                        $isNum   = !$isNo && !$isNama && !$isJab && !$isCount && !$isTtd;
+
+                                        if ($isNum && $val !== '' && $val !== '-') {
+                                            $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', (string)$val));
                                             if (is_numeric($stripped) && (float)$stripped != 0) {
                                                 $val = 'Rp ' . number_format((float)$stripped, 0, ',', '.');
                                             }
                                         }
-                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : 'td-num')));
+                                        $cls = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : ($isTtd ? 'td-ttd' : 'td-num'))));
                                     @endphp
                                     <td class="{{ $cls }}">{{ $val }}</td>
                                 @endforeach
