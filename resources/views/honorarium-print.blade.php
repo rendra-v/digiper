@@ -369,18 +369,14 @@
                                 <td class="td-ttd"></td>
                             </tr>
                         @endforeach
-                        @if($block['totalRow'])
-                            <tr class="row-total">
-                                <td colspan="3" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
-                                <td class="td-count">{{ $block['totalRow']['jumlah_perkara'] > 0 ? number_format($block['totalRow']['jumlah_perkara'], 0, ',', '.') : '-' }}</td>
-                                <td class="td-num"></td>
-                                <td class="td-num">{{ $block['totalRow']['jumlah_biaya'] > 0 ? 'Rp ' . number_format($block['totalRow']['jumlah_biaya'], 0, ',', '.') : '-' }}</td>
-                                <td class="td-num">{{ $block['totalRow']['pph15'] > 0 ? 'Rp ' . number_format($block['totalRow']['pph15'], 0, ',', '.') : '-' }}</td>
-                                <td class="td-num">{{ $block['totalRow']['pph5'] > 0 ? 'Rp ' . number_format($block['totalRow']['pph5'], 0, ',', '.') : '-' }}</td>
-                                <td class="td-num">{{ $block['totalRow']['netto'] > 0 ? 'Rp ' . number_format($block['totalRow']['netto'], 0, ',', '.') : '-' }}</td>
-                                <td class="td-ttd"></td>
-                            </tr>
-                        @endif
+                        <tr class="row-total">
+                            <td colspan="5" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['jumlah_biaya'], 0, ',', '.') }}</td>
+                            <td class="td-num">{{ $block['total']['pph15'] > 0 ? 'Rp ' . number_format($block['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                            <td class="td-ttd"></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
