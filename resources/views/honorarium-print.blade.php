@@ -21,24 +21,24 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 999;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2e5999 100%);
-            box-shadow: 0 2px 12px rgba(0,0,0,.35);
-            padding: 14px 28px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
         }
         .action-bar .brand {
-            color: #fff;
-            font-size: 13pt;
+            color: #111;
+            font-size: 13px;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         .action-bar .hint {
-            color: rgba(255,255,255,.65);
+            color: #555;
             font-size: 8.5pt;
         }
         .action-bar .btn-group { display: flex; gap: 10px; align-items: center; }
@@ -46,19 +46,19 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 18px;
-            border-radius: 7px;
+            padding: 6px 14px;
+            border-radius: 6px;
             font-family: Arial, sans-serif;
-            font-size: 9pt;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            border: none;
+            border: 1px solid rgba(0,0,0,.2);
             transition: filter .15s;
             text-decoration: none;
         }
-        .btn:hover { filter: brightness(1.12); }
-        .btn-print { background: #f4a418; color: #1a1a2e; }
-        .btn-back  { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+        .btn:hover { filter: brightness(0.95); }
+        .btn-print { background: #f4a418; color: #000; border: none; padding: 6px 18px; }
+        .btn-back  { background: #fff; color: #333; }
 
         /* ── Screen: page wrapper ─────────────────────────────── */
         .pages {

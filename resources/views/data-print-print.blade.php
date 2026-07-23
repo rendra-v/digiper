@@ -20,9 +20,10 @@
         .no-print {
             font-family: Arial, sans-serif;
             font-size: 13px;
-            background: #1e3a5f;
-            color: #fff;
-            padding: 10px 18px;
+            background: #f3f4f6;
+            color: #111;
+            border-bottom: 1px solid #d1d5db;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -96,11 +97,11 @@
     </span>
     <div style="display:flex; gap:8px;">
         <button onclick="window.print()"
-            style="padding:6px 18px; background:#f4a418; color:#000; border:none; border-radius:6px; font-weight:700; cursor:pointer;">
+            style="padding:6px 18px; background:#f4a418; color:#000; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
             Cetak / Simpan PDF
         </button>
         <button onclick="window.close()"
-            style="padding:6px 14px; background:rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:6px; cursor:pointer;">
+            style="padding:6px 14px; background:#fff; color:#333; border:1px solid rgba(0,0,0,.2); border-radius:6px; cursor:pointer; font-weight:600;">
             Tutup
         </button>
     </div>
