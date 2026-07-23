@@ -1397,4 +1397,445 @@ public function countHakimFromRows(array $rows): int
             'grand_netto'     => $grandNetto,
         ];
     }
+
+    /**
+     * Hitung seluruh blok tabel Kepaniteraan dari Data Print.
+     *
+     * Asumsi biaya satuan:
+     *  ─ T1  : nilai flat dari Excel (kasasi_500 = screenshot), diskala proporsional ke kelas lain.
+     *  ─ T2  : persen × penyelesaian_kelas (konsisten dengan Rekap 3).
+     *  ─ Agama / TUN / Khusus : struktur T2 + Staf Panmud spesifik.
+     *
+     * @return array  [['title','tim','jml_perkara','rows','total'], ...]
+     */
+    public function computeKepaniteraanBlocks(array $categories): array
+    {
+        // ── Index & helpers ─────────────────────────────────────────────────
+        $keyed = [];
+        foreach ($categories as $cat) {
+            if (isset($cat['id'])) $keyed[$cat['id']] = $cat;
+        }
+
+        $countRows = function (string $id, ?string $klas = null) use ($keyed): int {
+            if (!isset($keyed[$id])) return 0;
+            if ($klas === null) return count($keyed[$id]['data']);
+            $n = 0;
+            foreach ($keyed[$id]['data'] as $row) {
+                if ($this->resolveKlasifikasi($row) === strtoupper($klas)) $n++;
+            }
+            return $n;
+        };
+
+        $countRowsMulti = function (string $id, array $klasList) use ($keyed): int {
+            if (!isset($keyed[$id])) return 0;
+            $n = 0;
+            foreach ($keyed[$id]['data'] as $row) {
+                if (in_array($this->resolveKlasifikasi($row), $klasList)) $n++;
+            }
+            return $n;
+        };
+
+        // ── Tarif & penyelesaian per kelas ──────────────────────────────────
+        // Total biaya perkara (base rate)
+        $tarifTotal = [
+            'kasasi_500'   => 500_000,
+            'phum'         => 1_000_000,
+            'pk_250'       => 2_500_000,
+            'kasasi_niaga' => 5_000_000,
+            'pk_niaga'     => 10_000_000,
+        ];
+
+        // Penyelesaian = pph15 + pph5 per kelas (dari tarif_cek config)
+        $tc = $this->tarif['tarif_cek'];
+        $penyel = [
+            'kasasi_500'   => $tc['kasasi_pdt']['pph15']         + $tc['kasasi_pdt']['pph5'],
+            'phum'         => $tc['phum']['pph15']                + $tc['phum']['pph5'],
+            'pk_250'       => $tc['pk_pdt']['pph15']              + $tc['pk_pdt']['pph5'],
+            'kasasi_niaga' => $tc['kasasi_pdtsus_5jt']['pph15']   + $tc['kasasi_pdtsus_5jt']['pph5'],
+            'pk_niaga'     => $tc['pk_pdtsus_10jt']['pph15']      + $tc['pk_pdtsus_10jt']['pph5'],
+        ];
+
+        // ── T1 biaya satuan (dari screenshot, kasasi_500) ───────────────────
+        // Diskala proporsional: biaya_class = biaya_500 × (total_class / 500.000)
+        $t1Base = [
+            'kma'         => 27_500,
+            'panitera'    => 20_000,
+            'panmud'      => 22_500,
+            'penelaah'    => 15_000,
+            'staf_panmud' => 20_000,
+            'operator'    => 10_000,
+            'ppk'         => 15_000,
+        ];
+
+        $t1Biaya = function (string $class) use ($t1Base, $tarifTotal): array {
+            $scale = $tarifTotal[$class] / 500_000;
+            return array_map(fn ($v) => (int) round($v * $scale), $t1Base);
+        };
+
+        // ── T2 persentase (dari penyelesaian, mirip Rekap 3) ────────────────
+        $t2Pct = [
+            'kma'          => 0.03,
+            'waka_yud'     => 0.02,
+            'waka_non'     => 0.02,
+            'ketua_kamar'  => 0.025,
+            'panitera_1'   => 0.03,   // 2 Panitera MA masing-masing 3% (share 6%)
+            'panitera_2'   => 0.03,
+            'panmud'       => 0.06,
+            'tim_penelaah' => 0.06,
+            'staf_panmud'  => 0.06,
+            'tim_data'     => 0.05,
+            'tim_biaya'    => 0.05,
+            'tim_penerima' => 0.02,
+        ];
+
+        $t2Biaya = function (string $class) use ($t2Pct, $penyel): array {
+            $p = $penyel[$class];
+            return array_map(fn ($pct) => (int) round($p * $pct), $t2Pct);
+        };
+
+        // ── Row & total builders ────────────────────────────────────────────
+        $makeRow = function (int $no, string $nama, string $jabatan, int $jml, int $biaya, string $pajak): array {
+            $jumlah = $jml * $biaya;
+            $pph15  = $pajak === 'pph15' ? (int) round($jumlah * 0.15) : 0;
+            $pph5   = $pajak === 'pph5'  ? (int) round($jumlah * 0.05) : 0;
+            return [
+                'no'          => $no,
+                'nama'        => $nama,
+                'jabatan'     => $jabatan,
+                'jml_perkara' => $jml,
+                'biaya'       => $biaya,
+                'jml_biaya'   => $jumlah,
+                'pph15'       => $pph15,
+                'pph5'        => $pph5,
+                'netto'       => $jumlah - $pph15 - $pph5,
+            ];
+        };
+
+        $makeTotal = fn (array $rows): array => [
+            'jml_biaya' => array_sum(array_column($rows, 'jml_biaya')),
+            'pph15'     => array_sum(array_column($rows, 'pph15')),
+            'pph5'      => array_sum(array_column($rows, 'pph5')),
+            'netto'     => array_sum(array_column($rows, 'netto')),
+        ];
+
+        $wrapBlock = fn (string $title, string $tim, int $jml, array $rows): array => [
+            'title'       => $title,
+            'tim'         => $tim,
+            'jml_perkara' => $jml,
+            'rows'        => $rows,
+            'total'       => $makeTotal($rows),
+        ];
+
+        // ── T1 block builder ────────────────────────────────────────────────
+        $buildT1 = function (
+            string $title,
+            int    $jml,
+            string $class,
+            string $stafPanmud = 'TUIN, SH., MH.'
+        ) use ($t1Biaya, $makeRow, $wrapBlock): array {
+            $b    = $t1Biaya($class);
+            $rows = [
+                $makeRow(1, 'Prof. Dr. H. SUNARTO, S.H., M.H.',          'KETUA MAHKAMAH AGUNG SELAKU PENANGGUNG JAWAB BIAYA PROSES', $jml, $b['kma'],         'pph15'),
+                $makeRow(2, 'Dr. HERU PRAMONO, S.H., M.Hum.',             'PANITERA SELAKU PENANGGUNG JAWAB MINUTASI',                  $jml, $b['panitera'],   'pph15'),
+                $makeRow(3, 'ENNID HASANUDDIN',                            'PANITERA MUDA PERDATA UMUM',                                 $jml, $b['panmud'],     'pph15'),
+                $makeRow(4, 'HARIAWAN PURBUDI, SH., MH.',                  'STAF PENELAAH',                                              $jml, $b['penelaah'],   'pph15'),
+                $makeRow(5, $stafPanmud,                                    'STAF PANITERA MUDA',                                         $jml, $b['staf_panmud'],'pph15'),
+                $makeRow(6, 'ASEP NURSOBAH, S.Ag., M.H.',                  'STAF PENUNJANG/OPERATOR PADA KEPANITERAAN',                  $jml, $b['operator'],   'pph5'),
+                $makeRow(7, 'ST. KRIS NUGROHO, S.H., M.H.',                'STAFF PPK',                                                  $jml, $b['ppk'],        'pph15'),
+            ];
+            return $wrapBlock($title, 'T1', $jml, $rows);
+        };
+
+        // ── T2 block builder ────────────────────────────────────────────────
+        $buildT2 = function (
+            string $title,
+            int    $jml,
+            string $class,
+            string $stafPanmud  = 'TUIN, SH., MH.',
+            string $stafLabel   = 'STAF PANITERA MUDA PERKARA'
+        ) use ($t2Biaya, $makeRow, $wrapBlock): array {
+            $b    = $t2Biaya($class);
+            $rows = [
+                $makeRow(1,  'Prof. Dr. H. SUNARTO, S.H., M.H.',             'KETUA MAHKAMAH AGUNG',                                            $jml, $b['kma'],          'pph15'),
+                $makeRow(2,  'SUHARTO, S.H., M.HUM.',                         'WAKIL KETUA MA BIDANG YUDISIAL',                                  $jml, $b['waka_yud'],     'pph15'),
+                $makeRow(3,  'Dr. H. DWIARSO BUDI SANTIARTO, S.H., M.HUM.',  'WAKIL KETUA MA BIDANG NON YUDISIAL',                              $jml, $b['waka_non'],     'pph15'),
+                $makeRow(4,  'I GUSTI AGUNG SUMANATHA, S.H., M.H.',           'KETUA KAMAR',                                                     $jml, $b['ketua_kamar'],  'pph15'),
+                $makeRow(5,  'Dr. HERU PRAMONO, S.H., M.Hum.',                'PANITERA MAHKAMAH AGUNG',                                         $jml, $b['panitera_1'],  'pph15'),
+                $makeRow(6,  'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.',         'PANITERA MAHKAMAH AGUNG',                                         $jml, $b['panitera_2'],  'pph15'),
+                $makeRow(7,  'ENNID HASANUDDIN',                               'PANITERA MUDA PERKARA',                                           $jml, $b['panmud'],      'pph15'),
+                $makeRow(8,  'HARIAWAN PURBUDI, SH., MH.',                    'TIM PENELAAH KELENGKAPAN/FORMALITAS BERKAS',                      $jml, $b['tim_penelaah'], 'pph15'),
+                $makeRow(9,  $stafPanmud,                                      $stafLabel,                                                        $jml, $b['staf_panmud'], 'pph15'),
+                $makeRow(10, 'ASEP NURSOBAH, S.Ag., M.H.',                    'TIM PENDUKUNG PENGOLAH DATA, PELAPORAN DAN SISTEM INFORMASI',     $jml, $b['tim_data'],    'pph15'),
+                $makeRow(11, 'ST. KRIS NUGROHO, S.H., M.H.',                  'TIM PENGELOLA BIAYA PROSES',                                      $jml, $b['tim_biaya'],   'pph15'),
+                $makeRow(12, 'Dr. H. IYUS SURYANA, S.H., M.H.',               'TIM PENERIMA BERKAS',                                             $jml, $b['tim_penerima'],'pph15'),
+            ];
+            return $wrapBlock($title, 'T2', $jml, $rows);
+        };
+
+        $blocks = [];
+
+        // ════════════════════════════════════════════════════════════════════
+        // A. PERDATA UMUM (T1 + T2, pisah Kasasi & PK)
+        // ════════════════════════════════════════════════════════════════════
+        $jmlKasasiU = $countRows('kasasi-pdt-umum');
+        $jmlPKU     = $countRows('pk-pdt-umum');
+
+        $blocks[] = $buildT1('KASASI PERDATA UMUM',   $jmlKasasiU, 'kasasi_500');
+        $blocks[] = $buildT2('KASASI PERDATA UMUM',   $jmlKasasiU, 'kasasi_500');
+        $blocks[] = $buildT1('PK PERDATA UMUM',       $jmlPKU,     'pk_250');
+        $blocks[] = $buildT2('PK PERDATA UMUM',       $jmlPKU,     'pk_250');
+
+        // ════════════════════════════════════════════════════════════════════
+        // B. PERDATA KHUSUS — satu tabel per sub-klasifikasi (T2 only)
+        //    KPPU diabaikan, HKI+HAKI digabung, Kepailitan+PKPU digabung
+        // ════════════════════════════════════════════════════════════════════
+        $stafKhusus = [
+            'PHI'        => ['staf' => 'RICO MARULI HAPOSAN NAPITUPULU, S.E.', 'klas' => ['PHI'],       'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
+            'ARBITRASE'  => ['staf' => 'PETRUS SIAN EDVANSA, S.H.',            'klas' => ['ARBITRASE'], 'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
+            'PARPOL'     => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['PARPOL'],    'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
+            'BPSK'       => ['staf' => 'PETRUS SIAN EDVANSA, S.H.',            'klas' => ['BPSK'],      'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
+            'KIP'        => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['KIP'],       'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
+            'HKI'        => ['staf' => 'LOLITA ESGHATRA PURBASARI, SH.',       'klas' => ['HKI'],       'tarif_k' => 'kasasi_niaga', 'tarif_pk' => 'pk_niaga',  'label' => 'HAKI / HKI'],
+            'KEPAILITAN' => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['KEPAILITAN'],'tarif_k' => 'kasasi_niaga', 'tarif_pk' => 'pk_niaga',  'label' => 'KEPAILITAN / PKPU'],
+        ];
+
+        foreach ($stafKhusus as $key => $def) {
+            $label = $def['label'] ?? $key;
+            $jmlK  = $countRowsMulti('kasasi-pdt-khusus', $def['klas']);
+            $jmlPK = $countRowsMulti('pk-pdt-khusus',     $def['klas']);
+
+            $blocks[] = $buildT2("KASASI PERDATA KHUSUS {$label}", $jmlK,  $def['tarif_k'],  $def['staf']);
+            $blocks[] = $buildT2("PK PERDATA KHUSUS {$label}",     $jmlPK, $def['tarif_pk'], $def['staf']);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // C. PERDATA AGAMA (tanpa tim, staf = WASIYEM)
+        // ════════════════════════════════════════════════════════════════════
+        $jmlKasasiAg = $countRows('kasasi-pdt-agama');
+        $jmlPKAg     = $countRows('pk-pdt-agama');
+
+        $blocks[] = $buildT2('KASASI PERDATA AGAMA', $jmlKasasiAg, 'kasasi_500', 'WASIYEM', 'STAF PANITERA MUDA PERKARA');
+        $blocks[] = $buildT2('PK PERDATA AGAMA',     $jmlPKAg,     'pk_250',     'WASIYEM', 'STAF PANITERA MUDA PERKARA');
+
+        // ════════════════════════════════════════════════════════════════════
+        // D. TUN / P-HUM / P-KHS / PK TUN / PK PAJAK (staf = ARIF DONOVAN)
+        // ════════════════════════════════════════════════════════════════════
+        $tunDefs = [
+            ['title' => 'KASASI TUN', 'id' => 'kasasi-tun', 'class' => 'kasasi_500'],
+            ['title' => 'P-HUM',      'id' => 'phum',       'class' => 'phum'],
+            ['title' => 'P-KHS',      'id' => 'pkhs',       'class' => 'phum'],
+            ['title' => 'PK TUN',     'id' => 'pk-tun',     'class' => 'pk_250'],
+            ['title' => 'PK PAJAK',   'id' => 'pk-pajak',   'class' => 'pk_250'],
+        ];
+
+        foreach ($tunDefs as $def) {
+            $jml      = $countRows($def['id']);
+            $blocks[] = $buildT2($def['title'], $jml, $def['class'], 'ARIF DONOVAN, S.H.', 'STAF PANITERA MUDA PERKARA');
+        }
+
+        return $blocks;
+    }
+    /**
+     * Hitung rekapitulasi Operator/Pengetik per Panitera Pengganti (OP STAF).
+     *
+     * Satu block per jenis perkara. Setiap row = satu PP dengan count perkara
+     * yang usianya < 120 hari. Tarif flat sesuai spec. PPh 5%.
+     *
+     * @return array  [['title','tarif','rows','total'], ...]
+     */
+    public function computeOpStafBlocks(array $categories): array
+    {
+        // ── Index kategori ────────────────────────────────────────────────
+        $keyed = [];
+        foreach ($categories as $cat) {
+            if (isset($cat['id'])) $keyed[$cat['id']] = $cat;
+        }
+
+        // ── Filter usia < 120 hari ────────────────────────────────────────
+        $isUnder120 = function (array $row): bool {
+            // Coba berbagai nama kolom usia
+            $usia = $row['USIA PERKARA'] ?? $row['Usia Perkara'] ?? $row['usia perkara']
+                  ?? $row['USIA']        ?? $row['Usia']         ?? $row['usia']
+                  ?? $row['UMUR PERKARA']?? $row['Umur Perkara'] ?? null;
+
+            if ($usia !== null && $usia !== '') {
+                // Nilai usia sudah numerik (hari)
+                $days = (float) preg_replace('/[^0-9.]/', '', (string) $usia);
+                return $days < 120;
+            }
+
+            // Fallback: hitung dari tanggal masuk
+            $tgl = $row['TGL MASUK'] ?? $row['Tgl Masuk'] ?? $row['TANGGAL MASUK']
+                 ?? $row['Tanggal Masuk'] ?? $row['TGL REGISTER'] ?? $row['Tgl Register']
+                 ?? null;
+
+            if ($tgl === null || $tgl === '') return true; // no date = include
+
+            try {
+                if (is_numeric($tgl)) {
+                    // Excel serial date
+                    $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $tgl);
+                } else {
+                    $date = new \DateTime((string) $tgl);
+                }
+                $now  = new \DateTime('today');
+                $diff = $now->diff($date);
+                return $diff->days < 120;
+            } catch (\Throwable) {
+                return true;
+            }
+        };
+
+        // ── Hitung PP counts per kategori (dengan filter usia) ────────────
+        $countPP = function (string $id, ?callable $filter = null) use ($keyed, $isUnder120): array {
+            if (!isset($keyed[$id])) return [];
+            $counts = [];
+            foreach ($keyed[$id]['data'] as $row) {
+                if (!$isUnder120($row)) continue;
+                if ($filter !== null && !$filter($row)) continue;
+
+                // Case-insensitive lookup nama PP
+                $nama = '';
+                foreach ($row as $k => $v) {
+                    if (strtoupper(trim($k)) === 'NAMA PANITERA PENGGANTI') {
+                        $nama = trim((string) $v);
+                        break;
+                    }
+                }
+                if ($nama === '' || $nama === '-') continue;
+                $counts[$nama] = ($counts[$nama] ?? 0) + 1;
+            }
+            ksort($counts); // urutkan nama A-Z
+            return $counts;
+        };
+
+        // ── Niaga filter ──────────────────────────────────────────────────
+        $niagaKlas = ['HAKI', 'HKI', 'KEPAILITAN', 'PAILIT', 'PKPU'];
+        $isNiaga   = fn(array $r): bool => in_array(
+            strtoupper(trim((string) ($r['KLASIFIKASI'] ?? $r['klasifikasi'] ?? $r['Klasifikasi'] ?? ''))),
+            $niagaKlas
+        );
+
+        // ── Builder satu block ────────────────────────────────────────────
+        $makeBlock = function (
+            string $title,
+            array  $ppCounts,   // ['nama' => count]
+            int    $tarif       // Rp per perkara
+        ): ?array {
+            if (empty($ppCounts)) return null;
+
+            $rows   = [];
+            $no     = 1;
+            $gTotal = $gPph5 = $gNetto = 0;
+
+            foreach ($ppCounts as $nama => $jml) {
+                $bruto = $jml * $tarif;
+                $pph5  = (int) round($bruto * 0.05);
+                $netto = $bruto - $pph5;
+                $gTotal += $bruto;
+                $gPph5  += $pph5;
+                $gNetto += $netto;
+                $rows[] = [
+                    'no'    => $no++,
+                    'nama'  => $nama,
+                    'jml'   => $jml,
+                    'tarif' => $tarif,
+                    'bruto' => $bruto,
+                    'pph5'  => $pph5,
+                    'netto' => $netto,
+                ];
+            }
+
+            return [
+                'title'  => $title,
+                'tarif'  => $tarif,
+                'rows'   => $rows,
+                'total'  => [
+                    'jml'   => array_sum(array_column($rows, 'jml')),
+                    'bruto' => $gTotal,
+                    'pph5'  => $gPph5,
+                    'netto' => $gNetto,
+                ],
+            ];
+        };
+
+        // ── Klasifikasi khusus filter helper ─────────────────────────────
+        $byKlas = function (string $id, string $klas) use ($keyed, $isUnder120): array {
+            if (!isset($keyed[$id])) return [];
+            $counts = [];
+            foreach ($keyed[$id]['data'] as $row) {
+                if (!$isUnder120($row)) continue;
+                $rowKlas = strtoupper(trim((string) (
+                    $row['KLASIFIKASI'] ?? $row['klasifikasi'] ?? $row['Klasifikasi'] ??
+                    $row['Jenis Permohonan'] ?? $row['JENIS PERMOHONAN'] ?? ''
+                )));
+                // Normalize aliases
+                $aliases = [
+                    'ARBITRASE' => ['ARBITRASE'],
+                    'BPSK'      => ['BPSK'],
+                    'KPPU'      => ['KPPU'],
+                    'PARPOL'    => ['PARPOL'],
+                    'PHI'       => ['PHI'],
+                    'KIP'       => ['KIP'],
+                    'HAKI'      => ['HAKI', 'HKI'],
+                    'KEPAILITAN'=> ['KEPAILITAN', 'PAILIT', 'PKPU', 'PDT-SUS-PAILIT', 'PDT-SUS-PKPU'],
+                ][$klas] ?? [$klas];
+                if (!in_array($rowKlas, $aliases)) continue;
+                $nama = '';
+                foreach ($row as $k => $v) {
+                    if (strtoupper(trim($k)) === 'NAMA PANITERA PENGGANTI') {
+                        $nama = trim((string) $v); break;
+                    }
+                }
+                if ($nama === '' || $nama === '-') continue;
+                $counts[$nama] = ($counts[$nama] ?? 0) + 1;
+            }
+            ksort($counts);
+            return $counts;
+        };
+
+        $defs = [
+            // ── Kasasi Perdata Umum ───────────────────────────────────────
+            ['title' => 'KASASI PERDATA UMUM',  'tarif' => 12_500, 'counts' => $countPP('kasasi-pdt-umum')],
+            // ── PK Perdata Umum ───────────────────────────────────────────
+            ['title' => 'PK PERDATA UMUM',       'tarif' => 66_500, 'counts' => $countPP('pk-pdt-umum')],
+            // ── Kasasi Perdata Khusus (per klasifikasi, tarif 12.500) ─────
+            ['title' => 'KASASI PERDATA KHUSUS (ARBITRASE)', 'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'ARBITRASE')],
+            ['title' => 'KASASI PERDATA KHUSUS (BPSK)',      'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'BPSK')],
+            ['title' => 'KASASI PERDATA KHUSUS (KPPU)',      'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'KPPU')],
+            ['title' => 'KASASI PERDATA KHUSUS (PARPOL)',    'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'PARPOL')],
+            ['title' => 'KASASI PERDATA KHUSUS (PHI)',       'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'PHI')],
+            ['title' => 'KASASI PERDATA KHUSUS (KIP)',       'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'KIP')],
+            ['title' => 'KASASI PERDATA KHUSUS (HaKI)',      'tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'HAKI')],
+            ['title' => 'KASASI PERDATA KHUSUS (KEPAILITAN)','tarif' => 12_500, 'counts' => $byKlas('kasasi-pdt-khusus', 'KEPAILITAN')],
+            // ── PK Perdata Khusus (per klasifikasi; HAKI & KEPAILITAN 266.750) ──
+            ['title' => 'PK PERDATA KHUSUS (ARBITRASE)', 'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'ARBITRASE')],
+            ['title' => 'PK PERDATA KHUSUS (BPSK)',      'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'BPSK')],
+            ['title' => 'PK PERDATA KHUSUS (KPPU)',      'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'KPPU')],
+            ['title' => 'PK PERDATA KHUSUS (PARPOL)',    'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'PARPOL')],
+            ['title' => 'PK PERDATA KHUSUS (PHI)',       'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'PHI')],
+            ['title' => 'PK PERDATA KHUSUS (KIP)',       'tarif' => 66_500,  'counts' => $byKlas('pk-pdt-khusus', 'KIP')],
+            ['title' => 'PK PERDATA KHUSUS (HaKI)',      'tarif' => 266_750, 'counts' => $byKlas('pk-pdt-khusus', 'HAKI')],
+            ['title' => 'PK PERDATA KHUSUS (KEPAILITAN)','tarif' => 266_750, 'counts' => $byKlas('pk-pdt-khusus', 'KEPAILITAN')],
+            // ── Agama ─────────────────────────────────────────────────────
+            ['title' => 'KASASI PERDATA AGAMA', 'tarif' => 12_500, 'counts' => $countPP('kasasi-pdt-agama')],
+            ['title' => 'PK PERDATA AGAMA',      'tarif' => 66_500, 'counts' => $countPP('pk-pdt-agama')],
+            // ── TUN ───────────────────────────────────────────────────────
+            ['title' => 'KASASI TUN', 'tarif' => 12_500, 'counts' => $countPP('kasasi-tun')],
+            ['title' => 'P-HUM',      'tarif' => 25_000, 'counts' => $countPP('phum')],
+            ['title' => 'P-KHS',      'tarif' => 90_000, 'counts' => $countPP('pkhs')],
+            ['title' => 'PK TUN',     'tarif' => 66_500, 'counts' => $countPP('pk-tun')],
+            ['title' => 'PK PAJAK',   'tarif' => 66_500, 'counts' => $countPP('pk-pajak')],
+        ];
+
+
+        foreach ($defs as $def) {
+            $block = $makeBlock($def['title'], $def['counts'], $def['tarif']);
+            if ($block !== null) {
+                $blocks[] = $block;
+            }
+        }
+
+        return $blocks;
+    }
 }

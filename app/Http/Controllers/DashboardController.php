@@ -1571,6 +1571,91 @@ class DashboardController extends Controller
     }
 
     /**
+     * Load & compute OP STAF honorarium blocks dari Data Print.
+     */
+    private function computeOpStafData(string $filePath): array
+    {
+        try {
+            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v1');
+            $cached   = Session::get($cacheKey);
+            if ($cached !== null) return $cached;
+
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
+            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+                $categories = $dataPrintCache['categories'];
+            } else {
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(true);
+                if (method_exists($reader, 'setLoadSheetsOnly')) {
+                    $reader->setLoadSheetsOnly(['Data Print']);
+                }
+                $spreadsheet = $reader->load($filePath);
+                $ws = $spreadsheet->getSheetByName('Data Print');
+                if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
+                $categories = $this->parseDataPrintSheet($ws);
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+                if (empty($categories)) return [];
+            }
+
+            $calculator = new \App\Services\HonorariumCalculator();
+            $blocks     = $calculator->computeOpStafBlocks($categories);
+            Session::put($cacheKey, $blocks);
+            return $blocks;
+        } catch (\Throwable $e) {
+            \Log::error('computeOpStafData error', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    /**
+     * Load & compute Kepaniteraan honorarium blocks dari Data Print (dengan cache session).
+     */
+    private function computeKepaniteraanData(string $filePath): array
+    {
+        try {
+            $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v1');
+            $cached   = Session::get($cacheKey);
+            if ($cached !== null) return $cached;
+
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
+            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+                $categories = $dataPrintCache['categories'];
+            } else {
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(true);
+                if (method_exists($reader, 'setLoadSheetsOnly')) {
+                    $reader->setLoadSheetsOnly(['Data Print']);
+                }
+                $spreadsheet = $reader->load($filePath);
+                $ws = $spreadsheet->getSheetByName('Data Print');
+                if (!$ws) {
+                    foreach ($spreadsheet->getAllSheets() as $sheet) {
+                        $lower = strtolower($sheet->getTitle());
+                        if (str_contains($lower, 'data') && str_contains($lower, 'print')) {
+                            $ws = $sheet;
+                            break;
+                        }
+                    }
+                }
+                if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
+                $categories = $this->parseDataPrintSheet($ws);
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+                if (empty($categories)) return [];
+            }
+
+            $calculator = new \App\Services\HonorariumCalculator();
+            $blocks     = $calculator->computeKepaniteraanBlocks($categories);
+            Session::put($cacheKey, $blocks);
+            return $blocks;
+        } catch (\Throwable $e) {
+            \Log::error('computeKepaniteraanData error', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    /**
      * Load & compute TIM honorarium blocks dari Data Print (dengan cache session).
      */
     private function computeTimData(string $filePath): array
@@ -1656,15 +1741,19 @@ class DashboardController extends Controller
             $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
             $cached   = Session::get($cacheKey);
 
-            // Compute TIM honorarium dari Data Print (terpisah dari cache Excel sheets)
-            $timData = $this->computeTimData($filePath);
+            // Compute TIM, Kepaniteraan & OP STAF honorarium dari Data Print
+            $timData          = $this->computeTimData($filePath);
+            $kepaniteraanData = $this->computeKepaniteraanData($filePath);
+            $opStafData       = $this->computeOpStafData($filePath);
 
             if ($cached !== null) {
                 return view('honorarium', [
-                    'fileName' => $fileName,
-                    'sheets'   => $cached['sheets'],
-                    'timData'  => $timData,
-                    'error'    => null,
+                    'fileName'         => $fileName,
+                    'sheets'           => $cached['sheets'],
+                    'timData'          => $timData,
+                    'kepaniteraanData' => $kepaniteraanData,
+                    'opStafData'       => $opStafData,
+                    'error'            => null,
                 ]);
             }
 
@@ -1693,28 +1782,34 @@ class DashboardController extends Controller
 
             if (empty($sheets)) {
                 return view('honorarium', [
-                    'fileName' => $fileName,
-                    'sheets'   => [],
-                    'timData'  => $timData,
-                    'error'    => null,
+                    'fileName'         => $fileName,
+                    'sheets'           => [],
+                    'timData'          => $timData,
+                    'kepaniteraanData' => $kepaniteraanData,
+                    'opStafData'       => $opStafData,
+                    'error'            => null,
                 ]);
             }
 
             return view('honorarium', [
-                'fileName' => $fileName,
-                'sheets'   => $sheets,
-                'timData'  => $timData,
-                'error'    => null,
+                'fileName'         => $fileName,
+                'sheets'           => $sheets,
+                'timData'          => $timData,
+                'kepaniteraanData' => $kepaniteraanData,
+                'opStafData'       => $opStafData,
+                'error'            => null,
             ]);
 
         } catch (\Throwable $e) {
             \Log::error('Error in honorarium', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
 
             return view('honorarium', [
-                'fileName' => Session::get('excel_file_name'),
-                'sheets'   => [],
-                'timData'  => [],
-                'error'    => 'Error: '.$e->getMessage(),
+                'fileName'         => Session::get('excel_file_name'),
+                'sheets'           => [],
+                'timData'          => [],
+                'kepaniteraanData' => [],
+                'opStafData'       => [],
+                'error'            => 'Error: '.$e->getMessage(),
             ]);
         }
     }
