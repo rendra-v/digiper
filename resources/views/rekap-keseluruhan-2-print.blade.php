@@ -120,7 +120,7 @@
 
             // Split kolom jadi 2 halaman
             $half = (int) ceil(count($columns) / 2);
-            $colChunks = array_chunk($columns->toArray(), $half);
+            $colChunks = array_chunk((array) $columns, $half);
         @endphp
 
         @foreach($colChunks as $chunkIdx => $colChunk)
