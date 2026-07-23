@@ -1729,7 +1729,7 @@ class DashboardController extends Controller
     private function computeOpStafData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v4');
+            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v5');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) return $cached;
 
@@ -1745,7 +1745,7 @@ class DashboardController extends Controller
                 $spreadsheet = $reader->load($filePath);
                 $ws = $spreadsheet->getSheetByName('Data Print');
                 if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
-                $categories = $this->parseDataPrintSheet($ws);
+                $categories = $this->expandPerdataKhusus($this->parseDataPrintSheet($ws));
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
                 if (empty($categories)) return [];

@@ -1731,6 +1731,12 @@ public function countHakimFromRows(array $rows): int
                            'pph5' => $pph5, 'netto' => $netto];
             }
 
+            // Placeholder agar semua 27 blok selalu tampil (0 perkara = 1 baris kosong)
+            if (empty($rows)) {
+                $rows[] = ['no' => 1, 'nama' => '', 'jml' => 0,
+                           'tarif' => $biayaOperator, 'bruto' => 0, 'pph5' => 0, 'netto' => 0];
+            }
+
             $blocks[] = [
                 'title'         => $def['label'],
                 'tarif'         => $biayaOperator,

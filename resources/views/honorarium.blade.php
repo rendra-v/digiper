@@ -843,7 +843,6 @@
                     </div>
 
                     @foreach($opStafData as $oi => $block)
-                    @if(($block['total_perkara'] ?? count($block['rows'])) > 0)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="opBlock === '' || opBlock === '{{ $oi }}'">
 
@@ -864,7 +863,7 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[200px]">NAMA ASISTEN / PANITERA PENGGANTI</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[200px]">NAMA OPERATOR</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">JABATAN</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[80px]">JUMLAH PERKARA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[80px]">BIAYA</th>
@@ -880,8 +879,20 @@
                                         @php $rn++; $bg = $rn % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-orange-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600 dark:text-neutral-400">OPERATOR</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                                x-data="{ editing: false, val: '' }"
+                                                @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 min-h-[1.5rem]"></span>
+                                                <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                    <input x-model="val" type="text"
+                                                           x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                           @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                           class="flex-1 border border-orange-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                    <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                    <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                                </div>
+                                            </td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600 dark:text-neutral-400">OPERATOR/PENGETIK</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jml'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['bruto'], 0, ',', '.') }}</td>
@@ -904,7 +915,6 @@
                             </table>
                         </div>
                     </div>
-                    @endif
                     @endforeach
 
                 @else
