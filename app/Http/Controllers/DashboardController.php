@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class DashboardController extends Controller
@@ -389,7 +390,7 @@ class DashboardController extends Controller
             }
 
             // Ambil dari cache session jika tersedia
-            $cacheKey = $this->getCacheKey($filePath, 'data_print_v2');
+            $cacheKey = $this->getCacheKey($filePath, 'data_print_v4');
             $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
@@ -404,7 +405,7 @@ class DashboardController extends Controller
 
             \Log::info('dataPrint() - loading from file (no cache)');
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false); // perlu false agar format tanggal & formula terbaca
             // Hanya load sheet "Data Print" saja, jangan load seluruh workbook
             if (method_exists($reader, 'setLoadSheetsOnly')) {
                 $reader->setLoadSheetsOnly(['Data Print']);
@@ -782,14 +783,36 @@ class DashboardController extends Controller
         };
 
         $getCellValue = function ($cell) {
-            // Gunakan getValue() langsung (bukan getCalculatedValue) karena
-            // sheet Data Print berisi data mentah, bukan formula kompleks.
-            // getCalculatedValue() sangat lambat karena menghitung semua formula.
-            $val = $cell->getValue();
-            if (is_string($val) && strpos($val, '=') === 0) {
-                return null;
+            // getFormattedValue() sudah menangani:
+            // - date serial → format dd/mm/yyyy sesuai format cell
+            // - formula (=...) → menghitung dan mengembalikan hasilnya
+            try {
+                $val = $cell->getFormattedValue();
+                // Jika hasilnya string kosong atau sama dengan raw value yang formula, return null
+                $raw = $cell->getValue();
+                if (is_string($raw) && strpos($raw, '=') === 0 && ($val === null || $val === '')) {
+                    return null;
+                }
+                return $val !== '' ? $val : null;
+            } catch (\Throwable $e) {
+                // Fallback ke getValue()
+                $raw = $cell->getValue();
+                if (is_string($raw) && strpos($raw, '=') === 0) {
+                    return null;
+                }
+                return $raw;
             }
+        };
 
+        // Helper: konversi Excel date serial ke string dd/mm/yyyy (fallback jika diperlukan)
+        $excelDateToStr = function ($val) {
+            if (is_numeric($val) && $val > 20000 && $val < 100000) {
+                try {
+                    return ExcelDate::excelToDateTimeObject((float)$val)->format('d/m/Y');
+                } catch (\Throwable $e) {
+                    // biarkan nilai asli
+                }
+            }
             return $val;
         };
 
@@ -902,6 +925,12 @@ class DashboardController extends Controller
                     }
                     $key = $currentHeaders[$col] ?? $col;
                     $rowData[$key] = $value;
+                }
+                // Post-process: konversi date serial untuk kolom yang mengandung 'Tanggal'
+                foreach ($rowData as $key => $value) {
+                    if (stripos((string)$key, 'Tanggal') !== false && is_numeric($value) && $value > 20000 && $value < 100000) {
+                        $rowData[$key] = $excelDateToStr($value);
+                    }
                 }
                 if ($hasData) {
                     $firstCellVal = $rowData['No'] ?? null;
@@ -1745,7 +1774,7 @@ class DashboardController extends Controller
             }
 
             // Gunakan data_print cache jika ada (supaya jumlah perkara konsisten dengan halaman data-print)
-            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v2'));
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v4'));
             if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
