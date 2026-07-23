@@ -110,7 +110,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8pt;
+            font-size: 11pt;
             table-layout: auto;
         }
         thead tr { background: var(--accent); color: #fff; }
@@ -138,15 +138,15 @@
             padding-top: 10px;
             border-top: 1px solid var(--border);
         }
-        .footer-date { text-align: right; font-size: 8.5pt; margin-bottom: 12px; color: #4a4a6a; }
+        .footer-date { text-align: right; font-size: 11pt; margin-bottom: 12px; color: #4a4a6a; }
         .ttd-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 16px;
-            font-size: 8pt;
+            font-size: 11pt;
         }
         .ttd-label { font-weight: 700; text-transform: uppercase; color: var(--accent); line-height: 1.4; }
-        .ttd-space { height: 48px; border-bottom: 1px dashed var(--border); margin: 8px 0 4px; }
+        .ttd-space { height: 60px; border-bottom: 1px dashed var(--border); margin: 8px 0 4px; }
         .ttd-name  { color: #4a4a6a; font-style: italic; }
         .ttd-center { text-align: center; }
         .ttd-right  { text-align: right; }
@@ -157,7 +157,7 @@
             margin: 8mm 10mm;
         }
         @media print {
-            html, body { background: #fff; font-size: 8pt; }
+            html, body { background: #fff; font-size: 11pt; }
             .action-bar { display: none !important; }
             .pages { margin-top: 0; padding: 0; background: none; }
             .page {
@@ -166,7 +166,7 @@
                 border-radius: 0;
                 padding: 0;
             }
-            table { font-size: 7.5pt; }
+            table { font-size: 10.5pt; }
             thead th, tbody td { padding: 2px 4px; }
             .td-right { white-space: nowrap; }
         }

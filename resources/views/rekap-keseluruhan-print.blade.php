@@ -6,15 +6,15 @@
     <title>Print – Rekap Keseluruhan</title>
     <style>
         @page {
-            size: 330mm 215.9mm;
-            margin: 7mm 8mm;
+            size: landscape;
+            margin: 8mm;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 7.5px;
+            font-size: 10px;
             color: #111;
             background: #fff;
         }
@@ -41,8 +41,8 @@
             margin-bottom: 4px;
             line-height: 1.45;
         }
-        .doc-title .t1 { font-size: 8.5px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 8px;   font-weight: 700; text-transform: uppercase; }
+        .doc-title .t1 { font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
         /* ── Table ─── */
         .recap-table {
@@ -53,12 +53,12 @@
 
         .recap-table td,
         .recap-table th {
-            border: 0.6px solid #555;
-            padding: 1.5px 2px;
+            border: 0.8px solid #555;
+            padding: 3px 4px;
             vertical-align: middle;
             word-break: break-word;
-            font-size: 7px;
-            line-height: 1.2;
+            font-size: 9px;
+            line-height: 1.3;
         }
 
         /* Header rows */
@@ -74,10 +74,10 @@
         .recap-table .cat { background: #dbeafe; font-weight: 700; }
 
         /* Sub-total per kelompok */
-        .recap-table .subtot { background: #f1f5f9; font-weight: 700; }
+        .recap-table .subtot { background: #f1f5f9; font-weight: 700; font-size: 10px; }
 
         /* Grand total */
-        .recap-table .gtot { background: #bfdbfe; font-weight: 700; }
+        .recap-table .gtot { background: #bfdbfe; font-weight: 700; font-size: 10px; }
 
         /* Alignment helpers */
         .c { text-align: center; }
@@ -110,9 +110,9 @@
         .sig-col.center { align-items: center;      text-align: center; }
         .sig-col.right  { align-items: flex-end;    text-align: right; }
 
-        .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 7.5px; line-height: 1.35; }
-        .sig-space  { height: 30px; }
-        .sig-name   { font-weight: 700; text-decoration: underline; font-size: 8px; }
+        .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
+        .sig-space  { height: 60px; }
+        .sig-name   { font-weight: 700; text-decoration: underline; font-size: 11px; }
 
         .sig-bottom {
             margin-top: 7px;
