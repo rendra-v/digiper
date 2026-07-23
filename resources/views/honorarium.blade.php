@@ -71,6 +71,35 @@
                         </a>
                         @endforeach
 
+                        {{-- Computed Data Prints --}}
+                        @if(!empty($kepaniteraanData) && empty(array_filter($sheets, fn($s) => $s['sheetName'] === 'Kepaniteraan')))
+                        <a href="{{ route('honorarium.print') }}?computed=kepaniteraan" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 pl-8 pr-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/>
+                            </svg>
+                            Kepaniteraan
+                        </a>
+                        @endif
+                        @if(!empty($timData) && empty(array_filter($sheets, fn($s) => $s['sheetName'] === 'TIM')))
+                        <a href="{{ route('honorarium.print') }}?computed=tim" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 pl-8 pr-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/>
+                            </svg>
+                            TIM
+                        </a>
+                        @endif
+                        @if(!empty($opStafData) && empty(array_filter($sheets, fn($s) => $s['sheetName'] === 'OP - STAF')))
+                        <a href="{{ route('honorarium.print') }}?computed=op-staf" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 pl-8 pr-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/>
+                            </svg>
+                            OP - STAF
+                        </a>
+                        @endif
+
                         {{-- ── Grup: Rekap Keseluruhan ── --}}
                         <div class="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-t border-b border-neutral-200 dark:border-neutral-700">
                             <p class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Rekap Keseluruhan</p>
