@@ -17,23 +17,116 @@
             </p>
         </div>
         <div class="flex items-center gap-3">
-            @if(!$error && count($sheets) > 0)
-            <button @click="window.open('{{ route('honorarium.print') }}?sheet=' + activeSheet + '&block=' + (activeBlock[activeSheet] === null ? 'all' : activeBlock[activeSheet]), '_blank')"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <polyline points="6 9 6 2 18 2 18 9"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-                    <rect x="6" y="14" width="12" height="8"/>
-                </svg>
-                Cetak PDF
-            </button>
+            @if(!$error && (count($sheets) > 0 || !empty($timData) || !empty($kepaniteraanData) || !empty($opStafData)))
+                {{-- Dropdown Cetak --}}
+
+                <div class="relative" x-data="{ printOpen: false }" @click.outside="printOpen = false">
+                    <button @click="printOpen = !printOpen"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <polyline points="6 9 6 2 18 2 18 9"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                            <rect x="6" y="14" width="12" height="8"/>
+                        </svg>
+                        Cetak
+                        <svg class="w-3.5 h-3.5 transition-transform duration-150" :class="printOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </button>
+
+                    {{-- Dropdown menu --}}
+                    <div x-show="printOpen"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-64 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden"
+                         style="display:none;">
+
+                        {{-- ── Grup: Honorarium ── --}}
+                        <div class="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Honorarium</p>
+                        </div>
+
+                        {{-- Semua Honorarium --}}
+                        <a href="{{ route('honorarium.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                            </svg>
+                            Semua Honorarium
+                        </a>
+
+                        {{-- Per sheet Honorarium --}}
+                        @foreach($sheets as $si => $sheet)
+                        <a href="{{ route('honorarium.print') }}?sheet={{ $si }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 pl-8 pr-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/>
+                            </svg>
+                            {{ $sheet['sheetName'] }}
+                            <span class="ml-auto text-xs text-neutral-400">{{ count($sheet['blocks']) }} dok</span>
+                        </a>
+                        @endforeach
+
+                        {{-- ── Grup: Rekap Keseluruhan ── --}}
+                        <div class="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-t border-b border-neutral-200 dark:border-neutral-700">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Rekap Keseluruhan</p>
+                        </div>
+
+                        <a href="{{ route('rekap-keseluruhan.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-4 h-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Rekap Keseluruhan 1
+                        </a>
+                        <a href="{{ route('rekap-keseluruhan-2.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-4 h-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Rekap Keseluruhan 2
+                        </a>
+                        <a href="{{ route('rekap-keseluruhan-3.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-b border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-4 h-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Rekap Keseluruhan 3
+                        </a>
+
+                        {{-- ── Grup: Lainnya ── --}}
+                        <div class="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-t border-b border-neutral-200 dark:border-neutral-700">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Lainnya</p>
+                        </div>
+                        <a href="{{ route('sheet-cek.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                            <svg class="w-4 h-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                            Sheet Cek
+                        </a>
+                        <a href="{{ route('data-print.print') }}" target="_blank" rel="noopener"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors border-t border-neutral-100 dark:border-neutral-800">
+                            <svg class="w-4 h-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                            Data Print
+                        </a>
+
+                    </div>
+                </div>
             @endif
-            
+
             <a href="{{ route('dashboard') }}"
                class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
                 Dashboard
             </a>
         </div>
+
     </div>
 
     {{-- ─── Error ─── --}}

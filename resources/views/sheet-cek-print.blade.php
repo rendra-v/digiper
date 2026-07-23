@@ -153,8 +153,8 @@
 
         /* ── PRINT ──────────────────────────────────────────────────────── */
         @page {
-            size: A4 landscape;
-            margin: 10mm 12mm 10mm;
+            size: 330mm 215.9mm;
+            margin: 8mm 10mm;
         }
         @media print {
             html, body { background: #fff; font-size: 8pt; }
@@ -206,7 +206,7 @@
         <p style="color:#78350f;font-size:9pt;">{{ $error }}</p>
     </div>
 
-@elseif(empty($data))
+@elseif(empty($groups))
     <div style="margin:40px auto;max-width:480px;background:#fff8e6;border:1px solid #f0c040;border-radius:8px;padding:24px;text-align:center;font-family:Arial,sans-serif;">
         <h3 style="color:#b45309;margin-bottom:8px;">Tidak ada data</h3>
         <p style="color:#78350f;font-size:9pt;">Sheet "cek" tidak ditemukan atau kosong.</p>
@@ -242,89 +242,121 @@
     <table>
         <thead>
             <tr>
-                @foreach($headers as $colLetter => $headerName)
-                    <th>{{ $headerName }}</th>
-                @endforeach
+                <th>NO</th>
+                <th>PERKARA</th>
+                <th>JENIS PERKARA</th>
+                <th>JUMLAH</th>
+                <th>BIAYA</th>
+                <th></th>
+                <th></th>
+                <th>TIM</th>
+                <th>5 MAJELIS</th>
+                <th>KEPANITERAAN</th>
+                <th>PEMILAH</th>
+                <th>Total</th>
+                <th>PAJAK</th>
+                <th>TOTAL</th>
+                <th>TOTAL</th>
+                <th>TOTAL</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $numericHeaders = ['JUMLAH', 'BIAYA', 'TIM', '5 MAJELIS', 'KEPANITERAAN', 'PEMILAH', 'Total',
-                                   'PAJAK', 'TOTAL', 'TOTAL_1', 'TOTAL_2', 'TOTAL_3',
-                                   'Penyerahan', 'Honorarium', 'Biaya', 'Bersih'];
-            @endphp
-            @foreach($data as $row)
-                <tr>
-                    @foreach($headers as $colLetter => $headerName)
-                        @php
-                            $key      = $colToKey[$colLetter] ?? $headerName;
-                            $value    = $row[$key] ?? null;
-                            $rowspan  = $row['_rowspans'][$key] ?? 1;
-                            $isNumeric = in_array($headerName, $numericHeaders) || in_array($key, $numericHeaders);
-                        @endphp
+            @foreach($groups as $group)
+                @php
+                    $groupTotal = 0;
+                    foreach($group['sub_groups'] as $sg) {
+                        $p15 = round($sg['total_m_15'] * 0.15);
+                        $b15 = $sg['total_m_15'] - $p15;
+                        $p5  = round($sg['total_m_5'] * 0.05);
+                        $b5  = $sg['total_m_5'] - $p5;
+                        $groupTotal += ($b15 + $b5);
+                    }
+                @endphp
+                @foreach($group['sub_groups'] as $index => $sg)
+                    @php
+                        $pajak15   = round($sg['total_m_15'] * 0.15);
+                        $bersih15  = $sg['total_m_15'] - $pajak15;
+                        $pajak5    = round($sg['total_m_5'] * 0.05);
+                        $bersih5   = $sg['total_m_5'] - $pajak5;
+                        $subGroupTotal = $bersih15 + $bersih5;
+                    @endphp
 
-                        @if($value === 'SKIP_OR_NULL')
-                            @continue
+                    @if($sg['label'])
+                    <tr style="background:#93c5fd;font-weight:bold;">
+                        <td class="td-center">{{ $index === 0 ? $group['no'] : '' }}</td>
+                        <td class="td-left">{{ $sg['label'] }}</td>
+                        <td class="td-left">{{ $sg['jenis'] }}</td>
+                        <td colspan="13"></td>
+                    </tr>
+                    @endif
+
+                    <tr style="background:#dbeafe;font-weight:bold;">
+                        <td class="td-center">{{ $index === 0 && !$sg['label'] ? $group['no'] : '' }}</td>
+                        <td class="td-left">{{ $index === 0 && !$sg['label'] ? $group['perkara'] : '' }}</td>
+                        <td class="td-left">{{ $sg['label'] ? '' : $sg['jenis'] }}</td>
+                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['biaya_total'] > 0 ? number_format($sg['biaya_total'], 0, ',', '.') : '-' }}</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td class="td-right" rowspan="3">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
+                        @if($index === 0)
+                        <td class="td-right" rowspan="{{ count($group['sub_groups']) * 3 }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
                         @endif
-
-                        <td class="{{ $isNumeric ? 'td-right' : (in_array($headerName, ['NO', 'NO.']) ? 'td-center' : 'td-left') }}"
-                            @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
-                            @if(is_numeric($value))
-                                @if((float)$value === 0.0)
-                                    -
-                                @else
-                                    {{ number_format((float)$value, 0, ',', '.') }}
-                                @endif
-                            @else
-                                {{ $value ?? '-' }}
-                            @endif
-                        </td>
-                    @endforeach
-                </tr>
+                    </tr>
+                    {{-- Baris PPH 15% --}}
+                    <tr>
+                        <td colspan="3"></td>
+                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['biaya_15'] > 0 ? number_format($sg['biaya_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['total_15'] > 0 ? number_format($sg['total_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-center" style="background:#9ca3af;">PAJAK 15 %</td>
+                        <td class="td-right">{{ $sg['tim_15'] > 0 ? number_format($sg['tim_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['majelis5_15'] > 0 ? number_format($sg['majelis5_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['kepaniteraan_15'] > 0 ? number_format($sg['kepaniteraan_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['pemilah_15'] > 0 ? number_format($sg['pemilah_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['total_m_15'] > 0 ? number_format($sg['total_m_15'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $pajak15 > 0 ? number_format($pajak15, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $bersih15 > 0 ? number_format($bersih15, 0, ',', '.') : '-' }}</td>
+                    </tr>
+                    {{-- Baris PPH 5% --}}
+                    <tr>
+                        <td colspan="3"></td>
+                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['biaya_5'] > 0 ? number_format($sg['biaya_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['total_5'] > 0 ? number_format($sg['total_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-center" style="background:#9ca3af;">PAJAK 5 %</td>
+                        <td class="td-right">{{ $sg['tim_5'] > 0 ? number_format($sg['tim_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['majelis5_5'] > 0 ? number_format($sg['majelis5_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['kepaniteraan_5'] > 0 ? number_format($sg['kepaniteraan_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['pemilah_5'] > 0 ? number_format($sg['pemilah_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $sg['total_m_5'] > 0 ? number_format($sg['total_m_5'], 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $pajak5 > 0 ? number_format($pajak5, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $bersih5 > 0 ? number_format($bersih5, 0, ',', '.') : '-' }}</td>
+                    </tr>
+                @endforeach
             @endforeach
         </tbody>
     </table>
 
     {{-- Footer / Tanda Tangan --}}
-    @if(isset($footer) && count($footer) > 0)
-        @php
-            $fullText = '';
-            foreach($footer as $fRow) {
-                foreach($fRow as $k => $v) {
-                    if($k !== '_rowspans' && $k !== '_original_row' && $v && $v !== 'SKIP_OR_NULL') {
-                        $fullText .= ' ' . $v;
-                    }
-                }
-            }
-            $date = '';
-            if (preg_match('/(Jakarta,\s*\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/', $fullText, $m)) $date = $m[1];
-            $bendaharaName = preg_match('/FARIDA,\s*SH/', $fullText) ? 'FARIDA, S.H.' : 'FARIDA, S.H.';
-            $mengetahuiName = preg_match('/ASEP NURSOBAH/', $fullText) ? 'ASEP NURSOBAH, S.Ag., M.H.' : 'ASEP NURSOBAH, S.Ag., M.H.';
-            $ppkName = preg_match('/KRIS NUGROHO/', $fullText) ? 'ST. KRIS NUGROHO, S.H., M.H.' : 'ST. KRIS NUGROHO, S.H., M.H.';
-        @endphp
-        <div class="footer-wrap">
-            @if($date)
-                <div class="footer-date">{{ $date }}</div>
-            @endif
-            <div class="ttd-grid">
-                <div>
-                    <div class="ttd-label">Bendahara Biaya Proses</div>
-                    <div class="ttd-space"></div>
-                    <div class="ttd-name">{{ $bendaharaName }}</div>
-                </div>
-                <div class="ttd-center">
-                    <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
-                    <div class="ttd-space"></div>
-                    <div class="ttd-name">{{ $mengetahuiName }}</div>
-                </div>
-                <div class="ttd-right">
-                    <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
-                    <div class="ttd-space"></div>
-                    <div class="ttd-name">{{ $ppkName }}</div>
-                </div>
+    <div class="footer-wrap">
+        <div class="ttd-grid">
+            <div>
+                <div class="ttd-label">Bendahara Biaya Proses</div>
+                <div class="ttd-space"></div>
+                <div class="ttd-name">FARIDA, S.H.</div>
+            </div>
+            <div class="ttd-center">
+                <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                <div class="ttd-space"></div>
+                <div class="ttd-name">ASEP NURSOBAH, S.Ag., M.H.</div>
+            </div>
+            <div class="ttd-right">
+                <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                <div class="ttd-space"></div>
+                <div class="ttd-name">ST. KRIS NUGROHO, S.H., M.H.</div>
             </div>
         </div>
-    @endif
+    </div>
 
 </div>{{-- /.page --}}
 @endif

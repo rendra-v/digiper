@@ -18,7 +18,7 @@ Route::post('/file/{id}/rename-period', [DashboardController::class, 'renamePeri
 Route::post('/clear', [DashboardController::class, 'clear'])->name('clear');
 Route::get('/sheet/{name}', [DashboardController::class, 'getSheet'])->name('sheet.get');
 Route::get('/data-print', [DashboardController::class, 'dataPrint'])->name('data-print');
-Route::get('/data-print/print', [DashboardController::class, 'printRekapKeseluruhan'])->name('data-print.print');
+Route::get('/data-print/print', [DashboardController::class, 'dataPrintPrint'])->name('data-print.print');
 Route::get('/sheet-cek', [DashboardController::class, 'sheetCek'])->name('sheet-cek');
 Route::get('/sheet-cek/print', [DashboardController::class, 'sheetCekPrint'])->name('sheet-cek.print');
 Route::get('/rekap-keseluruhan', [DashboardController::class, 'rekapKeseluruhan'])->name('rekap-keseluruhan');

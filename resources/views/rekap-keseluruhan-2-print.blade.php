@@ -5,13 +5,13 @@
     <title>Print – Rekap Keseluruhan 2</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 6mm 8mm;
+            size: 330mm 215.9mm;
+            margin: 8mm 10mm;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 6.5px;
+            font-size: 8px;
             color: #111;
             background: #fff;
         }
@@ -50,10 +50,10 @@
             line-height: 1.25;
             overflow: hidden;
         }
-        .hdr  { background: #bfdbfe; font-weight: 700; text-align: center; }
-        .hdr2 { background: #dbeafe; font-weight: 700; text-align: center; }
-        .sec  { background: #f3f4f6; font-weight: 700; }
-        .tot  { background: #bfdbfe; font-weight: 700; }
+        .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
+        .hdr2 { background: #e9e9e9; font-weight: 700; text-align: center; }
+        .sec  { background: #f0f0f0; font-weight: 700; }
+        .tot  { background: #d9d9d9; font-weight: 700; }
         .c  { text-align: center; }
         .l  { text-align: left; }
         .r  { text-align: right; }
@@ -110,16 +110,29 @@
         </div>
 
         @php
-            // Column widths: NO(2%)+PERUNTUKAN(10%)+%(2%)+10×(BIAYA4+JML3+SUB5=12%)+TOTAL(6%) → harus ≈100%
-            // 10 kolom × 12% = 120% terlalu lebar → gunakan ukuran minimal, biarkan overflow
-            $colW_no    = '2%';
-            $colW_label = '9%';
+            $colW_no    = '2.5%';
+            $colW_label = '10%';
             $colW_pct   = '2%';
-            $colW_biaya = '3.5%';
-            $colW_jml   = '2.5%';
-            $colW_sub   = '4.5%';
-            $colW_total = '5%';
+            $colW_biaya = '4%';
+            $colW_jml   = '3%';
+            $colW_sub   = '5%';
+            $colW_total = '6%';
+
+            // Split kolom jadi 2 halaman
+            $half = (int) ceil(count($columns) / 2);
+            $colChunks = array_chunk((array) $columns, $half);
         @endphp
+
+        @foreach($colChunks as $chunkIdx => $colChunk)
+        {{-- Halaman {{ $chunkIdx + 1 }} dari {{ count($colChunks) }} --}}
+        <div style="{{ $chunkIdx > 0 ? 'page-break-before: always;' : '' }}">
+
+        <div class="doc-title">
+            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
+            @if($recapDate)
+            <div class="t2">{{ strtoupper($recapDate) }} &mdash; Halaman {{ $chunkIdx + 1 }} dari {{ count($colChunks) }}</div>
+            @endif
+        </div>
 
         <table>
             {{-- Colgroup --}}
@@ -127,7 +140,7 @@
                 <col style="width:{{ $colW_no }}">
                 <col style="width:{{ $colW_label }}">
                 <col style="width:{{ $colW_pct }}">
-                @foreach($columns as $col)
+                @foreach($colChunk as $col)
                 <col style="width:{{ $colW_biaya }}">
                 <col style="width:{{ $colW_jml }}">
                 <col style="width:{{ $colW_sub }}">
@@ -135,19 +148,20 @@
                 <col style="width:{{ $colW_total }}">
             </colgroup>
 
-            {{-- ── Header row 1 ── --}}
+            {{-- Header --}}
+
             <thead>
                 <tr class="hdr">
                     <th rowspan="2" class="c">NO</th>
                     <th rowspan="2" class="c">PERUNTUKAN</th>
                     <th rowspan="2" class="c">%</th>
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                     <th colspan="3" class="c">{{ $col['label'] }}<br>({{ $col['rate_label'] }})</th>
                     @endforeach
                     <th rowspan="2" class="c">TOTAL</th>
                 </tr>
                 <tr class="hdr2">
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                     <th class="c">BIAYA</th>
                     <th class="c">JML</th>
                     <th class="c">SUB TOTAL</th>
@@ -160,9 +174,15 @@
                 @php
                     $isHeader  = $row['type'] === 'header';
                     $isJmlOnly = $row['type'] === 'jml_only';
-                    $isData    = $row['type'] === 'data';
-                    $rowTotal  = $row_totals[$row['key']] ?? 0;
-                    $colCount  = count($columns);
+                    $colCount  = count($colChunk);
+                    // Hitung row total hanya dari kolom di chunk ini
+                    $chunkRowTotal = 0;
+                    if (!$isHeader) {
+                        foreach ($colChunk as $col) {
+                            $cell = $cells[$row['key']][$col['key']] ?? null;
+                            $chunkRowTotal += $cell ? ($cell['sub_total'] ?? 0) : 0;
+                        }
+                    }
                 @endphp
 
                 @if($isHeader)
@@ -176,7 +196,7 @@
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
                     <td class="c">{{ $row['persen'] }}</td>
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                         <td class="muted">-</td>
                         <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
@@ -190,13 +210,13 @@
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
                     <td class="c">{{ $row['persen'] }}</td>
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                         <td class="r">{{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
                         <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
                         <td class="r">{{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
                     @endforeach
-                    <td class="r b">{{ $rowTotal > 0 ? number_format($rowTotal, 0, ',', '.') : '-' }}</td>
+                    <td class="r b">{{ $chunkRowTotal > 0 ? number_format($chunkRowTotal, 0, ',', '.') : '-' }}</td>
                 </tr>
                 @endif
             @endforeach
@@ -205,25 +225,25 @@
             <tr class="tot">
                 <td colspan="2" class="c b"></td>
                 <td class="c b">100%</td>
-                @foreach($columns as $col)
+                @foreach($colChunk as $col)
                 <td class="r b">{{ number_format($col['base_rate'], 0, ',', '.') }}</td>
                 <td class="muted">-</td>
                 <td class="muted">-</td>
                 @endforeach
-                <td class="r b">{{ $grand_total > 0 ? number_format($grand_total, 0, ',', '.') : '-' }}</td>
+                @php
+                    $chunkGrandTotal = array_sum(array_map(fn($c) => $row_totals[$c['key']] ?? 0, $colChunk));
+                @endphp
+                <td class="r b">{{ $chunkGrandTotal > 0 ? number_format($chunkGrandTotal, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
         </table>
 
+        </div>{{-- end chunk div --}}
+        @endforeach {{-- colChunks --}}
+
         @if($recapDate)
         <div class="period">{{ $recapDate }}</div>
         @endif
-
-        <script>
-            window.addEventListener('load', function () {
-                setTimeout(function () { window.print(); }, 400);
-            });
-        </script>
 
     @endif
 </body>

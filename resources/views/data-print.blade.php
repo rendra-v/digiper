@@ -104,16 +104,7 @@
 
                         </div>
 
-                        {{-- ── Kanan: Print PDF ── --}}
-                        <a href="{{ route('data-print.print') }}" target="_blank" rel="noopener"
-                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 flex-shrink-0">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z" />
-                            </svg>
-                            Print PDF
-                        </a>
+
 
                     </div>
                 </div>
