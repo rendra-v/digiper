@@ -5,7 +5,7 @@
     <title>Cetak Data Print</title>
     <style>
         @page {
-            size: 330mm 215.9mm landscape;
+            size: 330mm 215.9mm;
             margin: 8mm 10mm;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -153,7 +153,7 @@
 
         /* ── PRINT ──────────────────────────────────────────────────────── */
         @page {
-            size: 330mm 215.9mm landscape;
+            size: 330mm 215.9mm;
             margin: 8mm 10mm;
         }
         @media print {

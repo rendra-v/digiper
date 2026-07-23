@@ -6,7 +6,7 @@
     <title>Print – Rekap Keseluruhan</title>
     <style>
         @page {
-            size: 330mm 215.9mm landscape;
+            size: 330mm 215.9mm;
             margin: 7mm 8mm;
         }
 

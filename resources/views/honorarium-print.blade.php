@@ -190,7 +190,7 @@
            PRINT STYLES — bersih hitam-putih, persis seperti contoh
         ══════════════════════════════════════════════════════ */
         @page {
-            size: 330mm 215.9mm landscape;
+            size: 330mm 215.9mm;
             margin: 10mm 12mm 10mm 12mm;
         }
         @media print {
