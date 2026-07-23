@@ -17,8 +17,9 @@
             </p>
         </div>
         <div class="flex items-center gap-3">
-            @if(!$error && count($sheets) > 0)
+            @if(!$error && (count($sheets) > 0 || !empty($timData) || !empty($kepaniteraanData) || !empty($opStafData)))
                 {{-- Dropdown Cetak --}}
+
                 <div class="relative" x-data="{ printOpen: false }" @click.outside="printOpen = false">
                     <button @click="printOpen = !printOpen"
                         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-sm">
