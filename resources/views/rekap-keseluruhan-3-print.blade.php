@@ -5,13 +5,13 @@
     <title>Print – Rekap Keseluruhan 3</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 5mm 6mm;
+            size: 330mm 215.9mm landscape;
+            margin: 8mm 10mm;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 6px;
+            font-size: 8px;
             color: #111;
             background: #fff;
         }
@@ -50,17 +50,17 @@
             line-height: 1.2;
             overflow: hidden;
         }
-        .hdr  { background: #c7d2fe; font-weight: 700; text-align: center; }
-        .hdr2 { background: #e0e7ff; font-weight: 700; text-align: center; }
-        .tot  { background: #c7d2fe; font-weight: 700; }
+        .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
+        .hdr2 { background: #e9e9e9; font-weight: 700; text-align: center; }
+        .tot  { background: #d9d9d9; font-weight: 700; }
         .c  { text-align: center; }
         .l  { text-align: left; }
         .r  { text-align: right; }
         .b  { font-weight: 700; }
-        .g  { background: #f0fdf4; } /* green */
-        .rd { background: #fef2f2; } /* red */
-        .or { background: #fff7ed; } /* orange */
-        .em { background: #ecfdf5; font-weight: 700; } /* emerald */
+        .g  { background: #e8f5e9; }
+        .rd { background: #fce4e4; }
+        .or { background: #fff3e0; }
+        .em { background: #e8f5e9; font-weight: 700; }
 
         .notice { margin: 30px auto; max-width: 400px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
         .period { text-align: right; font-size: 5.5px; font-weight: 700; margin-top: 5px; }
@@ -89,27 +89,37 @@
         <div class="notice">Belum ada data. Silakan upload file Excel terlebih dahulu.</div>
     @else
 
-        <div class="doc-title">
-            <div class="t1">REKAPITULASI DISTRIBUSI HONOR/INSENTIF PERSONIL PENYELESAIAN PERKARA</div>
-            @if($recapDate)
-            <div class="t2">{{ strtoupper($recapDate) }}</div>
-            @endif
-        </div>
+        @php
+            // Split kolom jadi 2 halaman
+            $half = (int) ceil(count($columns) / 2);
+            $colChunks = array_chunk($columns->toArray(), $half);
+        @endphp
 
-        <table>
+
+            @foreach($colChunks as $chunkIdx => $colChunk)
+            <div style="{{ $chunkIdx > 0 ? 'page-break-before: always;' : '' }}">
+
+            <div class="doc-title">
+                <div class="t1">REKAPITULASI DISTRIBUSI HONOR/INSENTIF PERSONIL PENYELESAIAN PERKARA</div>
+                @if($recapDate)
+                <div class="t2">{{ strtoupper($recapDate) }} &mdash; Halaman {{ $chunkIdx + 1 }} dari {{ count($colChunks) }}</div>
+                @endif
+            </div>
+
+            <table>
             <colgroup>
                 <col style="width:1.5%">   {{-- NO --}}
-                <col style="width:9%">     {{-- JABATAN --}}
+                <col style="width:10%">    {{-- JABATAN --}}
                 <col style="width:1.5%">   {{-- % --}}
-                @foreach($columns as $col)
-                <col style="width:3%">     {{-- BIAYA --}}
-                <col style="width:2%">     {{-- JML --}}
-                <col style="width:3.5%">   {{-- SUB TOTAL --}}
+                @foreach($colChunk as $col)
+                <col style="width:4%">     {{-- BIAYA --}}
+                <col style="width:2.5%">   {{-- JML --}}
+                <col style="width:4.5%">   {{-- SUB TOTAL --}}
                 @endforeach
-                <col style="width:4.5%">   {{-- BRUTO --}}
-                <col style="width:3.5%">   {{-- PPh 15% --}}
-                <col style="width:3.5%">   {{-- PPh 5% --}}
-                <col style="width:5%">     {{-- NETTO --}}
+                <col style="width:5%">     {{-- BRUTO --}}
+                <col style="width:4%">     {{-- PPh 15% --}}
+                <col style="width:4%">     {{-- PPh 5% --}}
+                <col style="width:5.5%">   {{-- NETTO --}}
             </colgroup>
 
             <thead>
@@ -118,7 +128,7 @@
                     <th rowspan="2" class="c">NO</th>
                     <th rowspan="2" class="c">JABATAN</th>
                     <th rowspan="2" class="c">%</th>
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                     <th colspan="3" class="c">{{ $col['label'] }}</th>
                     @endforeach
                     <th rowspan="2" class="c g">BRUTO</th>
@@ -128,7 +138,7 @@
                 </tr>
                 {{-- row 2 --}}
                 <tr class="hdr2">
-                    @foreach($columns as $col)
+                    @foreach($colChunk as $col)
                     <th class="c">BIAYA</th>
                     <th class="c">JML</th>
                     <th class="c">SUB TOTAL</th>
@@ -142,7 +152,7 @@
                 <td class="c">{{ $i + 1 }}</td>
                 <td class="l">{{ $row['label'] }}</td>
                 <td class="c">{{ number_format($row['persen'] * 100, 1, ',', '.') }}%</td>
-                @foreach($columns as $col)
+                @foreach($colChunk as $col)
                     @php $cell = $row['cells'][$col['key']] ?? ['biaya'=>0,'jml'=>0,'sub_total'=>0] @endphp
                     <td class="r">{{ $cell['biaya'] > 0 ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
                     <td class="r">{{ $cell['jml'] > 0 ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
@@ -158,7 +168,7 @@
             {{-- TOTAL --}}
             <tr class="tot">
                 <td colspan="3" class="c b">TOTAL</td>
-                @foreach($columns as $col)
+                @foreach($colChunk as $col)
                 <td class="c" style="color:#aaa">-</td>
                 <td class="c" style="color:#aaa">-</td>
                 <td class="r b">
@@ -172,7 +182,10 @@
                 <td class="r b em">{{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
-        </table>
+            </table>
+
+            </div>{{-- end chunk div --}}
+            @endforeach {{-- colChunks --}}
 
         @if($recapDate)
         <div class="period">{{ $recapDate }}</div>

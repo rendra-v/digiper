@@ -453,6 +453,53 @@ class DashboardController extends Controller
         }
     }
 
+    public function dataPrintPrint(Request $request)
+    {
+        $filePath = Session::get('excel_file_path');
+        $fileName = Session::get('excel_file_name');
+        $catFilter = $request->query('cat'); // optional: filter per kategori
+
+        if (! $filePath || ! file_exists($filePath)) {
+            return view('data-print-print', ['categories' => [], 'fileName' => null, 'error' => 'File tidak ditemukan.', 'catFilter' => null]);
+        }
+
+        // Reuse cache dari dataPrint()
+        $cacheKey = $this->getCacheKey($filePath, 'data_print_v4');
+        $cached = Session::get($cacheKey);
+
+        if ($cached !== null) {
+            $categories = $cached['categories'];
+        } else {
+            // Load fresh jika belum ada cache
+            try {
+                ini_set('memory_limit', '1024M');
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(false);
+                if (method_exists($reader, 'setLoadSheetsOnly')) {
+                    $reader->setLoadSheetsOnly(['Data Print']);
+                }
+                $spreadsheet = $reader->load($filePath);
+                if (! $spreadsheet->sheetNameExists('Data Print')) {
+                    return view('data-print-print', ['categories' => [], 'fileName' => $fileName, 'error' => 'Sheet "Data Print" tidak ditemukan.', 'catFilter' => $catFilter]);
+                }
+                $worksheet = $spreadsheet->getSheetByName('Data Print');
+                $categories = $this->parseDataPrintSheet($worksheet);
+                $categories = $this->expandPerdataKhusus($categories);
+                $spreadsheet->disconnectWorksheets();
+                Session::put($cacheKey, compact('categories'));
+            } catch (\Throwable $e) {
+                return view('data-print-print', ['categories' => [], 'fileName' => $fileName, 'error' => 'Error: '.$e->getMessage(), 'catFilter' => $catFilter]);
+            }
+        }
+
+        // Filter per kategori jika diminta
+        if ($catFilter !== null && isset($categories[$catFilter])) {
+            $categories = [$catFilter => $categories[$catFilter]];
+        }
+
+        return view('data-print-print', compact('categories', 'fileName', 'catFilter') + ['error' => null]);
+    }
+
     public function sheetCek()
     {
         try {
@@ -468,9 +515,9 @@ class DashboardController extends Controller
                 ]);
             }
 
-            // Load hanya sheet "Data Print" â€” sumber data satu-satunya
+            // Load hanya sheet "Data Print" — sumber data satu-satunya
             $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(true);
+            $reader->setReadDataOnly(false); // false agar formula & format tanggal terbaca (sama seperti dataPrint)
             $reader->setLoadSheetsOnly(['Data Print']);
             $spreadsheet = $reader->load($filePath);
 
