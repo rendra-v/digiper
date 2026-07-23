@@ -5,13 +5,13 @@
     <title>Print – Rekap Keseluruhan 3</title>
     <style>
         @page {
-            size: 330mm 215.9mm;
+            size: landscape;
             margin: 8mm 10mm;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8px;
+            font-size: 11px;
             color: #111;
             background: #fff;
         }
@@ -34,8 +34,8 @@
             text-align: center;
             margin-bottom: 3px;
         }
-        .doc-title .t1 { font-size: 7px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 6px; color: #555; }
+        .doc-title .t1 { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 9px; color: #555; }
 
         /* ── table ── */
         table {
@@ -44,10 +44,10 @@
             table-layout: fixed;
         }
         th, td {
-            border: 0.5px solid #555;
-            padding: 1.5px 2px;
-            font-size: 5.5px;
-            line-height: 1.2;
+            border: 0.8px solid #555;
+            padding: 3px 4px;
+            font-size: 9px;
+            line-height: 1.35;
             overflow: hidden;
         }
         .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
@@ -63,7 +63,7 @@
         .em { background: #e8f5e9; font-weight: 700; }
 
         .notice { margin: 30px auto; max-width: 400px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
-        .period { text-align: right; font-size: 5.5px; font-weight: 700; margin-top: 5px; }
+        .period { text-align: right; font-size: 9px; font-weight: 700; margin-top: 5px; }
     </style>
 </head>
 <body>

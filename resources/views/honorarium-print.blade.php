@@ -21,24 +21,24 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 999;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2e5999 100%);
-            box-shadow: 0 2px 12px rgba(0,0,0,.35);
-            padding: 14px 28px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
         }
         .action-bar .brand {
-            color: #fff;
-            font-size: 13pt;
+            color: #111;
+            font-size: 13px;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         .action-bar .hint {
-            color: rgba(255,255,255,.65);
+            color: #555;
             font-size: 8.5pt;
         }
         .action-bar .btn-group { display: flex; gap: 10px; align-items: center; }
@@ -46,19 +46,19 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 18px;
-            border-radius: 7px;
+            padding: 6px 14px;
+            border-radius: 6px;
             font-family: Arial, sans-serif;
-            font-size: 9pt;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            border: none;
+            border: 1px solid rgba(0,0,0,.2);
             transition: filter .15s;
             text-decoration: none;
         }
-        .btn:hover { filter: brightness(1.12); }
-        .btn-print { background: #f4a418; color: #1a1a2e; }
-        .btn-back  { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+        .btn:hover { filter: brightness(0.95); }
+        .btn-print { background: #f4a418; color: #000; border: none; padding: 6px 18px; }
+        .btn-back  { background: #fff; color: #333; }
 
         /* ── Screen: page wrapper ─────────────────────────────── */
         .pages {
@@ -277,6 +277,163 @@
             <h3>⚠ Gagal memuat dokumen</h3>
             <p>{{ $error }}</p>
         </div>
+
+    @elseif($computedType === 'op-staf')
+        @foreach($opStafData as $oi => $block)
+            @if(count($block['rows']) >= 1)
+            <div class="page">
+                <div class="doc-title-wrap">
+                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['title'] }}</div>
+                    <div class="title-sub">(SEBAGAI OPERATOR / STAF)</div>
+                    <div class="title-info">Sebanyak {{ number_format($block['total_perkara'], 0, ',', '.') }} Perkara</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="td-no">NO</th>
+                            <th class="td-nama">NAMA OPERATOR / STAF</th>
+                            <th class="td-jab">JABATAN</th>
+                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-num">BIAYA</th>
+                            <th class="td-num">JUMLAH BIAYA</th>
+                            <th class="td-num">PPH 15%</th>
+                            <th class="td-num">PPH 5%</th>
+                            <th class="td-num">NETTO</th>
+                            <th class="td-ttd">TANDA TANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($block['rows'] as $row)
+                            <tr>
+                                <td class="td-no">{{ $row['no'] }}</td>
+                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-jab">PANITERA PENGGANTI</td>
+                                <td class="td-count">{{ number_format($row['jml'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['bruto'], 0, ',', '.') }}</td>
+                                <td class="td-num">-</td>
+                                <td class="td-num">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                <td class="td-ttd"></td>
+                            </tr>
+                        @endforeach
+                        <tr class="row-total">
+                            <td colspan="5" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['bruto'], 0, ',', '.') }}</td>
+                            <td class="td-num">-</td>
+                            <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                            <td class="td-ttd"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        @endforeach
+
+    @elseif($computedType === 'tim')
+        @foreach($timData as $ti => $block)
+            @if(count($block['rows']) >= 1)
+            <div class="page">
+                <div class="doc-title-wrap">
+                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}</div>
+                    <div class="title-sub">Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="td-no">NO</th>
+                            <th class="td-nama">NAMA</th>
+                            <th class="td-jab">JABATAN</th>
+                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-num">BIAYA</th>
+                            <th class="td-num">JUMLAH BIAYA</th>
+                            <th class="td-num">PPH 15%</th>
+                            <th class="td-num">PPH 5%</th>
+                            <th class="td-num">NETTO</th>
+                            <th class="td-ttd">TANDA TANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($block['rows'] as $row)
+                            <tr>
+                                <td class="td-no">{{ $row['no'] }}</td>
+                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-jab">{{ $row['jabatan'] }}</td>
+                                <td class="td-count">{{ $row['jumlah_perkara'] > 0 ? number_format($row['jumlah_perkara'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['biaya'] > 0 ? 'Rp ' . number_format($row['biaya'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['jumlah_biaya'] > 0 ? 'Rp ' . number_format($row['jumlah_biaya'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['netto'] > 0 ? 'Rp ' . number_format($row['netto'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-ttd"></td>
+                            </tr>
+                        @endforeach
+                        <tr class="row-total">
+                            <td colspan="5" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['jumlah_biaya'], 0, ',', '.') }}</td>
+                            <td class="td-num">{{ $block['total']['pph15'] > 0 ? 'Rp ' . number_format($block['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                            <td class="td-ttd"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        @endforeach
+
+    @elseif($computedType === 'kepaniteraan')
+        @foreach($kepaniteraanData as $ki => $block)
+            @if(count($block['rows']) >= 1)
+            <div class="page">
+                <div class="doc-title-wrap">
+                    <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['title'] }}</div>
+                    <div class="title-sub">Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="td-no">NO</th>
+                            <th class="td-nama">NAMA</th>
+                            <th class="td-jab">JABATAN</th>
+                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-num">BIAYA</th>
+                            <th class="td-num">JUMLAH BIAYA</th>
+                            <th class="td-num">PPH 15%</th>
+                            <th class="td-num">PPH 5%</th>
+                            <th class="td-num">NETTO</th>
+                            <th class="td-ttd">TANDA TANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($block['rows'] as $row)
+                            <tr>
+                                <td class="td-no">{{ $row['no'] }}</td>
+                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-jab">{{ $row['jabatan'] }}</td>
+                                <td class="td-count">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                <td class="td-num">Rp {{ number_format($row['jml_biaya'], 0, ',', '.') }}</td>
+                                <td class="td-num">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                <td class="td-num">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                <td class="td-ttd"></td>
+                            </tr>
+                        @endforeach
+                        <tr class="row-total">
+                            <td colspan="5" class="td-center" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['jml_biaya'], 0, ',', '.') }}</td>
+                            <td class="td-num">{{ $block['total']['pph15'] > 0 ? 'Rp ' . number_format($block['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
+                            <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
+                            <td class="td-ttd"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        @endforeach
 
     @elseif(empty($sheets))
         <div class="notice">
