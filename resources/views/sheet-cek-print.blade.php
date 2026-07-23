@@ -153,8 +153,8 @@
 
         /* ── PRINT ──────────────────────────────────────────────────────── */
         @page {
-            size: A4 landscape;
-            margin: 10mm 12mm 10mm;
+            size: 330mm 215.9mm landscape;
+            margin: 8mm 10mm;
         }
         @media print {
             html, body { background: #fff; font-size: 8pt; }
