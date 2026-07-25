@@ -192,7 +192,18 @@
                 @endphp
                 <div x-data="{ timCat: '' }">
 
-                {{-- ── Dropdown Pilih Kategori ── --}}
+                {{-- ── Tombol Kembali ── --}}
+                <div class="mb-3 flex justify-end">
+                    <a href="{{ route('data-print') }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg shadow-sm hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200">
+                        <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="text-neutral-900 dark:text-white font-semibold">Kembali</span>
+                    </a>
+                </div>
+
+                {{-- ── Dropdown ── --}}
                 <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
                     <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                         Pilih Kategori Perkara
@@ -229,14 +240,14 @@
                             <thead>
                                 <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[160px]">NAMA</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">JABATAN</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[160px]">NAMA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[180px]">JABATAN</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">BIAYA</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">JUMLAH BIAYA</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">NETTO</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">PPH 5%</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">NETTO</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
                                 </tr>
                             </thead>
@@ -249,7 +260,7 @@
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
                                             x-data="{ editing: false, val: @js($row['nama']) }"
                                             @dblclick="editing=true" title="Klik 2x untuk edit nama">
-                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-800 dark:text-neutral-200"></span>
+                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-800 dark:text-neutral-200"></span>
                                             <div x-show="editing" x-cloak class="flex items-center gap-1">
                                                 <input x-model="val" type="text"
                                                        x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
@@ -259,13 +270,13 @@
                                                 <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
                                             </div>
                                         </td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['jumlah_biaya'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
                                     </tr>
                                 @endforeach
@@ -289,9 +300,48 @@
 
             @elseif($sheet['sheetName'] === 'Kepaniteraan' && !empty($kepaniteraanData))
                 {{-- KEPANITERAAN: tampilkan computed blocks dari Data Print --}}
-                @foreach($kepaniteraanData as $block)
+                @php $kepVisibleCount = count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 11)); @endphp
+                <div x-data="{ kepBlock: '' }">
+
+                {{-- ── Tombol Kembali ── --}}
+                <div class="mb-3 flex justify-end">
+                    <a href="{{ route('data-print') }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg shadow-sm hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200">
+                        <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="text-neutral-900 dark:text-white font-semibold">Kembali</span>
+                    </a>
+                </div>
+
+                {{-- ── Dropdown ── --}}
+                <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+                        Pilih Kategori Perkara
+                    </label>
+                    <div class="relative">
+                        <select x-model="kepBlock"
+                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
+                            <option value="">— Semua Kategori ({{ $kepVisibleCount }}) —</option>
+                            @foreach($kepaniteraanData as $ki => $kb)
+                            @if(count($kb['rows']) >= 11)
+                            <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
+                            @endif
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                @foreach($kepaniteraanData as $ki => $block)
                 @if(count($block['rows']) >= 11)
-                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
+                     x-show="kepBlock === '' || kepBlock === '{{ $ki }}'"
+                     x-cloak>
                     {{-- Header --}}
                     <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-b border-emerald-100 dark:border-emerald-900/50 px-6 py-4">
                         <div class="flex items-center justify-between">
@@ -303,14 +353,7 @@
                                     Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara
                                 </p>
                             </div>
-                            @if($block['tim'])
-                            <span class="ml-4 px-3 py-1 text-xs font-bold rounded-full
-                                {{ $block['tim'] === 'T1'
-                                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                                    : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' }}">
-                                {{ $block['tim'] }}
-                            </span>
-                            @endif
+
                         </div>
                     </div>
 
@@ -320,14 +363,14 @@
                             <thead>
                                 <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">NAMA</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[200px]">JABATAN</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[180px]">NAMA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[200px]">JABATAN</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">BIAYA</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">JUMLAH BIAYA</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
-                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">NETTO</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">PPH 5%</th>
+                                    <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[110px]">NETTO</th>
                                     <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
                                 </tr>
                             </thead>
@@ -340,7 +383,7 @@
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
                                             x-data="{ editing: false, val: @js($row['nama']) }"
                                             @dblclick="editing=true" title="Klik 2x untuk edit nama">
-                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-900 dark:text-neutral-100"></span>
+                                            <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-900 dark:text-neutral-100"></span>
                                             <div x-show="editing" x-cloak class="flex items-center gap-1">
                                                 <input x-model="val" type="text"
                                                        x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
@@ -350,13 +393,13 @@
                                                 <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
                                             </div>
                                         </td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300 text-center">{{ $row['jabatan'] }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['jml_biaya'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
                                     </tr>
                                 @endforeach
@@ -375,6 +418,7 @@
                 </div>
                 @endif
                 @endforeach
+                </div>{{-- /x-data kepBlock --}}
 
             @else
                 {{-- Kepaniteraan / OP-STAF / TIM tanpa computed data: tampilkan Excel blocks --}}
@@ -647,19 +691,38 @@
             <div x-show="active === 0" x-cloak>
                 @if(!empty($kepaniteraanData))
 
-                    {{-- ── Filter ── --}}
-                    <div class="mb-6">
-                        <select x-model="kepBlock"
-                                class="w-full max-w-2xl rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none">
-                            <option value="">— Semua Dokumen ({{ count($kepaniteraanData) }}) —</option>
-                            @foreach($kepaniteraanData as $ki => $kb)
-                                <option value="{{ $ki }}">
-                                    {{ $kb['title'] }}
-                                    @if($kb['tim']) [{{ $kb['tim'] }}] @endif
-                                    — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- ── Tombol Kembali ── --}}
+                    <div class="mb-3 flex justify-end">
+                        <a href="{{ route('data-print') }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg shadow-sm hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200">
+                            <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            <span class="text-neutral-900 dark:text-white font-semibold">Kembali</span>
+                        </a>
+                    </div>
+
+                    {{-- ── Dropdown ── --}}
+                    <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+                            Pilih Kategori Perkara
+                        </label>
+                        <div class="relative">
+                            <select x-model="kepBlock"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
+                                <option value="">— Semua Kategori ({{ count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 11)) }}) —</option>
+                                @foreach($kepaniteraanData as $ki => $kb)
+                                @if(count($kb['rows']) >= 11)
+                                <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
+                                @endif
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
                     @foreach($kepaniteraanData as $ki => $block)
@@ -677,14 +740,7 @@
                                         Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara
                                     </p>
                                 </div>
-                                @if($block['tim'])
-                                <span class="ml-4 px-3 py-1 text-xs font-bold rounded-full
-                                    {{ $block['tim'] === 'T1'
-                                        ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                                        : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' }}">
-                                    {{ $block['tim'] }}
-                                </span>
-                                @endif
+
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -692,14 +748,14 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">NAMA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[180px]">NAMA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[200px]">JABATAN</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">BIAYA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">JUMLAH BIAYA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">NETTO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">PPH 5%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[110px]">NETTO</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
                                     </tr>
                                 </thead>
@@ -712,7 +768,7 @@
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
                                                 x-data="{ editing: false, val: @js($row['nama']) }"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
-                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-neutral-900 dark:text-neutral-100"></span>
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-900 dark:text-neutral-100"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
                                                     <input x-model="val" type="text"
                                                            x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
@@ -722,13 +778,13 @@
                                                     <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
                                                 </div>
                                             </td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-neutral-700 dark:text-neutral-300 text-center">{{ $row['jabatan'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-700 dark:text-neutral-300">{{ $row['jabatan'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['jml_biaya'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
                                         </tr>
                                     @endforeach
@@ -756,7 +812,18 @@
                 @if(!empty($timData))
                 <div x-data="{ timCat3: '' }">
 
-                {{-- ── Dropdown Pilih Kategori ── --}}
+                {{-- ── Tombol Kembali ── --}}
+                <div class="mb-3 flex justify-end">
+                    <a href="{{ route('data-print') }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg shadow-sm hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200">
+                        <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="text-neutral-900 dark:text-white font-semibold">Kembali</span>
+                    </a>
+                </div>
+
+                {{-- ── Dropdown ── --}}
                 <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
                     <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                         Pilih Kategori Perkara
@@ -793,14 +860,14 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[160px]">NAMA</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">JABATAN</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[160px]">NAMA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[180px]">JABATAN</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">BIAYA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">JUMLAH BIAYA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">NETTO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">PPH 5%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">NETTO</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
                                     </tr>
                                 </thead>
@@ -813,7 +880,7 @@
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
                                                 x-data="{ editing: false, val: @js($row['nama']) }"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
-                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1"></span>
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
                                                     <input x-model="val" type="text"
                                                            x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
@@ -823,13 +890,13 @@
                                                     <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
                                                 </div>
                                             </td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2">{{ $row['jabatan'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['jabatan'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($row['jumlah_perkara'], 0, ',', '.') }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['jumlah_biaya'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph15'] > 0 ? 'Rp ' . number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['pph5'] > 0 ? 'Rp ' . number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
                                         </tr>
                                     @endforeach
@@ -858,17 +925,36 @@
             <div x-show="active === 2" x-cloak x-data="{ opBlock: '' }">
                 @if(!empty($opStafData))
 
-                    {{-- Filter --}}
-                    <div class="mb-6">
-                        <select x-model="opBlock"
-                                class="w-full max-w-2xl rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-orange-500 focus:outline-none">
-                            <option value="">— Semua Jenis Perkara ({{ count($opStafData) }}) —</option>
-                            @foreach($opStafData as $oi => $ob)
-                                <option value="{{ $oi }}">
-                                    {{ $ob['title'] }} — {{ number_format($ob['total']['jml'], 0, ',', '.') }} Perkara
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- ── Tombol Kembali ── --}}
+                    <div class="mb-3 flex justify-end">
+                        <a href="{{ route('data-print') }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg shadow-sm hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-all duration-200">
+                            <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            <span class="text-neutral-900 dark:text-white font-semibold">Kembali</span>
+                        </a>
+                    </div>
+
+                    {{-- ── Dropdown ── --}}
+                    <div class="mb-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+                            Pilih Kategori Perkara
+                        </label>
+                        <div class="relative">
+                            <select x-model="opBlock"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-colors cursor-pointer">
+                                <option value="">— Semua Kategori ({{ count($opStafData) }}) —</option>
+                                @foreach($opStafData as $oi => $ob)
+                                    <option value="{{ $oi }}">{{ $ob['title'] }} — {{ number_format($ob['total']['jml'], 0, ',', '.') }} Perkara</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
                     @foreach($opStafData as $oi => $block)
@@ -892,13 +978,13 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[200px]">NAMA OPERATOR</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[200px]">NAMA OPERATOR</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">JABATAN</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[80px]">JUMLAH PERKARA</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[80px]">BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[80px]">BIAYA</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">JUMLAH BIAYA</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
-                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[110px]">NETTO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">PPH 5%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[110px]">NETTO</th>
                                         <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
                                     </tr>
                                 </thead>
@@ -923,10 +1009,10 @@
                                             </td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600 dark:text-neutral-400">OPERATOR/PENGETIK</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ number_format($row['jml'], 0, ',', '.') }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['bruto'], 0, ',', '.') }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['pph5'], 0, ',', '.') }}</td>
-                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">Rp {{ number_format($row['pph5'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($row['netto'], 0, ',', '.') }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
                                         </tr>
                                     @endforeach

@@ -1767,16 +1767,17 @@ class DashboardController extends Controller
     private function computeKepaniteraanData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v1');
+            $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v2');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) return $cached;
 
-            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
+            // Gunakan data_print_v4 cache yang sudah di-expand (konsisten dengan computeTimData)
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v4'));
             if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
                 $reader = IOFactory::createReaderForFile($filePath);
-                $reader->setReadDataOnly(true);
+                $reader->setReadDataOnly(false);
                 if (method_exists($reader, 'setLoadSheetsOnly')) {
                     $reader->setLoadSheetsOnly(['Data Print']);
                 }
@@ -1792,7 +1793,8 @@ class DashboardController extends Controller
                     }
                 }
                 if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
-                $categories = $this->parseDataPrintSheet($ws);
+                // expandPerdataKhusus agar ID sub-klasifikasi tersedia
+                $categories = $this->expandPerdataKhusus($this->parseDataPrintSheet($ws));
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
                 if (empty($categories)) return [];

@@ -1576,65 +1576,50 @@ public function countHakimFromRows(array $rows): int
             return $wrapBlock($title, 'T2', $jml, $rows);
         };
 
+        // ── 27 Jenis Perkara identik Data Print (sama dengan TIM & OP STAF) ──
+        // Biaya per jabatan = penyelesaian[tarif] × persen_jabatan (Rekap Keseluruhan 3)
+        $jenisDefs = [
+            // 1
+            ['title' => 'KASASI PERDATA UMUM',                            'id' => 'kasasi-pdt-umum',             'klas' => null,         'class' => 'kasasi_500',   'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 2
+            ['title' => 'PENINJAUAN KEMBALI PERDATA UMUM',               'id' => 'pk-pdt-umum',                 'klas' => null,         'class' => 'pk_250',       'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 3 parent
+            ['title' => 'KASASI PERDATA KHUSUS',                         'id' => 'kasasi-pdt-khusus',           'klas' => null,         'class' => 'kasasi_500',   'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 4-11 sub kasasi khusus
+            ['title' => 'KASASI PERDATA KHUSUS (PHI)',                   'id' => 'kasasi-pdt-khusus-PHI',       'klas' => null,         'class' => 'kasasi_500',   'staf' => 'RICO MARULI HAPOSAN NAPITUPULU, S.E.',   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (HKI)',                   'id' => 'kasasi-pdt-khusus-HKI',       'klas' => null,         'class' => 'kasasi_niaga', 'staf' => 'LOLITA ESGHATRA PURBASARI, SH.',         'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (KEPAILITAN)',            'id' => 'kasasi-pdt-khusus-KEPAILITAN','klas' => null,         'class' => 'kasasi_niaga', 'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (ARBITRASE)',             'id' => 'kasasi-pdt-khusus-ARBITRASE', 'klas' => null,         'class' => 'kasasi_500',   'staf' => 'PETRUS SIAN EDVANSA, S.H.',              'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (PARPOL)',                'id' => 'kasasi-pdt-khusus-PARPOL',    'klas' => null,         'class' => 'kasasi_500',   'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (KPPU)',                  'id' => 'kasasi-pdt-khusus-KPPU',      'klas' => null,         'class' => 'kasasi_500',   'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (BPSK)',                  'id' => 'kasasi-pdt-khusus-BPSK',      'klas' => null,         'class' => 'kasasi_500',   'staf' => 'PETRUS SIAN EDVANSA, S.H.',              'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI PERDATA KHUSUS (KIP)',                   'id' => 'kasasi-pdt-khusus-KIP',       'klas' => null,         'class' => 'kasasi_500',   'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 12 parent pk khusus
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS',             'id' => 'pk-pdt-khusus',               'klas' => null,         'class' => 'pk_250',       'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 13-20 sub pk khusus
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (PHI)',       'id' => 'pk-pdt-khusus-PHI',           'klas' => null,         'class' => 'pk_250',       'staf' => 'RICO MARULI HAPOSAN NAPITUPULU, S.E.',   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (HKI)',       'id' => 'pk-pdt-khusus-HKI',           'klas' => null,         'class' => 'pk_niaga',     'staf' => 'LOLITA ESGHATRA PURBASARI, SH.',         'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KEPAILITAN)','id' => 'pk-pdt-khusus-KEPAILITAN',    'klas' => null,         'class' => 'pk_niaga',     'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (ARBITRASE)', 'id' => 'pk-pdt-khusus-ARBITRASE',     'klas' => null,         'class' => 'pk_250',       'staf' => 'PETRUS SIAN EDVANSA, S.H.',              'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (PARPOL)',    'id' => 'pk-pdt-khusus-PARPOL',        'klas' => null,         'class' => 'pk_250',       'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KPPU)',      'id' => 'pk-pdt-khusus-KPPU',          'klas' => null,         'class' => 'pk_250',       'staf' => 'TUIN, SH., MH.',                        'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (BPSK)',      'id' => 'pk-pdt-khusus-BPSK',          'klas' => null,         'class' => 'pk_250',       'staf' => 'PETRUS SIAN EDVANSA, S.H.',              'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA KHUSUS (KIP)',       'id' => 'pk-pdt-khusus-KIP',           'klas' => null,         'class' => 'pk_250',       'staf' => 'HJ. YUNI WANTI, SH.',                   'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            // 21-27
+            ['title' => 'KASASI PERDATA AGAMA',                          'id' => 'kasasi-pdt-agama',            'klas' => null,         'class' => 'kasasi_500',   'staf' => 'WASIYEM',                               'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PERDATA AGAMA',              'id' => 'pk-pdt-agama',                'klas' => null,         'class' => 'pk_250',       'staf' => 'WASIYEM',                               'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'KASASI TATA USAHA NEGARA (K-TUN)',              'id' => 'kasasi-tun',                  'klas' => null,         'class' => 'kasasi_500',   'staf' => 'ARIF DONOVAN, S.H.',                    'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'P-HUM (PERMOHONAN HAK UJI MATERIL)',            'id' => 'phum',                        'klas' => null,         'class' => 'phum',         'staf' => 'ARIF DONOVAN, S.H.',                    'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'P-KHS (PERMOHONAN HAK UJI PENDAPAT)',           'id' => 'pkhs',                        'klas' => null,         'class' => 'phum',         'staf' => 'ARIF DONOVAN, S.H.',                    'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)','id' => 'pk-tun',                      'klas' => null,         'class' => 'pk_250',       'staf' => 'ARIF DONOVAN, S.H.',                    'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+            ['title' => 'PENINJAUAN KEMBALI PAJAK (PK-PJK)',             'id' => 'pk-pajak',                    'klas' => null,         'class' => 'pk_250',       'staf' => 'ARIF DONOVAN, S.H.',                    'stafLabel' => 'STAF PANITERA MUDA PERKARA'],
+        ];
+
         $blocks = [];
-
-        // ════════════════════════════════════════════════════════════════════
-        // A. PERDATA UMUM (T1 + T2, pisah Kasasi & PK)
-        // ════════════════════════════════════════════════════════════════════
-        $jmlKasasiU = $countRows('kasasi-pdt-umum');
-        $jmlPKU     = $countRows('pk-pdt-umum');
-
-        $blocks[] = $buildT1('KASASI PERDATA UMUM',   $jmlKasasiU, 'kasasi_500');
-        $blocks[] = $buildT2('KASASI PERDATA UMUM',   $jmlKasasiU, 'kasasi_500');
-        $blocks[] = $buildT1('PK PERDATA UMUM',       $jmlPKU,     'pk_250');
-        $blocks[] = $buildT2('PK PERDATA UMUM',       $jmlPKU,     'pk_250');
-
-        // ════════════════════════════════════════════════════════════════════
-        // B. PERDATA KHUSUS — satu tabel per sub-klasifikasi (T2 only)
-        //    KPPU diabaikan, HKI+HAKI digabung, Kepailitan+PKPU digabung
-        // ════════════════════════════════════════════════════════════════════
-        $stafKhusus = [
-            'PHI'        => ['staf' => 'RICO MARULI HAPOSAN NAPITUPULU, S.E.', 'klas' => ['PHI'],       'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
-            'ARBITRASE'  => ['staf' => 'PETRUS SIAN EDVANSA, S.H.',            'klas' => ['ARBITRASE'], 'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
-            'PARPOL'     => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['PARPOL'],    'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
-            'BPSK'       => ['staf' => 'PETRUS SIAN EDVANSA, S.H.',            'klas' => ['BPSK'],      'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
-            'KIP'        => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['KIP'],       'tarif_k' => 'kasasi_500',   'tarif_pk' => 'pk_250'],
-            'HKI'        => ['staf' => 'LOLITA ESGHATRA PURBASARI, SH.',       'klas' => ['HKI'],       'tarif_k' => 'kasasi_niaga', 'tarif_pk' => 'pk_niaga',  'label' => 'HAKI / HKI'],
-            'KEPAILITAN' => ['staf' => 'HJ. YUNI WANTI, SH.',                  'klas' => ['KEPAILITAN'],'tarif_k' => 'kasasi_niaga', 'tarif_pk' => 'pk_niaga',  'label' => 'KEPAILITAN / PKPU'],
-        ];
-
-        foreach ($stafKhusus as $key => $def) {
-            $label = $def['label'] ?? $key;
-            $jmlK  = $countRowsMulti('kasasi-pdt-khusus', $def['klas']);
-            $jmlPK = $countRowsMulti('pk-pdt-khusus',     $def['klas']);
-
-            $blocks[] = $buildT2("KASASI PERDATA KHUSUS {$label}", $jmlK,  $def['tarif_k'],  $def['staf']);
-            $blocks[] = $buildT2("PK PERDATA KHUSUS {$label}",     $jmlPK, $def['tarif_pk'], $def['staf']);
-        }
-
-        // ════════════════════════════════════════════════════════════════════
-        // C. PERDATA AGAMA (tanpa tim, staf = WASIYEM)
-        // ════════════════════════════════════════════════════════════════════
-        $jmlKasasiAg = $countRows('kasasi-pdt-agama');
-        $jmlPKAg     = $countRows('pk-pdt-agama');
-
-        $blocks[] = $buildT2('KASASI PERDATA AGAMA', $jmlKasasiAg, 'kasasi_500', 'WASIYEM', 'STAF PANITERA MUDA PERKARA');
-        $blocks[] = $buildT2('PK PERDATA AGAMA',     $jmlPKAg,     'pk_250',     'WASIYEM', 'STAF PANITERA MUDA PERKARA');
-
-        // ════════════════════════════════════════════════════════════════════
-        // D. TUN / P-HUM / P-KHS / PK TUN / PK PAJAK (staf = ARIF DONOVAN)
-        // ════════════════════════════════════════════════════════════════════
-        $tunDefs = [
-            ['title' => 'KASASI TUN', 'id' => 'kasasi-tun', 'class' => 'kasasi_500'],
-            ['title' => 'P-HUM',      'id' => 'phum',       'class' => 'phum'],
-            ['title' => 'P-KHS',      'id' => 'pkhs',       'class' => 'phum'],
-            ['title' => 'PK TUN',     'id' => 'pk-tun',     'class' => 'pk_250'],
-            ['title' => 'PK PAJAK',   'id' => 'pk-pajak',   'class' => 'pk_250'],
-        ];
-
-        foreach ($tunDefs as $def) {
-            $jml      = $countRows($def['id']);
-            $blocks[] = $buildT2($def['title'], $jml, $def['class'], 'ARIF DONOVAN, S.H.', 'STAF PANITERA MUDA PERKARA');
+        foreach ($jenisDefs as $def) {
+            $jml = isset($keyed[$def['id']]) ? count($keyed[$def['id']]['data'] ?? []) : 0;
+            // T2 block (12 baris, biaya konsisten dengan Rekap Keseluruhan 3)
+            $blocks[] = $buildT2($def['title'], $jml, $def['class'], $def['staf'], $def['stafLabel']);
         }
 
         return $blocks;
