@@ -1,4 +1,4 @@
-gi@extends('layout')
+@extends('layout')
 
 @section('title', 'Dashboard')
 
