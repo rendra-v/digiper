@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <title>Print – Rekap Keseluruhan 3</title>
     <style>
-        @page {
-            size: 215mm 330mm landscape;
-            margin: 8mm 10mm;
+        @@page {
+            margin: 0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -27,7 +26,14 @@
             align-items: center;
             justify-content: space-between;
         }
-        @media print { .no-print { display: none !important; } }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 10mm 12mm; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { break-inside: avoid; page-break-inside: avoid; }
+            .tot { break-inside: avoid; page-break-inside: avoid; }
+        }
 
         /* ── title ── */
         .doc-title {
@@ -45,22 +51,23 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 3px 4px;
-            font-size: 9px;
-            line-height: 1.35;
+            padding: 5px 7px;
+            font-size: 10px;
+            line-height: 1.4;
             overflow: hidden;
         }
         .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
         .hdr2 { background: #e9e9e9; font-weight: 700; text-align: center; }
         .tot  { background: #d9d9d9; font-weight: 700; }
-        .c  { text-align: center; }
-        .l  { text-align: left; }
-        .r  { text-align: right; }
-        .b  { font-weight: 700; }
-        .g  { background: #e8f5e9; }
-        .rd { background: #fce4e4; }
-        .or { background: #fff3e0; }
-        .em { background: #e8f5e9; font-weight: 700; }
+        .c    { text-align: center; }
+        .l    { text-align: left; }
+        .r    { text-align: right; }
+        .b    { font-weight: 700; }
+        .g    { background: #e8f5e9; }
+        .rd   { background: #fce4e4; }
+        .or   { background: #fff3e0; }
+        .em   { background: #e8f5e9; font-weight: 700; }
+        .nowrap { white-space: nowrap; text-align: center; }
 
         .notice { margin: 30px auto; max-width: 400px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
         .period { text-align: right; font-size: 9px; font-weight: 700; margin-top: 5px; }
@@ -71,6 +78,7 @@
     {{-- Toolbar --}}
     <div class="no-print">
         <span style="font-weight:600; color:#1f2937;">🖨️ Print – Rekap Keseluruhan 3 (Distribusi Honor Personil)</span>
+        <span style="font-size:11px;color:#6b7280;">📄 Ukuran kertas: <b>F4 Landscape</b></span>
         <div style="display:flex; gap:8px;">
             <button onclick="window.print()"
                 style="padding:6px 18px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
@@ -109,18 +117,18 @@
 
             <table>
             <colgroup>
-                <col style="width:1.5%">   {{-- NO --}}
-                <col style="width:10%">    {{-- JABATAN --}}
-                <col style="width:1.5%">   {{-- % --}}
+                <col style="width:2.5%">  {{-- NO --}}
+                <col style="width:10%">   {{-- JABATAN --}}
+                <col style="width:3.5%">  {{-- % --}}
                 @foreach($colChunk as $col)
-                <col style="width:4%">     {{-- BIAYA --}}
-                <col style="width:2.5%">   {{-- JML --}}
-                <col style="width:4.5%">   {{-- SUB TOTAL --}}
+                <col style="width:5%">    {{-- BIAYA --}}
+                <col style="width:3.5%">  {{-- JML --}}
+                <col style="width:5.5%">  {{-- SUB TOTAL --}}
                 @endforeach
-                <col style="width:5%">     {{-- BRUTO --}}
-                <col style="width:4%">     {{-- PPh 15% --}}
-                <col style="width:4%">     {{-- PPh 5% --}}
-                <col style="width:5.5%">   {{-- NETTO --}}
+                <col style="width:7%">    {{-- BRUTO --}}
+                <col style="width:6%">    {{-- PPh 15% --}}
+                <col style="width:6%">    {{-- PPh 5% --}}
+                <col style="width:7%">    {{-- NETTO --}}
             </colgroup>
 
             <thead>
@@ -152,17 +160,17 @@
             <tr>
                 <td class="c">{{ $i + 1 }}</td>
                 <td class="l">{{ $row['label'] }}</td>
-                <td class="c">{{ number_format($row['persen'] * 100, 1, ',', '.') }}%</td>
+                <td class="nowrap">{{ number_format($row['persen'] * 100, 1, ',', '.') }}%</td>
                 @foreach($colChunk as $col)
                     @php $cell = $row['cells'][$col['key']] ?? ['biaya'=>0,'jml'=>0,'sub_total'=>0] @endphp
                     <td class="r">{{ $cell['biaya'] > 0 ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
                     <td class="r">{{ $cell['jml'] > 0 ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $cell['sub_total'] > 0 ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
+                    <td class="r nowrap">{{ $cell['sub_total'] > 0 ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
                 @endforeach
-                <td class="r b g">{{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}</td>
-                <td class="r rd">{{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                <td class="r or">{{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                <td class="r b em">{{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}</td>
+                <td class="r b g nowrap">{{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}</td>
+                <td class="r rd nowrap">{{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                <td class="r or nowrap">{{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                <td class="r b em nowrap">{{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}</td>
             </tr>
             @endforeach
 
@@ -172,15 +180,15 @@
                 @foreach($colChunk as $col)
                 <td class="c" style="color:#aaa">-</td>
                 <td class="c" style="color:#aaa">-</td>
-                <td class="r b">
+                <td class="r b nowrap">
                     {{ isset($col_grand_total[$col['key']]) && $col_grand_total[$col['key']] > 0
                        ? number_format($col_grand_total[$col['key']], 0, ',', '.') : '-' }}
                 </td>
                 @endforeach
-                <td class="r b g">{{ $grand_bruto > 0 ? number_format($grand_bruto, 0, ',', '.') : '-' }}</td>
-                <td class="r b rd">{{ $grand_pph15 > 0 ? number_format($grand_pph15, 0, ',', '.') : '-' }}</td>
-                <td class="r b or">{{ $grand_pph5 > 0 ? number_format($grand_pph5, 0, ',', '.') : '-' }}</td>
-                <td class="r b em">{{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}</td>
+                <td class="r b g nowrap">{{ $grand_bruto > 0 ? number_format($grand_bruto, 0, ',', '.') : '-' }}</td>
+                <td class="r b rd nowrap">{{ $grand_pph15 > 0 ? number_format($grand_pph15, 0, ',', '.') : '-' }}</td>
+                <td class="r b or nowrap">{{ $grand_pph5 > 0 ? number_format($grand_pph5, 0, ',', '.') : '-' }}</td>
+                <td class="r b em nowrap">{{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
             </table>

@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <title>Print – Rekap Keseluruhan 2</title>
     <style>
-        @page {
-            size: 215mm 330mm landscape;
-            margin: 8mm 10mm;
+        @@page {
+            margin: 0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -27,7 +26,14 @@
             align-items: center;
             justify-content: space-between;
         }
-        @media print { .no-print { display: none !important; } }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 10mm 12mm; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { break-inside: avoid; page-break-inside: avoid; }
+            .tot { break-inside: avoid; page-break-inside: avoid; }
+        }
 
         /* ── title ── */
         .doc-title {
@@ -45,20 +51,21 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 3px 4px;
-            font-size: 9px;
-            line-height: 1.35;
+            padding: 5px 7px;
+            font-size: 10px;
+            line-height: 1.4;
             overflow: hidden;
         }
         .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
         .hdr2 { background: #e9e9e9; font-weight: 700; text-align: center; }
         .sec  { background: #f0f0f0; font-weight: 700; }
         .tot  { background: #d9d9d9; font-weight: 700; }
-        .c  { text-align: center; }
-        .l  { text-align: left; }
-        .r  { text-align: right; }
-        .b  { font-weight: 700; }
+        .c    { text-align: center; }
+        .l    { text-align: left; }
+        .r    { text-align: right; }
+        .b    { font-weight: 700; }
         .muted { color: #aaa; text-align: center; }
+        .nowrap { white-space: nowrap; text-align: center; }
 
         /* notice */
         .notice {
@@ -84,6 +91,7 @@
     {{-- Toolbar (screen only) --}}
     <div class="no-print">
         <span style="font-weight:600; color:#1f2937;">🖨️ Print – Rekap Keseluruhan 2 (Distribusi Biaya)</span>
+        <span style="font-size:11px;color:#6b7280;">📄 Ukuran kertas: <b>F4 Landscape</b></span>
         <div style="display:flex; gap:8px;">
             <button onclick="window.print()"
                 style="padding:6px 18px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
@@ -102,21 +110,15 @@
         <div class="notice">Belum ada data. Silakan upload file Excel terlebih dahulu.</div>
     @else
 
-        <div class="doc-title">
-            <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
-            @if($recapDate)
-            <div class="t2">{{ strtoupper($recapDate) }}</div>
-            @endif
-        </div>
 
         @php
-            $colW_no    = '2.5%';
-            $colW_label = '10%';
-            $colW_pct   = '2%';
-            $colW_biaya = '4%';
-            $colW_jml   = '3%';
-            $colW_sub   = '5%';
-            $colW_total = '6%';
+            $colW_no    = '3%';
+            $colW_label = '11%';
+            $colW_pct   = '4%';
+            $colW_biaya = '5.5%';
+            $colW_jml   = '4%';
+            $colW_sub   = '6%';
+            $colW_total = '7%';
 
             // Split kolom jadi 2 halaman
             $half = (int) ceil(count($columns) / 2);
@@ -195,7 +197,7 @@
                 <tr>
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
-                    <td class="c">{{ $row['persen'] }}</td>
+                    <td class="nowrap">{{ $row['persen'] }}</td>
                     @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                         <td class="muted">-</td>
@@ -209,7 +211,7 @@
                 <tr>
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
-                    <td class="c">{{ $row['persen'] }}</td>
+                    <td class="nowrap">{{ $row['persen'] }}</td>
                     @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                         <td class="r">{{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
@@ -224,7 +226,7 @@
             {{-- Total row --}}
             <tr class="tot">
                 <td colspan="2" class="c b"></td>
-                <td class="c b">100%</td>
+                <td class="nowrap b">100%</td>
                 @foreach($colChunk as $col)
                 <td class="r b">{{ number_format($col['base_rate'], 0, ',', '.') }}</td>
                 <td class="muted">-</td>
@@ -241,9 +243,6 @@
         </div>{{-- end chunk div --}}
         @endforeach {{-- colChunks --}}
 
-        @if($recapDate)
-        <div class="period">{{ $recapDate }}</div>
-        @endif
 
     @endif
 </body>

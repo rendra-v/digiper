@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print – Rekap Keseluruhan</title>
     <style>
-        @page {
-            size: 215mm 330mm landscape;
-            margin: 8mm;
+        @@page {
+            margin: 0;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,6 +32,12 @@
 
         @media print {
             .no-print { display: none !important; }
+            body { padding: 10mm 12mm; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { break-inside: avoid; page-break-inside: avoid; }
+            .recap-table .subtot,
+            .recap-table .gtot { break-inside: avoid; page-break-inside: avoid; }
         }
 
         /* ── Title ─── */
@@ -54,11 +59,11 @@
         .recap-table td,
         .recap-table th {
             border: 0.8px solid #555;
-            padding: 3px 4px;
+            padding: 5px 7px;
             vertical-align: middle;
             word-break: break-word;
-            font-size: 9px;
-            line-height: 1.3;
+            font-size: 10px;
+            line-height: 1.4;
         }
 
         /* Header rows */
@@ -66,7 +71,7 @@
             background: #cce5ff;
             font-weight: 700;
             text-align: center;
-            font-size: 6.5px;
+            font-size: 9px;
             text-transform: uppercase;
         }
 
@@ -86,13 +91,13 @@
         .b { font-weight: 700; }
 
         /* ── Signature ─── */
-        .sig-wrap { margin-top: 7px; }
+        .sig-wrap { margin-top: 5px; }
 
         .sig-date {
             text-align: right;
             font-size: 8px;
             font-weight: 700;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .sig-row {
@@ -111,18 +116,18 @@
         .sig-col.right  { align-items: flex-end;    text-align: right; }
 
         .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
-        .sig-space  { height: 60px; }
+        .sig-space  { height: 40px; }
         .sig-name   { font-weight: 700; text-decoration: underline; font-size: 11px; }
 
         .sig-bottom {
-            margin-top: 7px;
+            margin-top: 4px;
             text-align: center;
             font-size: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .sig-bottom .sig-name { margin-top: 30px; }
+        .sig-bottom .sig-name { margin-top: 18px; }
 
         /* ── Error ─── */
         .notice {
@@ -141,6 +146,7 @@
     {{-- Toolbar (screen only) --}}
     <div class="no-print">
         <span style="font-weight:600; color:#1f2937;">🖨️ Preview – Rekap Keseluruhan</span>
+        <span style="font-size:11px;color:#6b7280;">📄 Ukuran kertas: <b>F4 Landscape</b></span>
         <div style="display:flex; gap:10px;">
             <button onclick="window.print()"
                     style="padding:7px 22px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">

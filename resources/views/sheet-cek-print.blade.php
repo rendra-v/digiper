@@ -69,7 +69,7 @@
 
         /* ── Paper ─────────────────────────────────────────────────────── */
         .page {
-            width: 297mm; /* landscape A4 width for screen preview */
+            width: 330mm; /* F4 landscape width for screen preview */
             background: #fff;
             box-shadow: 0 4px 32px rgba(0,0,0,.18);
             border-radius: 3px;
@@ -95,7 +95,7 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 3px 4px;
+            padding: 5px 7px;
             vertical-align: middle;
             word-wrap: break-word;
         }
@@ -128,12 +128,12 @@
         .ttd-right  { text-align: right; }
 
         /* ── PRINT ──────────────────────────────────────────────────────── */
-        @page {
-            size: 330mm 215.9mm;
-            margin: 8mm 10mm;
+        @@page {
+            margin: 0;
         }
         @media print {
-            html, body { background: #fff; font-size: 11pt; }
+            html { background: #fff; }
+            body { background: #fff; font-size: 9.5pt; padding: 10mm 12mm; }
             .action-bar { display: none !important; }
             .pages { margin-top: 0; padding: 0; background: none; }
             .page {
@@ -142,9 +142,14 @@
                 border-radius: 0;
                 padding: 0;
             }
-            table { font-size: 8.5pt; }
-            thead th, tbody td { padding: 2px 4px; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            table { font-size: 7pt; }
+            thead th, tbody td { padding: 3px 4px; }
+            tbody tr { break-inside: avoid; page-break-inside: avoid; }
             .td-right { white-space: nowrap; }
+            .footer-wrap { break-inside: avoid; page-break-inside: avoid; }
+            .ttd-grid { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -161,7 +166,7 @@
         </svg>
         Cetak Sheet Cek — Rekap Penyerahan Honorarium
     </div>
-    <span class="hint">A4 Landscape · Gunakan "Save as PDF" di dialog cetak browser</span>
+    <span class="hint">F4 Landscape · Ukuran kertas diatur otomatis</span>
     <div class="btn-group">
         <a href="{{ route('sheet-cek') }}" class="btn btn-back">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

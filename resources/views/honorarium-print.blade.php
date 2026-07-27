@@ -73,11 +73,11 @@
         /* ── Paper page (screen preview) ─────────────────────── */
         .page {
             width: 330mm;
-            min-height: 215.9mm;
+            min-height: 215mm;
             background: #fff;
             box-shadow: 0 4px 32px rgba(0,0,0,.18), 0 1px 6px rgba(0,0,0,.08);
             border-radius: 3px;
-            padding: 12mm 14mm 10mm;
+            padding: 10mm 15mm 10mm;
             position: relative;
         }
 
@@ -108,7 +108,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11pt;
+            font-size: 9pt;
             font-family: Arial, Helvetica, sans-serif;
             table-layout: auto;
             margin-top: 6px;
@@ -118,25 +118,25 @@
         }
         thead th {
             border: 1px solid #000;
-            padding: 5px 6px;
+            padding: 5px 7px;
             font-weight: 700;
             text-align: center;
-            font-size: 11pt;
+            font-size: 9pt;
         }
         tbody td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 5px 7px;
             vertical-align: middle;
-            font-size: 11pt;
+            font-size: 9pt;
         }
         tbody tr:nth-child(even) { background: #f5f5f5; }
 
-        .td-no    { text-align: center; width: 30px;  white-space: nowrap; }
-        .td-nama  { text-align: left;   min-width: 140px; }
-        .td-jab   { text-align: left;   min-width: 160px; }
-        .td-num   { text-align: right;  white-space: nowrap; min-width: 80px; }
-        .td-count { text-align: center; white-space: nowrap; min-width: 70px; }
-        .td-ttd   { text-align: center; min-width: 80px; }
+        .td-no    { text-align: center; width: 24px;  white-space: nowrap; }
+        .td-nama  { text-align: left;   min-width: 110px; }
+        .td-jab   { text-align: left;   min-width: 120px; }
+        .td-num   { text-align: right;  white-space: nowrap; min-width: 60px; }
+        .td-count { text-align: center; white-space: nowrap; min-width: 50px; }
+        .td-ttd   { text-align: center; min-width: 60px; }
 
         tr.row-total {
             background: #d9d9d9 !important;
@@ -189,16 +189,19 @@
         /* ══════════════════════════════════════════════════════
            PRINT STYLES — bersih hitam-putih, persis seperti contoh
         ══════════════════════════════════════════════════════ */
-        @page {
-            size: 215mm 330mm landscape;
-            margin: 10mm 12mm 10mm 12mm;
+        @@page {
+            margin: 0;
         }
         @media print {
-            html, body {
+            html {
+                background: #fff;
+            }
+            body {
                 background: #fff;
                 font-size: 11pt;
                 font-family: Arial, Helvetica, sans-serif;
                 color: #000;
+                padding: 10mm 12mm;
             }
             .action-bar { display: none !important; }
             .pages { margin-top: 0; padding: 0; gap: 0; background: none; }
@@ -215,28 +218,31 @@
             .page:last-child { page-break-after: avoid; break-after: avoid; }
 
             /* Tabel hitam-putih bersih */
-            table { font-size: 11pt; width: 100% !important; table-layout: auto; }
-            thead tr { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            thead th { border: 1px solid #000; padding: 4px 5px; font-weight: 700; }
-            tbody td { border: 1px solid #000; padding: 3px 5px; }
-            tbody tr:nth-child(even) { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            tr.row-total { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
+            table { font-size: 8.5pt; width: 100% !important; table-layout: auto; }
             thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            thead tr { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            thead th { border: 1px solid #000; padding: 3px 5px; font-weight: 700; font-size: 8.5pt; }
+            tbody td { border: 1px solid #000; padding: 3px 5px; font-size: 8.5pt; }
+            tbody tr { break-inside: avoid; page-break-inside: avoid; }
+            tbody tr:nth-child(even) { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr.row-total { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; page-break-inside: avoid; }
+
             tbody tr:hover { background: inherit; }
 
             /* Judul */
+            .doc-title-wrap { break-inside: avoid; page-break-inside: avoid; }
             .doc-title-wrap .title-main,
             .doc-title-wrap .title-sub,
             .doc-title-wrap .title-info {
-                font-size: 11pt;
+                font-size: 9.5pt;
             }
 
             /* Footer */
-            .footer-wrap { margin-top: 10px; }
-            .footer-date { font-size: 11pt; }
-            .ttd-grid { font-size: 11pt; }
-            .ttd-space { height: 46px; }
+            .footer-wrap { margin-top: 8px; break-inside: avoid; page-break-inside: avoid; }
+            .footer-date { font-size: 9.5pt; }
+            .ttd-grid { font-size: 9.5pt; }
+            .ttd-space { height: 40px; }
         }
     </style>
 </head>
@@ -256,7 +262,7 @@
             <span style="font-weight:400;opacity:.7;font-size:10pt">— {{ $fileName }}</span>
         @endif
     </div>
-    <span class="hint">Pratinjau dokumen siap cetak &middot; Gunakan PDF printer untuk simpan sebagai PDF</span>
+    <span class="hint">Pratinjau dokumen siap cetak &middot; Ukuran kertas: <b>F4 Landscape</b></span>
     <div class="btn-group">
         <a href="{{ route('honorarium') }}" class="btn btn-back">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

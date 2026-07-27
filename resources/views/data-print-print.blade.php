@@ -5,8 +5,7 @@
     <title>Cetak Data Print</title>
     <style>
         @page {
-            size: landscape;
-            margin: 8mm 10mm;
+            margin: 0;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -27,15 +26,6 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-        @media print { .no-print { display: none !important; } }
-
-        /* ── Per-kategori section ── */
-        .cat-section {
-            page-break-after: always;
-        }
-        .cat-section:last-child {
-            page-break-after: avoid;
         }
 
         /* ── Judul ── */
@@ -62,28 +52,49 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 3px 4px;
+            padding: 4px 6px;
             font-size: 9px;
             line-height: 1.35;
             vertical-align: middle;
         }
-        thead tr { background: #d9d9d9; }
+        thead tr { background: #d9d9d9; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         thead th { font-weight: 700; text-align: center; }
         .td-no  { text-align: center; width: 22px; }
         .td-l   { text-align: left; }
         .td-c   { text-align: center; }
         .td-r   { text-align: right; }
 
-        /* ── Page break untuk tabel banyak baris ── */
+        /* ── Page break rules ── */
         .page-group {
+            break-after: page;
             page-break-after: always;
         }
-        .page-group:last-child { page-break-after: avoid; }
+        .page-group:last-child {
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+        .cat-section {
+            break-after: page;
+            page-break-after: always;
+        }
+        .cat-section:last-child {
+            break-after: avoid;
+            page-break-after: avoid;
+        }
 
         /* ── Notice ── */
         .notice {
             margin: 30px auto; max-width: 400px; padding: 12px;
             border: 1px solid #ddd; border-radius: 6px; font-size: 12px;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 10mm 12mm; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { break-inside: avoid; page-break-inside: avoid; }
+            .cat-title, .cat-subtitle { break-after: avoid; page-break-after: avoid; }
         }
     </style>
 </head>

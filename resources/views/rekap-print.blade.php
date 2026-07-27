@@ -6,9 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Rekap Keseluruhan</title>
     <style>
-        @page {
-            size: 215mm 330mm landscape;
-            margin: 7mm;
+        @@page {
+            margin: 0;
         }
 
         * {
@@ -55,14 +54,14 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            font-size: 7px;
-            line-height: 1.02;
+            font-size: 9px;
+            line-height: 1.35;
         }
 
         .report-table td,
         .report-table th {
             border: 1px solid #444;
-            padding: 1px 2px;
+            padding: 4px 6px;
             vertical-align: middle;
             word-break: break-word;
         }
@@ -174,6 +173,12 @@
             .no-print {
                 display: none !important;
             }
+            body { padding: 10mm 12mm; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { break-inside: avoid; page-break-inside: avoid; }
+            .signature-area { break-inside: avoid; page-break-inside: avoid; }
+            .signature-centered { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
 </head>
