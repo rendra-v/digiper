@@ -180,9 +180,15 @@
                                                     <td class="px-4 py-2.5 text-xs text-center text-neutral-500 dark:text-neutral-400 font-medium w-10">
                                                         {{ $displayNum }}</td>
                                                     @foreach ($visibleColumns as $colName)
+                                                        @php
+                                                            $cellVal = (string)($row[$colName] ?? '');
+                                                            if (str_starts_with($cellVal, '#VALUE') || str_starts_with($cellVal, '#REF') || str_starts_with($cellVal, '#N/A') || str_starts_with($cellVal, '#')) {
+                                                                $cellVal = '-';
+                                                            }
+                                                        @endphp
                                                         <td class="px-4 py-2.5 text-xs text-neutral-900 dark:text-neutral-100 max-w-[220px] truncate"
-                                                            title="{{ $row[$colName] ?? '' }}">
-                                                            {{ $row[$colName] !== null && $row[$colName] !== '' ? $row[$colName] : '-' }}
+                                                            title="{{ str_starts_with((string)($row[$colName] ?? ''), '#VALUE') ? '' : ($row[$colName] ?? '') }}">
+                                                            {{ $cellVal !== null && $cellVal !== '' ? $cellVal : '-' }}
                                                         </td>
                                                     @endforeach
                                                 </tr>

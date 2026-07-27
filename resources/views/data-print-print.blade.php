@@ -186,7 +186,10 @@
                         <td class="td-no">{{ ($ci * $rowsPerPage) + $rowNum + 1 }}</td>
                         @foreach($visibleColumns as $colName)
                             @php
-                                $val = $row[$colName] ?? '';
+                                $val = (string)($row[$colName] ?? '');
+                                if (str_starts_with($val, '#VALUE') || str_starts_with($val, '#REF') || str_starts_with($val, '#N/A') || str_starts_with($val, '#')) {
+                                    $val = '-';
+                                }
                                 $isDate = str_contains(strtolower($colName), 'tanggal') || str_contains(strtolower($colName), 'putus');
                                 $cls = 'td-l';
                                 if (is_numeric(str_replace([',', '.'], '', $val)) && !$isDate && $val !== '') $cls = 'td-r';

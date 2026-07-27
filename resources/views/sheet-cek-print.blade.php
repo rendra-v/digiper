@@ -208,30 +208,32 @@
                 <th>PERKARA</th>
                 <th>JENIS PERKARA</th>
                 <th>JUMLAH</th>
-                <th>BIAYA</th>
-                <th></th>
-                <th></th>
+                <th>BIAYA PERKARA</th>
+                <th>JUMLAH BIAYA</th>
+                <th>KETERANGAN</th>
                 <th>TIM</th>
                 <th>5 MAJELIS</th>
                 <th>KEPANITERAAN</th>
                 <th>PEMILAH</th>
-                <th>Total</th>
-                <th>PAJAK</th>
-                <th>TOTAL</th>
-                <th>TOTAL</th>
-                <th>TOTAL</th>
+                <th>TOTAL BRUTO</th>
+                <th>POT. PAJAK</th>
+                <th>TOTAL NETTO</th>
+                <th>SUBTOTAL PERKARA</th>
+                <th>TOTAL KELOMPOK</th>
             </tr>
         </thead>
         <tbody>
             @foreach($groups as $group)
                 @php
                     $groupTotal = 0;
+                    $totalGroupRows = 0;
                     foreach($group['sub_groups'] as $sg) {
                         $p15 = round($sg['total_m_15'] * 0.15);
                         $b15 = $sg['total_m_15'] - $p15;
                         $p5  = round($sg['total_m_5'] * 0.05);
                         $b5  = $sg['total_m_5'] - $p5;
                         $groupTotal += ($b15 + $b5);
+                        $totalGroupRows += ($sg['label'] ? 4 : 3);
                     }
                 @endphp
                 @foreach($group['sub_groups'] as $index => $sg)
@@ -241,33 +243,54 @@
                         $pajak5    = round($sg['total_m_5'] * 0.05);
                         $bersih5   = $sg['total_m_5'] - $pajak5;
                         $subGroupTotal = $bersih15 + $bersih5;
+
+                        $totBiaya   = $sg['total_15'] + $sg['total_5'];
+                        $totTim     = $sg['tim_15'] + $sg['tim_5'];
+                        $totMajelis = $sg['majelis5_15'] + $sg['majelis5_5'];
+                        $totKepan   = $sg['kepaniteraan_15'] + $sg['kepaniteraan_5'];
+                        $totPemilah = $sg['pemilah_15'] + $sg['pemilah_5'];
+                        $totBruto   = $sg['total_m_15'] + $sg['total_m_5'];
+                        $totPajak   = $pajak15 + $pajak5;
                     @endphp
 
                     @if($sg['label'])
-                    <tr style="background:#d9d9d9;font-weight:bold;">
-                        <td class="td-center">{{ $index === 0 ? $group['no'] : '' }}</td>
-                        <td class="td-left">{{ $sg['label'] }}</td>
-                        <td class="td-left">{{ $sg['jenis'] }}</td>
-                        <td colspan="13"></td>
+                    <tr style="background:#e9e9e9;font-weight:bold;">
+                        @if($index === 0)
+                        <td class="td-center" rowspan="{{ $totalGroupRows }}">{{ $group['no'] }}</td>
+                        <td class="td-left" rowspan="{{ $totalGroupRows }}">{{ $group['perkara'] }}</td>
+                        @endif
+                        <td class="td-left" colspan="13" style="background:#d9d9d9;">{{ $sg['label'] }} — {{ $sg['jenis'] }}</td>
+                        @if($index === 0)
+                        <td class="td-right" rowspan="{{ $totalGroupRows }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
+                        @endif
                     </tr>
                     @endif
 
+                    {{-- Baris Total Sub-Group --}}
                     <tr style="background:#f3f4f6;font-weight:bold;">
-                        <td class="td-center">{{ $index === 0 && !$sg['label'] ? $group['no'] : '' }}</td>
-                        <td class="td-left">{{ $index === 0 && !$sg['label'] ? $group['perkara'] : '' }}</td>
-                        <td class="td-left">{{ $sg['label'] ? '' : $sg['jenis'] }}</td>
-                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                        @if($index === 0 && !$sg['label'])
+                        <td class="td-center" rowspan="{{ $totalGroupRows }}">{{ $group['no'] }}</td>
+                        <td class="td-left" rowspan="{{ $totalGroupRows }}">{{ $group['perkara'] }}</td>
+                        @endif
+                        <td class="td-left" rowspan="3">{{ $sg['jenis'] }}</td>
+                        <td class="td-right" rowspan="3">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['biaya_total'] > 0 ? number_format($sg['biaya_total'], 0, ',', '.') : '-' }}</td>
-                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td class="td-right">{{ $totBiaya > 0 ? number_format($totBiaya, 0, ',', '.') : '-' }}</td>
+                        <td class="td-center" style="background:#d9d9d9;">TOTAL</td>
+                        <td class="td-right">{{ $totTim > 0 ? number_format($totTim, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $totMajelis > 0 ? number_format($totMajelis, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $totKepan > 0 ? number_format($totKepan, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $totPemilah > 0 ? number_format($totPemilah, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $totBruto > 0 ? number_format($totBruto, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $totPajak > 0 ? number_format($totPajak, 0, ',', '.') : '-' }}</td>
+                        <td class="td-right">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
                         <td class="td-right" rowspan="3">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
-                        @if($index === 0)
-                        <td class="td-right" rowspan="{{ count($group['sub_groups']) * 3 }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
+                        @if($index === 0 && !$sg['label'])
+                        <td class="td-right" rowspan="{{ $totalGroupRows }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
                         @endif
                     </tr>
                     {{-- Baris PPH 15% --}}
                     <tr>
-                        <td colspan="3"></td>
-                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['biaya_15'] > 0 ? number_format($sg['biaya_15'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['total_15'] > 0 ? number_format($sg['total_15'], 0, ',', '.') : '-' }}</td>
                         <td class="td-center" style="background:#e9e9e9;font-weight:bold;">PAJAK 15 %</td>
@@ -281,8 +304,6 @@
                     </tr>
                     {{-- Baris PPH 5% --}}
                     <tr>
-                        <td colspan="3"></td>
-                        <td class="td-right">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['biaya_5'] > 0 ? number_format($sg['biaya_5'], 0, ',', '.') : '-' }}</td>
                         <td class="td-right">{{ $sg['total_5'] > 0 ? number_format($sg['total_5'], 0, ',', '.') : '-' }}</td>
                         <td class="td-center" style="background:#e9e9e9;font-weight:bold;">PAJAK 5 %</td>

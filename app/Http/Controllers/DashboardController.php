@@ -1816,7 +1816,7 @@ class DashboardController extends Controller
     private function computeTimData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v11');
+            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v14');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) {
                 return $cached;
