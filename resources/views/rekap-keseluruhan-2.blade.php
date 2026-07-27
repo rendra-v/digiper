@@ -121,7 +121,7 @@
                             @foreach($columns as $col)
                                 @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                                 <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">-</td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}
                                 </td>
                                 <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-400">-</td>
@@ -136,17 +136,17 @@
                             <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-600 dark:text-neutral-400">{{ $row['persen'] }}</td>
                             @foreach($columns as $col)
                                 @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}
                                 </td>
                             @endforeach
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-right font-medium text-neutral-800 dark:text-neutral-200">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1 text-center font-medium text-neutral-800 dark:text-neutral-200">
                                 {{ $rowTotal > 0 ? number_format($rowTotal, 0, ',', '.') : '-' }}
                             </td>
                         </tr>
@@ -158,13 +158,13 @@
                         <td colspan="2" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-left text-neutral-900 dark:text-neutral-100 uppercase tracking-wide text-[10px]"></td>
                         <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-900 dark:text-neutral-100">100%</td>
                         @foreach($columns as $col)
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-900 dark:text-neutral-100">
                             {{ number_format($col['base_rate'], 0, ',', '.') }}
                         </td>
                         <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
                         <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
                         @endforeach
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-emerald-700 dark:text-emerald-400">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-emerald-700 dark:text-emerald-400">
                             {{ $grand_total > 0 ? number_format($grand_total, 0, ',', '.') : '-' }}
                         </td>
                     </tr>

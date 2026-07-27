@@ -1193,7 +1193,7 @@ class DashboardController extends Controller
             }
 
             // Cache session
-            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v2');
+            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v3');
             $cached   = Session::get($cacheKey);
 
             if ($cached !== null) {
@@ -1279,7 +1279,7 @@ class DashboardController extends Controller
             }
 
             // Reuse cache dari rekapKeseluruhan
-            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v2');
+            $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v3');
             $cached   = Session::get($cacheKey);
 
             if ($cached !== null) {

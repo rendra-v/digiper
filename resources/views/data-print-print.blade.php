@@ -129,6 +129,9 @@
         $excludedColumns = [
             'TANGGAL PERKARA MASUK', 'TANGGAL PERKARA MASUK 2', 'TANGGAL PERKARA MASUK 3',
             'No', 'no', 'NO',
+            'U', 'V', 'QTY', 'P1', 'P2', 'P3', 'P4', 'P5', 'PP', 'cek bulan', 'cek umur', 
+            'panmud', 'Jenis Perkara', 'Jenis Permohonan', 'klasifikasi', 'Klasifikasi', 'MJELIS', 
+            'AK', 'AL', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AJ',
         ];
         $rowsPerPage = 60; // baris per halaman
     @endphp
@@ -172,12 +175,8 @@
         <div class="{{ ($loop->last && $loop->parent->last) ? 'cat-section' : 'page-group' }}">
 
             {{-- Judul --}}
-            <div class="cat-title">
-                DATA PRINT — {{ strtoupper($catKey) }}
-            </div>
             <div class="cat-subtitle">
                 {{ $fileName ?? '' }}
-                @if($totalChunks > 1) — Halaman {{ $ci + 1 }} dari {{ $totalChunks }} @endif
                 ({{ count($validRows) }} data)
             </div>
 
@@ -201,10 +200,15 @@
                                 if (str_starts_with($val, '#VALUE') || str_starts_with($val, '#REF') || str_starts_with($val, '#N/A') || str_starts_with($val, '#')) {
                                     $val = '-';
                                 }
-                                $isDate = str_contains(strtolower($colName), 'tanggal') || str_contains(strtolower($colName), 'putus');
-                                $cls = 'td-l';
-                                if (is_numeric(str_replace([',', '.'], '', $val)) && !$isDate && $val !== '') $cls = 'td-r';
-                                if ($isDate) $cls = 'td-c';
+                                $lowerCol = strtolower($colName);
+                                $isName = preg_match('/nama p[1-5]/', $lowerCol) || 
+                                          str_contains($lowerCol, 'nama panitera pengganti') || 
+                                          str_contains($lowerCol, 'hakim pemilah');
+                                
+                                $cls = 'td-c';
+                                if ($isName) {
+                                    $cls = 'td-l';
+                                }
                             @endphp
                             <td class="{{ $cls }}">{{ $val !== null && $val !== '' ? $val : '-' }}</td>
                         @endforeach

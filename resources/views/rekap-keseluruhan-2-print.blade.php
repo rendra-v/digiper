@@ -131,9 +131,7 @@
 
         <div class="doc-title">
             <div class="t1">REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK</div>
-            @if($recapDate)
-            <div class="t2">{{ strtoupper($recapDate) }} &mdash; Halaman {{ $chunkIdx + 1 }} dari {{ count($colChunks) }}</div>
-            @endif
+
         </div>
 
         <table>
@@ -197,11 +195,11 @@
                 <tr>
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
-                    <td class="nowrap">{{ $row['persen'] }}</td>
+                    <td class="c nowrap">{{ $row['persen'] }}</td>
                     @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
                         <td class="muted">-</td>
-                        <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
                         <td class="muted">-</td>
                     @endforeach
                     <td class="muted">-</td>
@@ -211,14 +209,14 @@
                 <tr>
                     <td class="c">{{ $row['no'] }}</td>
                     <td class="l">{{ $row['label'] }}</td>
-                    <td class="nowrap">{{ $row['persen'] }}</td>
+                    <td class="c nowrap">{{ $row['persen'] }}</td>
                     @foreach($colChunk as $col)
                         @php $cell = $cells[$row['key']][$col['key']] ?? null @endphp
-                        <td class="r">{{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ ($cell && $cell['biaya'] > 0) ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
                     @endforeach
-                    <td class="r b">{{ $chunkRowTotal > 0 ? number_format($chunkRowTotal, 0, ',', '.') : '-' }}</td>
+                    <td class="c b">{{ $chunkRowTotal > 0 ? number_format($chunkRowTotal, 0, ',', '.') : '-' }}</td>
                 </tr>
                 @endif
             @endforeach
@@ -226,16 +224,16 @@
             {{-- Total row --}}
             <tr class="tot">
                 <td colspan="2" class="c b"></td>
-                <td class="nowrap b">100%</td>
+                <td class="c nowrap b">100%</td>
                 @foreach($colChunk as $col)
-                <td class="r b">{{ number_format($col['base_rate'], 0, ',', '.') }}</td>
+                <td class="c b">{{ number_format($col['base_rate'], 0, ',', '.') }}</td>
                 <td class="muted">-</td>
                 <td class="muted">-</td>
                 @endforeach
                 @php
                     $chunkGrandTotal = array_sum(array_map(fn($c) => $row_totals[$c['key']] ?? 0, $colChunk));
                 @endphp
-                <td class="r b">{{ $chunkGrandTotal > 0 ? number_format($chunkGrandTotal, 0, ',', '.') : '-' }}</td>
+                <td class="c b">{{ $chunkGrandTotal > 0 ? number_format($chunkGrandTotal, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
         </table>

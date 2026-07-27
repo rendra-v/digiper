@@ -1315,12 +1315,12 @@ public function countHakimFromRows(array $rows): int
 
         // === I. PERDATA UMUM ===
         $rows1 = [
-            $makeRow('Perdata Umum',
+            $makeRow('Perdata',
                 $countRows('kasasi-pdt-umum'), $biaya['PERDATA']['kasasi'],
                 $countRows('pk-pdt-umum'),     $biaya['PERDATA']['pk']
             ),
         ];
-        $groups[] = ['no' => 'I', 'label' => 'PERDATA UMUM', 'rows' => $rows1] + $groupTotals($rows1);
+        $groups[] = ['no' => 'I', 'label' => 'PERDATA', 'rows' => $rows1] + $groupTotals($rows1);
 
         // === II. PERDATA KHUSUS ===
         // Setiap sub-klasifikasi punya biaya berbeda (500rb atau 5jt kasasi, 2.5jt atau 10jt PK)

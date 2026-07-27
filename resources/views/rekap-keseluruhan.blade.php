@@ -148,35 +148,35 @@
                                             {{ $group['no'] }}
                                         </td>
                                         <td rowspan="{{ $rowCount }}"
-                                            class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-left font-bold text-neutral-900 dark:text-neutral-100 align-middle bg-cyan-50 dark:bg-cyan-900/20">
+                                            class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center font-bold text-neutral-900 dark:text-neutral-100 align-middle bg-cyan-50 dark:bg-cyan-900/20">
                                             {{ $group['label'] }}
                                         </td>
                                     @endif
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-left text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['label'] }}
                                     </td>
                                     {{-- Kasasi --}}
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['kasasi_jumlah'] > 0 ? number_format($row['kasasi_jumlah'], 0, ',', '.') : '-' }}
                                     </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['kasasi_biaya'] > 0 ? number_format($row['kasasi_biaya'], 0, ',', '.') : '-' }}
                                     </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['kasasi_total'] > 0 ? number_format($row['kasasi_total'], 0, ',', '.') : '-' }}
                                     </td>
                                     {{-- PK --}}
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['pk_jumlah'] > 0 ? number_format($row['pk_jumlah'], 0, ',', '.') : '-' }}
                                     </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}
                                     </td>
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}
                                     </td>
                                     {{-- Grand Total per row --}}
-                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right text-neutral-800 dark:text-neutral-200">
+                                    <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">
                                         {{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}
                                     </td>
                                 </tr>
@@ -187,21 +187,21 @@
                                 <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-left text-neutral-900 dark:text-neutral-100">
                                     Total {{ $group['label'] }}
                                 </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
                                     {{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}
                                 </td>
                                 <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
                                     {{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
                                     {{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}
                                 </td>
                                 <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
                                     {{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-right text-neutral-900 dark:text-neutral-100">
+                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
                                     {{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}
                                 </td>
                             </tr>
@@ -213,21 +213,21 @@
                             <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-left text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">
                                 JUMLAH TOTAL KESELURUHAN
                             </td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}
                             </td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}
                             </td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}
                             </td>
                         </tr>
@@ -238,11 +238,19 @@
         </div>
 
         {{-- ══ Signature Area ══ --}}
-        @php $pejabat = config('tarif.pejabat'); @endphp
+        @php
+            $pejabat = config('tarif.pejabat');
+            $months = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $dateNow = 'Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y');
+        @endphp
         <div class="mt-12 mb-16">
             <div class="flex justify-end mb-8">
                 <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                    {{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}
+                    {{ $dateNow }}
                 </p>
             </div>
 

@@ -110,9 +110,7 @@
 
             <div class="doc-title">
                 <div class="t1">REKAPITULASI DISTRIBUSI HONOR/INSENTIF PERSONIL PENYELESAIAN PERKARA</div>
-                @if($recapDate)
-                <div class="t2">{{ strtoupper($recapDate) }} &mdash; Halaman {{ $chunkIdx + 1 }} dari {{ count($colChunks) }}</div>
-                @endif
+
             </div>
 
             <table>
@@ -160,17 +158,17 @@
             <tr>
                 <td class="c">{{ $i + 1 }}</td>
                 <td class="l">{{ $row['label'] }}</td>
-                <td class="nowrap">{{ number_format($row['persen'] * 100, 1, ',', '.') }}%</td>
+                <td class="c nowrap">{{ number_format($row['persen'] * 100, 1, ',', '.') }}%</td>
                 @foreach($colChunk as $col)
                     @php $cell = $row['cells'][$col['key']] ?? ['biaya'=>0,'jml'=>0,'sub_total'=>0] @endphp
-                    <td class="r">{{ $cell['biaya'] > 0 ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $cell['jml'] > 0 ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
-                    <td class="r nowrap">{{ $cell['sub_total'] > 0 ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $cell['biaya'] > 0 ? number_format($cell['biaya'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $cell['jml'] > 0 ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c nowrap">{{ $cell['sub_total'] > 0 ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
                 @endforeach
-                <td class="r b g nowrap">{{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}</td>
-                <td class="r rd nowrap">{{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
-                <td class="r or nowrap">{{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
-                <td class="r b em nowrap">{{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}</td>
+                <td class="c b g nowrap">{{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}</td>
+                <td class="c rd nowrap">{{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}</td>
+                <td class="c or nowrap">{{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}</td>
+                <td class="c b em nowrap">{{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}</td>
             </tr>
             @endforeach
 
@@ -180,15 +178,15 @@
                 @foreach($colChunk as $col)
                 <td class="c" style="color:#aaa">-</td>
                 <td class="c" style="color:#aaa">-</td>
-                <td class="r b nowrap">
+                <td class="c b nowrap">
                     {{ isset($col_grand_total[$col['key']]) && $col_grand_total[$col['key']] > 0
                        ? number_format($col_grand_total[$col['key']], 0, ',', '.') : '-' }}
                 </td>
                 @endforeach
-                <td class="r b g nowrap">{{ $grand_bruto > 0 ? number_format($grand_bruto, 0, ',', '.') : '-' }}</td>
-                <td class="r b rd nowrap">{{ $grand_pph15 > 0 ? number_format($grand_pph15, 0, ',', '.') : '-' }}</td>
-                <td class="r b or nowrap">{{ $grand_pph5 > 0 ? number_format($grand_pph5, 0, ',', '.') : '-' }}</td>
-                <td class="r b em nowrap">{{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}</td>
+                <td class="c b g nowrap">{{ $grand_bruto > 0 ? number_format($grand_bruto, 0, ',', '.') : '-' }}</td>
+                <td class="c b rd nowrap">{{ $grand_pph15 > 0 ? number_format($grand_pph15, 0, ',', '.') : '-' }}</td>
+                <td class="c b or nowrap">{{ $grand_pph5 > 0 ? number_format($grand_pph5, 0, ',', '.') : '-' }}</td>
+                <td class="c b em nowrap">{{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
             </table>
@@ -196,9 +194,7 @@
             </div>{{-- end chunk div --}}
             @endforeach {{-- colChunks --}}
 
-        @if($recapDate)
-        <div class="period">{{ $recapDate }}</div>
-        @endif
+
 
         <script>
             window.addEventListener('load', function () {

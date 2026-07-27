@@ -122,26 +122,26 @@
                             </td>
                             @foreach($columns as $col)
                                 @php $cell = $row['cells'][$col['key']] ?? ['biaya'=>0,'jml'=>0,'sub_total'=>0] @endphp
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ $cell['biaya'] > 0 ? number_format($cell['biaya'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ $cell['jml'] > 0 ? number_format($cell['jml'], 0, ',', '.') : '-' }}
                                 </td>
-                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-neutral-700 dark:text-neutral-300">
+                                <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center text-neutral-700 dark:text-neutral-300">
                                     {{ $cell['sub_total'] > 0 ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}
                                 </td>
                             @endforeach
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-medium text-green-800 dark:text-green-300 bg-green-50/40 dark:bg-green-900/10">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center font-medium text-green-800 dark:text-green-300 bg-green-50/40 dark:bg-green-900/10">
                                 {{ $row['bruto'] > 0 ? number_format($row['bruto'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-red-700 dark:text-red-400 bg-red-50/30 dark:bg-red-900/10">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center text-red-700 dark:text-red-400 bg-red-50/30 dark:bg-red-900/10">
                                 {{ $row['pph15'] > 0 ? number_format($row['pph15'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right text-orange-700 dark:text-orange-400 bg-orange-50/30 dark:bg-orange-900/10">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center text-orange-700 dark:text-orange-400 bg-orange-50/30 dark:bg-orange-900/10">
                                 {{ $row['pph5'] > 0 ? number_format($row['pph5'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-right font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50/40 dark:bg-emerald-900/10">
+                            <td class="border border-neutral-200 dark:border-neutral-700 px-1.5 py-1.5 text-center font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50/40 dark:bg-emerald-900/10">
                                 {{ $row['netto'] > 0 ? number_format($row['netto'], 0, ',', '.') : '-' }}
                             </td>
                         </tr>
@@ -153,21 +153,21 @@
                         @foreach($columns as $col)
                         <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
                         <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-neutral-500">-</td>
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center">
                             {{ isset($col_grand_total[$col['key']]) && $col_grand_total[$col['key']] > 0
                                ? number_format($col_grand_total[$col['key']], 0, ',', '.') : '-' }}
                         </td>
                         @endforeach
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-green-800 dark:text-green-300">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-green-800 dark:text-green-300">
                             {{ $grand_bruto > 0 ? number_format($grand_bruto, 0, ',', '.') : '-' }}
                         </td>
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-red-700 dark:text-red-400">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-red-700 dark:text-red-400">
                             {{ $grand_pph15 > 0 ? number_format($grand_pph15, 0, ',', '.') : '-' }}
                         </td>
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-orange-700 dark:text-orange-400">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-orange-700 dark:text-orange-400">
                             {{ $grand_pph5 > 0 ? number_format($grand_pph5, 0, ',', '.') : '-' }}
                         </td>
-                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-right text-emerald-700 dark:text-emerald-400">
+                        <td class="border border-neutral-300 dark:border-neutral-600 px-1.5 py-2 text-center text-emerald-700 dark:text-emerald-400">
                             {{ $grand_netto > 0 ? number_format($grand_netto, 0, ',', '.') : '-' }}
                         </td>
                     </tr>

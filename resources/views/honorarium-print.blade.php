@@ -133,8 +133,8 @@
 
         .td-no    { text-align: center; width: 24px;  white-space: nowrap; }
         .td-nama  { text-align: left;   min-width: 110px; }
-        .td-jab   { text-align: left;   min-width: 120px; }
-        .td-num   { text-align: right;  white-space: nowrap; min-width: 60px; }
+        .td-jab   { text-align: center; min-width: 120px; }
+        .td-num   { text-align: center; white-space: nowrap; min-width: 60px; }
         .td-count { text-align: center; white-space: nowrap; min-width: 50px; }
         .td-ttd   { text-align: center; min-width: 60px; }
 

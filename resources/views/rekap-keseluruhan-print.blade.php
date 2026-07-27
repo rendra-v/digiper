@@ -209,32 +209,32 @@
                         <tr>
                             @if($i === 0)
                                 <td rowspan="{{ $rowCount }}" class="c b cat">{{ $group['no'] }}</td>
-                                <td rowspan="{{ $rowCount }}" class="l b cat">{{ $group['label'] }}</td>
+                                <td rowspan="{{ $rowCount }}" class="c b cat">{{ $group['label'] }}</td>
                             @endif
-                            <td class="l">{{ $row['label'] }}</td>
+                            <td class="c">{{ $row['label'] }}</td>
                             {{-- Kasasi --}}
-                            <td class="r">{{ $row['kasasi_jumlah'] > 0 ? number_format($row['kasasi_jumlah'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $row['kasasi_biaya'] > 0 ? number_format($row['kasasi_biaya'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $row['kasasi_total'] > 0 ? number_format($row['kasasi_total'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['kasasi_jumlah'] > 0 ? number_format($row['kasasi_jumlah'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['kasasi_biaya'] > 0 ? number_format($row['kasasi_biaya'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['kasasi_total'] > 0 ? number_format($row['kasasi_total'], 0, ',', '.') : '-' }}</td>
                             {{-- PK --}}
-                            <td class="r">{{ $row['pk_jumlah'] > 0 ? number_format($row['pk_jumlah'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}</td>
-                            <td class="r">{{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['pk_jumlah'] > 0 ? number_format($row['pk_jumlah'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}</td>
                             {{-- Grand Total per row --}}
-                            <td class="r">{{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}</td>
+                            <td class="c">{{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}</td>
                         </tr>
                     @endforeach
 
                     {{-- Sub-total per kelompok --}}
                     <tr class="subtot">
                         <td colspan="3" class="l">Total {{ $group['label'] }}</td>
-                        <td class="r">{{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}</td>
                         <td class="c">—</td>
-                        <td class="r">{{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}</td>
                         <td class="c">—</td>
-                        <td class="r">{{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}</td>
-                        <td class="r">{{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}</td>
+                        <td class="c">{{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}</td>
                     </tr>
                 @endforeach
 
@@ -242,13 +242,13 @@
                 @if($final_total)
                 <tr class="gtot">
                     <td colspan="3" class="l">JUMLAH TOTAL KESELURUHAN</td>
-                    <td class="r">{{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}</td>
                     <td class="c">—</td>
-                    <td class="r">{{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}</td>
                     <td class="c">—</td>
-                    <td class="r">{{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}</td>
-                    <td class="r">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
                 </tr>
                 @endif
             </tbody>
@@ -258,7 +258,15 @@
         <div class="sig-wrap">
 
             {{-- Tanggal kanan --}}
-            <div class="sig-date">{{ $recapDate ?: 'Jakarta, 05 Maret 2026' }}</div>
+            @php
+                $months = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+                $dateNow = 'Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y');
+            @endphp
+            <div class="sig-date">{{ $dateNow }}</div>
 
             {{-- 3 kolom --}}
             <div class="sig-row">
