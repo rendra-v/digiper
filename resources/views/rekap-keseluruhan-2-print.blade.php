@@ -5,7 +5,7 @@
     <title>Print – Rekap Keseluruhan 2</title>
     <style>
         @page {
-            size: landscape;
+            size: 215mm 330mm landscape;
             margin: 8mm 10mm;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
