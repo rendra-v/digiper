@@ -1767,7 +1767,7 @@ class DashboardController extends Controller
     private function computeKepaniteraanData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v3');
+            $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v5');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) return $cached;
 

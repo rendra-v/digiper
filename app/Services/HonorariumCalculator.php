@@ -1573,8 +1573,8 @@ public function countHakimFromRows(array $rows): int
                     $makeRow(5,  'Dr. HERU PRAMONO, S.H., M.Hum.',                'PANITERA MAHKAMAH AGUNG',                                         $jml, $b['panitera_1'],  'pph15'),
                     $makeRow(6,  'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.',         'PANITERA MAHKAMAH AGUNG',                                         $jml, $b['panitera_2'],  'pph15'),
                     $makeRow(7,  'ENNID HASANUDDIN',                               'PANITERA MUDA PERKARA',                                           $jml, $b['panmud'],      'pph15'),
-                    $makeRow(8,  'HARIAWAN PURBUDI, SH., MH.',                    'TIM PENELAAH KELENGKAPAN/FORMALITAS BERKAS',                      $jml, $b['tim_penelaah'], 'pph15'),
-                    $makeRow(9,  $stafPanmud,                                      $stafLabel,                                                        $jml, $b['staf_panmud'], 'pph15'),
+                    $makeRow(8,  'HARIAWAN PURBUDI, SH., MH.',                    'TIM PENELAAH KELENGKAPAN/FORMALITAS BERKAS',                      $jml, $b['tim_penelaah'], 'pph5'),
+                    $makeRow(9,  $stafPanmud,                                      $stafLabel,                                                        $jml, $b['staf_panmud'], 'pph5'),
                     $makeRow(10, 'ASEP NURSOBAH, S.Ag., M.H.',                    'TIM PENDUKUNG PENGOLAH DATA, PELAPORAN DAN SISTEM INFORMASI',     $jml, $b['tim_data'],    'pph15'),
                     $makeRow(11, 'ST. KRIS NUGROHO, S.H., M.H.',                  'TIM PENGELOLA BIAYA PROSES',                                      $jml, $b['tim_biaya'],   'pph15'),
                     $makeRow(12, 'Dr. H. IYUS SURYANA, S.H., M.H.',               'TIM PENERIMA BERKAS',                                             $jml, $b['tim_penerima'],'pph15'),
@@ -1589,8 +1589,8 @@ public function countHakimFromRows(array $rows): int
                     $makeRow(4,  'I GUSTI AGUNG SUMANATHA, S.H., M.H.',           'KETUA KAMAR',                                                     $jml, $b['ketua_kamar'],  'pph15'),
                     $makeRow(5,  'Dr. HERU PRAMONO, S.H., M.Hum.',                'PANITERA MAHKAMAH AGUNG',                                         $jml, $biayaPanitera,    'pph15'),
                     $makeRow(6,  'ENNID HASANUDDIN',                               'PANITERA MUDA PERKARA',                                           $jml, $b['panmud'],      'pph15'),
-                    $makeRow(7,  'HARIAWAN PURBUDI, SH., MH.',                    'TIM PENELAAH KELENGKAPAN/FORMALITAS BERKAS',                      $jml, $b['tim_penelaah'], 'pph15'),
-                    $makeRow(8,  $stafPanmud,                                      $stafLabel,                                                        $jml, $b['staf_panmud'], 'pph15'),
+                    $makeRow(7,  'HARIAWAN PURBUDI, SH., MH.',                    'TIM PENELAAH KELENGKAPAN/FORMALITAS BERKAS',                      $jml, $b['tim_penelaah'], 'pph5'),
+                    $makeRow(8,  $stafPanmud,                                      $stafLabel,                                                        $jml, $b['staf_panmud'], 'pph5'),
                     $makeRow(9,  'ASEP NURSOBAH, S.Ag., M.H.',                    'TIM PENDUKUNG PENGOLAH DATA, PELAPORAN DAN SISTEM INFORMASI',     $jml, $b['tim_data'],    'pph15'),
                     $makeRow(10, 'ST. KRIS NUGROHO, S.H., M.H.',                  'TIM PENGELOLA BIAYA PROSES',                                      $jml, $b['tim_biaya'],   'pph15'),
                     $makeRow(11, 'Dr. H. IYUS SURYANA, S.H., M.H.',               'TIM PENERIMA BERKAS',                                             $jml, $b['tim_penerima'],'pph15'),
@@ -1642,10 +1642,7 @@ public function countHakimFromRows(array $rows): int
         $blocks = [];
         foreach ($jenisDefs as $def) {
             $jml = isset($keyed[$def['id']]) ? count($keyed[$def['id']]['data'] ?? []) : 0;
-            // Hanya KASASI PERDATA UMUM yang punya 2 PANITERA MAHKAMAH AGUNG (12 baris)
-            // Semua jenis lain: 1 PANITERA MAHKAMAH AGUNG dengan biaya gabungan (11 baris)
-            $dualPanitera = ($def['id'] === 'kasasi-pdt-umum');
-            $blocks[] = $buildT2($def['title'], $jml, $def['class'], $def['staf'], $def['stafLabel'], $dualPanitera);
+            $blocks[] = $buildT2($def['title'], $jml, $def['class'], $def['staf'], $def['stafLabel']);
         }
 
         return $blocks;
