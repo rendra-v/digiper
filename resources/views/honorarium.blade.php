@@ -913,6 +913,80 @@
                         </div>
                     </div>
                     @endif
+
+                    {{-- ── Tabel 5 ANGGOTA (jika ada perkara 5 majelis) ── --}}
+                    @if(!empty($block['block_5_anggota']))
+                    @php $b5 = $block['block_5_anggota']; @endphp
+                    <div x-show="timCat3 === '' || timCat3 === '{{ $ti3 }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-amber-300 dark:border-amber-800/60 rounded-xl shadow-sm overflow-hidden">
+                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-b border-amber-200 dark:border-amber-900/50 px-6 py-4 text-center">
+                            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                                {{ $b5['title'] }}
+                            </p>
+                            <p class="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mt-0.5 uppercase">
+                                {{ $b5['subtitle'] }}
+                            </p>
+                            <p class="text-xs font-bold text-amber-700 dark:text-amber-400 mt-1">
+                                {{ $b5['kamar_info'] }}
+                            </p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-slate-800/60 border-b-2 border-slate-300 dark:border-slate-600">
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center w-8">NO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[200px]">NAMA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-left min-w-[180px]">JABATAN</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[90px]">JUMLAH PERKARA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">JUMLAH BIAYA</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 15%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[90px]">PPH 5%</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-right min-w-[100px]">NETTO</th>
+                                        <th class="border border-slate-300 dark:border-slate-600 px-2 py-2.5 font-bold text-neutral-800 dark:text-neutral-200 text-center min-w-[100px]">TANDA TANGAN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $rowNum5 = 0; @endphp
+                                    @foreach($b5['rows'] as $r5)
+                                        @php $rowNum5++; $bg5 = $rowNum5 % 2 === 0 ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''; @endphp
+                                        <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 transition-colors {{ $bg5 }}">
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $r5['no'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
+                                                x-data="{ editing: false, val: @js($r5['nama']) }"
+                                                @dblclick="editing=true" title="Klik 2x untuk edit nama">
+                                                <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1"></span>
+                                                <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                                    <input x-model="val" type="text"
+                                                           x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                           @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                                           class="flex-1 border border-amber-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                                    <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold text-sm shrink-0">✓</button>
+                                                    <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold text-sm shrink-0">✗</button>
+                                                </div>
+                                            </td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2">{{ $r5['jabatan'] }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ number_format($r5['jumlah_perkara'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($r5['biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">Rp {{ number_format($r5['jumlah_biaya'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">{{ $r5['pph15'] > 0 ? 'Rp ' . number_format($r5['pph15'], 0, ',', '.') : '-' }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right">-</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-right font-medium text-neutral-900 dark:text-neutral-100">Rp {{ number_format($r5['netto'], 0, ',', '.') }}</td>
+                                            <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2"></td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="bg-amber-50 dark:bg-amber-900/20 border-t-2 border-amber-400 font-bold">
+                                        <td colspan="5" class="border border-amber-200 dark:border-amber-800 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">TOTAL</td>
+                                        <td class="border border-amber-200 dark:border-amber-800 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">Rp {{ number_format($b5['total']['jumlah_biaya'], 0, ',', '.') }}</td>
+                                        <td class="border border-amber-200 dark:border-amber-800 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">{{ $b5['total']['pph15'] > 0 ? 'Rp ' . number_format($b5['total']['pph15'], 0, ',', '.') : '-' }}</td>
+                                        <td class="border border-amber-200 dark:border-amber-800 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">-</td>
+                                        <td class="border border-amber-200 dark:border-amber-800 px-2 py-2.5 text-right text-neutral-900 dark:text-neutral-100">Rp {{ number_format($b5['total']['netto'], 0, ',', '.') }}</td>
+                                        <td class="border border-amber-200 dark:border-amber-800 px-2 py-2.5"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
                     @endforeach
 
                 </div>{{-- /x-data timCat3 --}}

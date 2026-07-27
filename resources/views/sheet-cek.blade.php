@@ -94,32 +94,33 @@
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PERKARA</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">JENIS PERKARA</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">JUMLAH</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">BIAYA</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600"></th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600"></th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">BIAYA PERKARA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">JUMLAH BIAYA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">KETERANGAN</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TIM</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">5 MAJELIS</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">KEPANITERAAN</th>
                             <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PEMILAH</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">Total</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">PAJAK</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
-                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL BRUTO</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">POT. PAJAK</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL NETTO</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">SUBTOTAL PERKARA</th>
+                            <th class="px-1.5 py-3 text-center font-bold text-neutral-800 dark:text-neutral-200 border-r border-neutral-400 dark:border-neutral-600">TOTAL KELOMPOK</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if(isset($groups) && count($groups) > 0)
                             @foreach($groups as $group)
                                 @php
-                                    // Hitung total group terlebih dahulu untuk kolom 16
                                     $groupTotal = 0;
+                                    $totalGroupRows = 0;
                                     foreach($group['sub_groups'] as $sg) {
                                         $p15 = round($sg['total_m_15'] * 0.15);
                                         $b15 = $sg['total_m_15'] - $p15;
                                         $p5 = round($sg['total_m_5'] * 0.05);
                                         $b5 = $sg['total_m_5'] - $p5;
                                         $groupTotal += ($b15 + $b5);
+                                        $totalGroupRows += ($sg['label'] ? 4 : 3);
                                     }
                                 @endphp
                                 @foreach($group['sub_groups'] as $index => $sg)
@@ -131,50 +132,61 @@
                                         $bersih5 = $sg['total_m_5'] - $pajak5;
                                         
                                         $subGroupTotal = $bersih15 + $bersih5;
+
+                                        $totBiaya   = $sg['total_15'] + $sg['total_5'];
+                                        $totTim     = $sg['tim_15'] + $sg['tim_5'];
+                                        $totMajelis = $sg['majelis5_15'] + $sg['majelis5_5'];
+                                        $totKepan   = $sg['kepaniteraan_15'] + $sg['kepaniteraan_5'];
+                                        $totPemilah = $sg['pemilah_15'] + $sg['pemilah_5'];
+                                        $totBruto   = $sg['total_m_15'] + $sg['total_m_5'];
+                                        $totPajak   = $pajak15 + $pajak5;
                                     @endphp
                                     
-                                    {{-- Judul tambahan K-PDTSUS dsb jika ada --}}
                                     @if($sg['label'])
-                                    <tr class="bg-blue-300 dark:bg-blue-800/80 font-bold border-b border-neutral-400 dark:border-neutral-700">
-                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-center">{{ $index === 0 ? $group['no'] : '' }}</td>
-                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700">{{ $sg['label'] }}</td>
-                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700">{{ $sg['jenis'] }}</td>
-                                        <td colspan="13"></td>
+                                    <tr class="bg-neutral-200 dark:bg-neutral-700 font-bold border-b border-neutral-400 dark:border-neutral-600">
+                                        @if($index === 0)
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-center align-middle" rowspan="{{ $totalGroupRows }}">{{ $group['no'] }}</td>
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 align-middle" rowspan="{{ $totalGroupRows }}">{{ $group['perkara'] }}</td>
+                                        @endif
+                                        <td colspan="13" class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 font-bold bg-neutral-300 dark:bg-neutral-600">{{ $sg['label'] }} — {{ $sg['jenis'] }}</td>
+                                        @if($index === 0)
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle bg-white dark:bg-neutral-900 font-bold" rowspan="{{ $totalGroupRows }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
+                                        @endif
                                     </tr>
                                     @endif
                                 
-                                    <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-blue-100 dark:bg-blue-900/30 font-bold">
-                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700">
-                                            {{ $index === 0 && !$sg['label'] ? $group['no'] : '' }}
+                                    <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/60 font-bold">
+                                        @if($index === 0 && !$sg['label'])
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 align-middle" rowspan="{{ $totalGroupRows }}">
+                                            {{ $group['no'] }}
                                         </td>
-                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-blue-700 dark:text-blue-300">
-                                            {{ $index === 0 && !$sg['label'] ? $group['perkara'] : '' }}
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 align-middle" rowspan="{{ $totalGroupRows }}">
+                                            {{ $group['perkara'] }}
                                         </td>
-                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-blue-700 dark:text-blue-300">{{ $sg['label'] ? '' : $sg['jenis'] }}</td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
+                                        @endif
+                                        <td class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 align-middle" rowspan="3">{{ $sg['jenis'] }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle" rowspan="3">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['biaya_total'] > 0 ? number_format($sg['biaya_total'], 0, ',', '.') : '-' }}</td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700"></td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totBiaya > 0 ? number_format($totBiaya, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-700">TOTAL</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totTim > 0 ? number_format($totTim, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totMajelis > 0 ? number_format($totMajelis, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totKepan > 0 ? number_format($totKepan, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totPemilah > 0 ? number_format($totPemilah, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totBruto > 0 ? number_format($totBruto, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $totPajak > 0 ? number_format($totPajak, 0, ',', '.') : '-' }}</td>
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle" rowspan="3">{{ $subGroupTotal > 0 ? number_format($subGroupTotal, 0, ',', '.') : '-' }}</td>
-                                        @if($index === 0)
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle bg-white dark:bg-neutral-900" rowspan="{{ count($group['sub_groups']) * 3 }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
+                                        @if($index === 0 && !$sg['label'])
+                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 align-middle bg-white dark:bg-neutral-900" rowspan="{{ $totalGroupRows }}">{{ $groupTotal > 0 ? number_format($groupTotal, 0, ',', '.') : '-' }}</td>
                                         @endif
                                     </tr>
                                     
                                     {{-- Baris PPH 15% --}}
                                     <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-medium">
-                                        <td colspan="3" class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['biaya_15'] > 0 ? number_format($sg['biaya_15'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['total_15'] > 0 ? number_format($sg['total_15'], 0, ',', '.') : '-' }}</td>
-                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-400 dark:bg-neutral-600 text-black">PAJAK 15 %</td>
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-300 dark:bg-neutral-700 text-black dark:text-white font-bold">PAJAK 15 %</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['tim_15'] > 0 ? number_format($sg['tim_15'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['majelis5_15'] > 0 ? number_format($sg['majelis5_15'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['kepaniteraan_15'] > 0 ? number_format($sg['kepaniteraan_15'], 0, ',', '.') : '-' }}</td>
@@ -186,11 +198,9 @@
                                     
                                     {{-- Baris PPH 5% --}}
                                     <tr class="border-b border-neutral-400 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-medium">
-                                        <td colspan="3" class="px-1.5 py-2 border-r border-neutral-400 dark:border-neutral-700"></td>
-                                        <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['jumlah'] > 0 ? number_format($sg['jumlah'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['biaya_5'] > 0 ? number_format($sg['biaya_5'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700 font-bold">{{ $sg['total_5'] > 0 ? number_format($sg['total_5'], 0, ',', '.') : '-' }}</td>
-                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-400 dark:bg-neutral-600 text-black">PAJAK 5 %</td>
+                                        <td class="px-1.5 py-2 text-center border-r border-neutral-400 dark:border-neutral-700 bg-neutral-300 dark:bg-neutral-700 text-black dark:text-white font-bold">PAJAK 5 %</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['tim_5'] > 0 ? number_format($sg['tim_5'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['majelis5_5'] > 0 ? number_format($sg['majelis5_5'], 0, ',', '.') : '-' }}</td>
                                         <td class="px-1.5 py-2 text-right border-r border-neutral-400 dark:border-neutral-700">{{ $sg['kepaniteraan_5'] > 0 ? number_format($sg['kepaniteraan_5'], 0, ',', '.') : '-' }}</td>

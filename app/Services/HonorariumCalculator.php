@@ -1131,16 +1131,123 @@ public function countHakimFromRows(array $rows): int
                 'netto'          => $jbOperator - $pph5Operator,
             ];
 
+            // ── 5. Deteksi & Buat Tabel 5 ANGGOTA (5 Majelis) ──
+            // Skip parent categories (KASASI PERDATA KHUSUS & PK PERDATA KHUSUS parent) agar tidak menggabungkan sub-kategori
+            $isParentCat = in_array($def['label'], ['KASASI PERDATA KHUSUS', 'PENINJAUAN KEMBALI PERDATA KHUSUS'], true);
+
+            $block5Anggota = null;
+            if (!$isParentCat) {
+                $isValidJudgeName = function (?string $name): bool {
+                    if ($name === null) return false;
+                    $s = trim((string)$name);
+                    if ($s === '' || $s === '-' || $s === '0' || $s === '—') return false;
+                    if (str_starts_with($s, '#') || str_starts_with($s, '=')) return false;
+                    if (in_array(strtoupper($s), ['N/A', '#N/A', 'NULL', 'NONE', 'NO'], true)) return false;
+                    return strlen($s) >= 3;
+                };
+
+                $fiveAnggotaRows = [];
+                foreach ($rows as $r) {
+                    $rUpper = [];
+                    foreach ($r as $k => $v) {
+                        $rUpper[strtoupper(trim((string)$k))] = trim((string)$v);
+                    }
+                    $p1 = $rUpper['NAMA P1'] ?? '';
+                    $p2 = $rUpper['NAMA P2'] ?? '';
+                    $p3 = $rUpper['NAMA P3'] ?? '';
+                    $p4 = $rUpper['NAMA P4'] ?? '';
+                    $p5 = $rUpper['NAMA P5'] ?? '';
+
+                    if ($isValidJudgeName($p1) &&
+                        $isValidJudgeName($p2) &&
+                        $isValidJudgeName($p3) &&
+                        $isValidJudgeName($p4) &&
+                        $isValidJudgeName($p5)) {
+                        $fiveAnggotaRows[] = [
+                            'row' => $r,
+                            'p1'  => $p1,
+                            'p2'  => $p2,
+                            'p3'  => $p3,
+                            'p4'  => $p4,
+                            'p5'  => $p5,
+                        ];
+                    }
+                }
+
+                if (!empty($fiveAnggotaRows)) {
+                    // Hitung frekuensi nama dari P1..P5 untuk baris 5 Anggota ini saja
+                    $hakim5Counts = [];
+                    foreach ($fiveAnggotaRows as $item5) {
+                        foreach (['p1', 'p2', 'p3', 'p4', 'p5'] as $pk) {
+                            $nm = $item5[$pk];
+                            if ($isValidJudgeName($nm)) {
+                                $hakim5Counts[$nm] = ($hakim5Counts[$nm] ?? 0) + 1;
+                            }
+                        }
+                    }
+
+                    $jml5Perkara = count($fiveAnggotaRows);
+                    $biayaHakim5 = (int) round($penyel * 0.06); // 30% / 5 = 6% per hakim
+
+                    $rows5 = [];
+                    $no5   = 1;
+                    foreach ($hakim5Counts as $nama5 => $jmlPerkara5) {
+                        $jb5    = $jmlPerkara5 * $biayaHakim5;
+                        $pph155 = (int) round($jb5 * 0.15);
+                        $rows5[] = [
+                            'no'             => $no5++,
+                            'nama'           => $nama5,
+                            'jabatan'        => 'TIM KOREKTOR / HAKIM AGUNG',
+                            'jumlah_perkara' => $jmlPerkara5,
+                            'biaya'          => $biayaHakim5,
+                            'jumlah_biaya'   => $jb5,
+                            'pph15'          => $pph155,
+                            'pph5'           => 0,
+                            'netto'          => $jb5 - $pph155,
+                        ];
+                    }
+
+                    $kamarName = 'TUN';
+                    if (str_contains(strtoupper($def['label']), 'AGAMA')) {
+                        $kamarName = 'PERDATA AGAMA';
+                    } elseif (str_contains(strtoupper($def['label']), 'PERDATA')) {
+                        $kamarName = 'PERDATA';
+                    }
+
+                    $shortLabel = $def['label'];
+                    $shortLabel = str_replace(
+                        ['PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)', 'PENINJAUAN KEMBALI PERDATA UMUM', 'KASASI TATA USAHA NEGARA (K-TUN)'],
+                        ['PK TUN', 'PK PERDATA UMUM', 'KASASI TUN'],
+                        $shortLabel
+                    );
+
+                    $block5Anggota = [
+                        'title'          => "HONORARIUM BIAYA PENYELESAIAN PERKARA {$shortLabel} DENGAN 5 ANGGOTA",
+                        'subtitle'       => "YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK",
+                        'kamar_info'     => "PADA KAMAR {$kamarName} ( Sebanyak {$jml5Perkara} Perkara )",
+                        'jumlah_perkara' => $jml5Perkara,
+                        'rows'           => $rows5,
+                        'total'          => [
+                            'jumlah_biaya' => array_sum(array_column($rows5, 'jumlah_biaya')),
+                            'pph15'        => array_sum(array_column($rows5, 'pph15')),
+                            'pph5'         => 0,
+                            'netto'        => array_sum(array_column($rows5, 'netto')),
+                        ],
+                    ];
+                }
+            }
+
             $blocks[] = [
-                'label'          => $def['label'],
-                'jumlah_perkara' => $totalPerkara,
-                'rows'           => $tableRows,
-                'total'          => [
+                'label'           => $def['label'],
+                'jumlah_perkara'  => $totalPerkara,
+                'rows'            => $tableRows,
+                'total'           => [
                     'jumlah_biaya' => array_sum(array_column($tableRows, 'jumlah_biaya')),
                     'pph15'        => array_sum(array_column($tableRows, 'pph15')),
                     'pph5'         => array_sum(array_column($tableRows, 'pph5')),
                     'netto'        => array_sum(array_column($tableRows, 'netto')),
                 ],
+                'block_5_anggota' => $block5Anggota,
             ];
         }
 
