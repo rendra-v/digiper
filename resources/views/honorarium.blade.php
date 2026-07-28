@@ -226,7 +226,7 @@
 
                 @foreach($timData as $ti => $block)
                 @if(count($block['rows']) >= 1)
-                <div x-show="timCat === '' || timCat === '{{ $ti }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                <div x-show="timCat === '' || timCat === '{{ $ti }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
                         <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
                             HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
@@ -258,7 +258,8 @@
                                     <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['no'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                            x-data="{ editing: false, val: @js($row['nama']) }"
+                                            x-data="{ editing: false, val: localStorage.getItem('hon_tim_{{ $ti }}_{{ $loop->index }}') ?? @js($row['nama']) }"
+                                            x-init="$watch('val', v => localStorage.setItem('hon_tim_{{ $ti }}_{{ $loop->index }}', v))"
                                             @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                             <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-800 dark:text-neutral-200"></span>
                                             <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -290,6 +291,71 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    {{-- TTD Section --}}
+                    @php
+                        $ttdDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                            ?: ('Jakarta, ' . \Carbon\Carbon::now()->translatedFormat('d F Y'));
+                        $pejabat = config('tarif.pejabat');
+                    @endphp
+                    <div class="px-4 pt-4 pb-2 border-t border-neutral-200 dark:border-neutral-700">
+                        <div class="grid grid-cols-3 gap-4 text-xs">
+                            {{-- Kiri --}}
+                            <div class="flex flex-col">
+                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-center leading-tight mb-1">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_petugas') ?? @js($pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_petugas', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-center"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Tengah --}}
+                            <div class="flex flex-col items-center">
+                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-center leading-tight mb-1">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_kuasa') ?? @js($pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_kuasa', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-center"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Kanan --}}
+                            <div class="flex flex-col items-end">
+                                <div class="text-right font-semibold text-neutral-600 dark:text-neutral-400 mb-1">{{ $ttdDate }}<br><span class="font-bold uppercase text-neutral-700 dark:text-neutral-300">Bendahara Biaya Proses</span></div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_bendahara') ?? @js($pejabat['bendahara'] ?? 'FARIDA,SH') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_bendahara', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-right"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1 justify-end">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-neutral-400 mt-2 text-center">Klik 2x pada nama untuk mengedit</p>
                     </div>
                 </div>
                 @endif
@@ -339,7 +405,7 @@
 
                 @foreach($kepaniteraanData as $ki => $block)
                 @if(count($block['rows']) >= 11)
-                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
+                <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm"
                      x-show="kepBlock === '' || kepBlock === '{{ $ki }}'"
                      x-cloak>
                     {{-- Header --}}
@@ -381,7 +447,8 @@
                                     <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-emerald-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                            x-data="{ editing: false, val: @js($row['nama']) }"
+                                            x-data="{ editing: false, val: localStorage.getItem('hon_kep_{{ $ki }}_{{ $loop->index }}') ?? @js($row['nama']) }"
+                                            x-init="$watch('val', v => localStorage.setItem('hon_kep_{{ $ki }}_{{ $loop->index }}', v))"
                                             @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                             <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-900 dark:text-neutral-100"></span>
                                             <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -414,6 +481,71 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    {{-- TTD Section --}}
+                    @php
+                        $ttdDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                            ?: ('Jakarta, ' . \Carbon\Carbon::now()->translatedFormat('d F Y'));
+                        $pejabat = config('tarif.pejabat');
+                    @endphp
+                    <div class="px-4 pt-4 pb-2 border-t border-neutral-200 dark:border-neutral-700">
+                        <div class="grid grid-cols-3 gap-4 text-xs">
+                            {{-- Kiri --}}
+                            <div class="flex flex-col">
+                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-center leading-tight mb-1">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_petugas') ?? @js($pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_petugas', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-center"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Tengah --}}
+                            <div class="flex flex-col items-center">
+                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-center leading-tight mb-1">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_kuasa') ?? @js($pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_kuasa', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-center"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Kanan --}}
+                            <div class="flex flex-col items-end">
+                                <div class="text-right font-semibold text-neutral-600 dark:text-neutral-400 mb-1">{{ $ttdDate }}<br><span class="font-bold uppercase text-neutral-700 dark:text-neutral-300">Bendahara Biaya Proses</span></div>
+                                <div class="h-12"></div>
+                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_bendahara') ?? @js($pejabat['bendahara'] ?? 'FARIDA,SH') }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_bendahara', v))"
+                                     @dblclick="editing=true" title="Klik 2x untuk edit">
+                                    <span x-show="!editing" x-text="val" class="cursor-text block font-bold underline text-neutral-900 dark:text-neutral-100 text-right"></span>
+                                    <div x-show="editing" x-cloak class="flex items-center gap-1 justify-end">
+                                        <input x-model="val" type="text"
+                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                               @keyup.enter="editing=false" @keyup.escape="editing=false"
+                                               class="flex-1 border border-blue-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                        <button @click="editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-neutral-400 mt-2 text-center">Klik 2x pada nama untuk mengedit</p>
                     </div>
                 </div>
                 @endif
@@ -766,7 +898,8 @@
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-emerald-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: @js($row['nama']) }"
+                                                x-data="{ editing: false, val: localStorage.getItem('hon_kep_{{ $ki }}_{{ $loop->index }}') ?? @js($row['nama']) }"
+                                                x-init="$watch('val', v => localStorage.setItem('hon_kep_{{ $ki }}_{{ $loop->index }}', v))"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center text-neutral-900 dark:text-neutral-100"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -878,7 +1011,8 @@
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['no'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: @js($row['nama']) }"
+                                                x-data="{ editing: false, val: localStorage.getItem('hon_tim_{{ $ti3 }}_{{ $loop->index }}') ?? @js($row['nama']) }"
+                                                x-init="$watch('val', v => localStorage.setItem('hon_tim_{{ $ti3 }}_{{ $loop->index }}', v))"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 text-center"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -952,7 +1086,8 @@
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 transition-colors {{ $bg5 }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $r5['no'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: @js($r5['nama']) }"
+                                                x-data="{ editing: false, val: localStorage.getItem('hon_tim5_{{ $ti3 }}_{{ $loop->index }}') ?? @js($r5['nama']) }"
+                                                x-init="$watch('val', v => localStorage.setItem('hon_tim5_{{ $ti3 }}_{{ $loop->index }}', v))"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -1069,7 +1204,8 @@
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-orange-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: '' }"
+                                                x-data="{ editing: false, val: localStorage.getItem('hon_op_{{ $oi }}_{{ $loop->index }}') ?? '' }"
+                                                x-init="$watch('val', v => localStorage.setItem('hon_op_{{ $oi }}_{{ $loop->index }}', v))"
                                                 @dblclick="editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val" class="cursor-text block px-1 py-1 min-h-[1.5rem]"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">

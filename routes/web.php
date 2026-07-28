@@ -30,6 +30,8 @@ Route::get('/rekap-keseluruhan-3/print', [DashboardController::class, 'rekapKese
 Route::get('/honorarium', [DashboardController::class, 'honorarium'])->name('honorarium');
 Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])->name('honorarium.print');
 Route::get('/honorarium/debug', [DashboardController::class, 'honorariumDebug'])->name('honorarium.debug');
+Route::get('/periode-laporan', [DashboardController::class, 'periodeLaporan'])->name('periode-laporan');
+Route::post('/periode-laporan', [DashboardController::class, 'updatePeriodeLaporan'])->name('periode-laporan.update');
 
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);

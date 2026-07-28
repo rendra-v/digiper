@@ -7,6 +7,14 @@
     <style>
         @@page {
             margin: 0;
+            size: 330mm 215.9mm;
+            /* Hapus header/footer bawaan browser */
+            @top-left   { content: ''; }
+            @top-center { content: ''; }
+            @top-right  { content: ''; }
+            @bottom-left   { content: ''; }
+            @bottom-center { content: ''; }
+            @bottom-right  { content: ''; }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,12 +40,13 @@
 
         @media print {
             .no-print { display: none !important; }
-            body { padding: 10mm 12mm; }
+            body { padding: 6mm 10mm; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
             .recap-table .subtot,
             .recap-table .gtot { break-inside: avoid; page-break-inside: avoid; }
+            .sig-space { height: 35px; }
         }
 
         /* ── Title ─── */
@@ -193,10 +202,10 @@
                     <th rowspan="2" class="c">Grand Total (Rp)</th>
                 </tr>
                 <tr class="hdr">
-                    <th class="c">Jumlah</th>
+                    <th class="c">Jumlah Perkara</th>
                     <th class="c">Biaya (Rp)</th>
                     <th class="c">Jumlah Biaya (Rp)</th>
-                    <th class="c">Jumlah</th>
+                    <th class="c">Jumlah Perkara</th>
                     <th class="c">Biaya (Rp)</th>
                     <th class="c">Jumlah Biaya (Rp)</th>
                 </tr>
@@ -242,13 +251,19 @@
                 @if($final_total)
                 <tr class="gtot">
                     <td colspan="3" class="l">JUMLAH TOTAL KESELURUHAN</td>
-                    <td class="c">{{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">—</td>
                     <td class="c">—</td>
                     <td class="c">{{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}</td>
-                    <td class="c">{{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c">—</td>
                     <td class="c">—</td>
                     <td class="c">{{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}</td>
                     <td class="c">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
+                </tr>
+                <tr class="gtot">
+                    <td colspan="3" class="l">Jumlah Total Perkara</td>
+                    <td colspan="3" class="c" style="font-size:11px; font-weight:700;">{{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}</td>
+                    <td colspan="3" class="c" style="font-size:11px; font-weight:700;">{{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}</td>
+                    <td class="c" style="font-size:14px; font-weight:900;">{{ ($final_total['kasasiJml'] + $final_total['pkJml']) > 0 ? number_format($final_total['kasasiJml'] + $final_total['pkJml'], 0, ',', '.') : '-' }}</td>
                 </tr>
                 @endif
             </tbody>
@@ -264,7 +279,8 @@
                     5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
                     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
                 ];
-                $dateNow = 'Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y');
+                $dateNow = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+                    ?: ('Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y'));
             @endphp
             <div class="sig-date">{{ $dateNow }}</div>
 

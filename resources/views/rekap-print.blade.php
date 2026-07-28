@@ -8,6 +8,14 @@
     <style>
         @@page {
             margin: 0;
+            size: 330mm 215.9mm;
+            /* Hapus header/footer bawaan browser */
+            @top-left   { content: ''; }
+            @top-center { content: ''; }
+            @top-right  { content: ''; }
+            @bottom-left   { content: ''; }
+            @bottom-center { content: ''; }
+            @bottom-right  { content: ''; }
         }
 
         * {
@@ -209,7 +217,10 @@
                 $line1 = $getCellValue(2, 'A2', 'REKAPITULASI BIAYA PENYELESAIAN PERKARA YANG DIPUTUS PADA BULAN');
                 $line2 = $getCellValue(3, 'A3', 'YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK');
                 $line3 = $reportLabel ?? 'PERKARA ELEKTRONIK';
-                $recapDate = $recapDate ?? '';
+                $recapDate = $recapDate ?: (
+                    \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+                    ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'))
+                );
             @endphp
 
             <div class="title">
@@ -298,7 +309,7 @@
                     </div>
 
                     <div class="signature-block right">
-                        {{ $recapDate !== '' ? $recapDate : 'Jakarta, 05 Maret 2026' }}
+                        {{ $recapDate }}
                         <br>{{ $getCellValue(36, 'L36', 'BENDAHARA BIAYA PROSES') }}
                         <div class="signature-name">
                             {{ $getCellValue(40, 'L40', 'FARIDA,SH') }}

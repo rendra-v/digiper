@@ -6,6 +6,14 @@
     <style>
         @@page {
             margin: 0;
+            size: 330mm 215.9mm;
+            /* Hapus header/footer bawaan browser */
+            @top-left   { content: ''; }
+            @top-center { content: ''; }
+            @top-right  { content: ''; }
+            @bottom-left   { content: ''; }
+            @bottom-center { content: ''; }
+            @bottom-right  { content: ''; }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {

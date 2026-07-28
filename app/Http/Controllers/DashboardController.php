@@ -161,6 +161,7 @@ class DashboardController extends Controller
             $spreadsheet = $reader->load($filePath);
 
             $sheetNames = $spreadsheet->getSheetNames();
+            $periodeData = $this->parsePeriodeLaporan($spreadsheet);
 
             // Hapus cache lama sebelum set file baru
             $this->invalidateSessionCache();
@@ -169,6 +170,10 @@ class DashboardController extends Controller
             Session::put('excel_file_path', $filePath);
             Session::put('excel_sheets', $sheetNames);
             Session::put('excel_period', $excelFile->period);
+            Session::put('excel_laporan_periode',        $periodeData['laporan_periode']);
+            Session::put('excel_tgl_data_laporan',       $periodeData['tgl_data_laporan']);
+            Session::put('excel_tgl_rekap_keseluruhan',  $periodeData['tgl_rekap_keseluruhan']);
+            Session::put('excel_tgl_kwitansi',           $periodeData['tgl_kwitansi']);
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
@@ -176,6 +181,49 @@ class DashboardController extends Controller
             \Log::error('Error loading file to session', ['error' => $e->getMessage()]);
             throw $e;
         }
+    }
+
+    /**
+     * Membaca sheet "Periode Laporan" dari spreadsheet.
+     * Struktur: kolom A = label, kolom B = ":", kolom C = nilai.
+     * Return array dengan fallback kosong jika sheet tidak ada.
+     */
+    private function parsePeriodeLaporan($spreadsheet): array
+    {
+        $result = [
+            'laporan_periode'       => '',
+            'tgl_data_laporan'      => '',
+            'tgl_rekap_keseluruhan' => '',
+            'tgl_kwitansi'          => '',
+        ];
+
+        $sheet = $spreadsheet->getSheetByName('Periode Laporan');
+        if (! $sheet) {
+            return $result;
+        }
+
+        $labelMap = [
+            'LAPORAN PERIODE'           => 'laporan_periode',
+            'TANGGAL DATA LAPORAN'      => 'tgl_data_laporan',
+            'TANGGAL REKAP KESELURUHAN' => 'tgl_rekap_keseluruhan',
+            'TANGGAL KWITANSI'          => 'tgl_kwitansi',
+        ];
+
+        $highestRow = min((int) $sheet->getHighestRow(), 30);
+        for ($row = 1; $row <= $highestRow; $row++) {
+            $label = strtoupper(trim((string) $sheet->getCell('A'.$row)->getValue()));
+            if (isset($labelMap[$label])) {
+                // Nilai bisa di kolom C atau D (tergantung format file)
+                $val = trim((string) $sheet->getCell('C'.$row)->getFormattedValue());
+                if ($val === '') {
+                    $val = trim((string) $sheet->getCell('D'.$row)->getFormattedValue());
+                }
+                $result[$labelMap[$label]] = $val;
+            }
+        }
+
+        \Log::info('parsePeriodeLaporan()', $result);
+        return $result;
     }
 
     public function upload(Request $request)
@@ -305,6 +353,9 @@ class DashboardController extends Controller
                 'period' => '',
             ]);
 
+            // Parse Periode Laporan sheet
+            $periodeData = $this->parsePeriodeLaporan($spreadsheet);
+
             // Store both data and sheet info in session
             Session::put('current_file_id', $excelFile->id);
             Session::put('excel_data', $data);
@@ -312,7 +363,11 @@ class DashboardController extends Controller
             Session::put('excel_current_sheet', $targetSheetName);
             Session::put('excel_file_name', $file->getClientOriginalName());
             Session::put('excel_file_path', $fullPath);
-            Session::put('excel_period', '');
+            Session::put('excel_period', $periodeData['laporan_periode']);
+            Session::put('excel_laporan_periode',        $periodeData['laporan_periode']);
+            Session::put('excel_tgl_data_laporan',       $periodeData['tgl_data_laporan']);
+            Session::put('excel_tgl_rekap_keseluruhan',  $periodeData['tgl_rekap_keseluruhan']);
+            Session::put('excel_tgl_kwitansi',           $periodeData['tgl_kwitansi']);
 
             // Cleanup
             $spreadsheet->disconnectWorksheets();
@@ -361,6 +416,10 @@ class DashboardController extends Controller
         Session::forget('excel_file_path');
         Session::forget('current_file_id');
         Session::forget('excel_period');
+        Session::forget('excel_laporan_periode');
+        Session::forget('excel_tgl_data_laporan');
+        Session::forget('excel_tgl_rekap_keseluruhan');
+        Session::forget('excel_tgl_kwitansi');
 
         return response()->json(['success' => true]);
     }
@@ -1231,7 +1290,7 @@ class DashboardController extends Controller
 
             $calculator = new HonorariumCalculator;
             $result     = $calculator->computeRekapKeseluruhan($categories);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             Session::put($cacheKey, [
                 'groups'      => $result['groups'],
@@ -1317,7 +1376,7 @@ class DashboardController extends Controller
 
             $calculator = new HonorariumCalculator;
             $result     = $calculator->computeRekapKeseluruhan($categories);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             Session::put($cacheKey, [
                 'groups'      => $result['groups'],
@@ -1405,7 +1464,7 @@ class DashboardController extends Controller
 
             $calculator = new HonorariumCalculator;
             $result     = $calculator->computeRekapKeseluruhan2($categories);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             $payload = [
                 'columns'     => $result['columns'],
@@ -1497,7 +1556,7 @@ class DashboardController extends Controller
 
             $calculator = new HonorariumCalculator;
             $result     = $calculator->computeRekapKeseluruhan2($categories);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             $payload = [
                 'columns'     => $result['columns'],
@@ -2472,7 +2531,7 @@ class DashboardController extends Controller
             $calculator = new HonorariumCalculator;
             $rekap2     = $calculator->computeRekapKeseluruhan2($categories);
             $rekap3     = $calculator->computeRekapKeseluruhan3($rekap2);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             $payload = array_merge($rekap3, ['recapDate' => $recapDate]);
             Session::put($cacheKey, $payload);
@@ -2555,7 +2614,7 @@ class DashboardController extends Controller
             $calculator = new HonorariumCalculator;
             $rekap2     = $calculator->computeRekapKeseluruhan2($categories);
             $rekap3     = $calculator->computeRekapKeseluruhan3($rekap2);
-            $recapDate  = Session::get('excel_period', 'Jakarta, 05 Maret 2026');
+            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
 
             $payload = array_merge($rekap3, ['recapDate' => $recapDate]);
             Session::put($cacheKey, $payload);
@@ -3107,7 +3166,41 @@ class DashboardController extends Controller
         return $blocks;
     }
 
+
+    public function periodeLaporan()
+    {
+        return view('periode-laporan', [
+            'laporan_periode'       => Session::get('excel_laporan_periode', ''),
+            'tgl_data_laporan'      => Session::get('excel_tgl_data_laporan', ''),
+            'tgl_rekap_keseluruhan' => Session::get('excel_tgl_rekap_keseluruhan', ''),
+            'tgl_kwitansi'          => Session::get('excel_tgl_kwitansi', ''),
+            'hasFile'               => (bool) Session::get('excel_file_path'),
+        ]);
+    }
+
+    public function updatePeriodeLaporan(Request $request)
+    {
+        $request->validate([
+            'laporan_periode'       => 'nullable|string|max:200',
+            'tgl_data_laporan'      => 'nullable|string|max:100',
+            'tgl_rekap_keseluruhan' => 'nullable|string|max:100',
+            'tgl_kwitansi'          => 'nullable|string|max:100',
+        ]);
+
+        Session::put('excel_laporan_periode',        $request->input('laporan_periode', ''));
+        Session::put('excel_tgl_data_laporan',       $request->input('tgl_data_laporan', ''));
+        Session::put('excel_tgl_rekap_keseluruhan',  $request->input('tgl_rekap_keseluruhan', ''));
+        Session::put('excel_tgl_kwitansi',           $request->input('tgl_kwitansi', ''));
+
+        // Invalidate all view caches so prints use the new dates
+        $this->invalidateSessionCache();
+
+        return redirect()->route('periode-laporan')
+            ->with('success', 'Periode laporan berhasil diperbarui.');
+    }
+
     public function deleteFile($id)
+
     {
         try {
             $excelFile = ExcelFile::findOrFail($id);

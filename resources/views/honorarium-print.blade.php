@@ -191,6 +191,14 @@
         ══════════════════════════════════════════════════════ */
         @@page {
             margin: 0;
+            size: 330mm 215.9mm;
+            /* Hapus header/footer bawaan browser (tanggal, URL, nomor halaman) */
+            @top-left   { content: ''; }
+            @top-center { content: ''; }
+            @top-right  { content: ''; }
+            @bottom-left   { content: ''; }
+            @bottom-center { content: ''; }
+            @bottom-right  { content: ''; }
         }
         @media print {
             html {
@@ -263,6 +271,7 @@
         @endif
     </div>
     <span class="hint">Pratinjau dokumen siap cetak &middot; Ukuran kertas: <b>F4 Landscape</b></span>
+    <span class="hint" style="color:#c05c00;font-size:9.5pt;">⚠ Jika muncul tanggal/URL/nomor halaman di PDF: buka dialog print → <b>More settings</b> → hilangkan centang <b>Headers and footers</b></span>
     <div class="btn-group">
         <a href="{{ route('honorarium') }}" class="btn btn-back">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -312,7 +321,7 @@
                             @if($row['jml'] > 0)
                             <tr>
                                 <td class="td-no">{{ $row['no'] }}</td>
-                                <td class="td-nama"></td>
+                                <td class="td-nama" data-hon-key="hon_op_{{ $oi }}_{{ $loop->index }}"></td>
                                 <td class="td-jab">OPERATOR/PENGETIK</td>
                                 <td class="td-count">{{ number_format($row['jml'], 0, ',', '.') }}</td>
                                 <td class="td-num">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
@@ -363,7 +372,7 @@
                         @foreach($block['rows'] as $row)
                             <tr>
                                 <td class="td-no">{{ $row['no'] }}</td>
-                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-nama" data-hon-key="hon_tim_{{ $ti }}_{{ $loop->index }}">{{ $row['nama'] }}</td>
                                 <td class="td-jab">{{ $row['jabatan'] }}</td>
                                 <td class="td-count">{{ $row['jumlah_perkara'] > 0 ? number_format($row['jumlah_perkara'], 0, ',', '.') : '-' }}</td>
                                 <td class="td-num">{{ $row['biaya'] > 0 ? 'Rp ' . number_format($row['biaya'], 0, ',', '.') : '-' }}</td>
@@ -384,6 +393,31 @@
                         </tr>
                     </tbody>
                 </table>
+                @php
+                    $pejabat = config('tarif.pejabat');
+                    $ttdDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                        ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+                @endphp
+                <div class="footer-wrap">
+                    <div class="footer-date">{{ $ttdDate }}</div>
+                    <div class="ttd-grid">
+                        <div class="ttd-item">
+                            <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item center">
+                            <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item right">
+                            <div class="ttd-label">Bendahara Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             @endif
 
@@ -414,7 +448,7 @@
                         @foreach($b5['rows'] as $r5)
                             <tr>
                                 <td class="td-no">{{ $r5['no'] }}</td>
-                                <td class="td-nama">{{ $r5['nama'] }}</td>
+                                <td class="td-nama" data-hon-key="hon_tim5_{{ $ti }}_{{ $loop->index }}">{{ $r5['nama'] }}</td>
                                 <td class="td-jab">{{ $r5['jabatan'] }}</td>
                                 <td class="td-count">{{ number_format($r5['jumlah_perkara'], 0, ',', '.') }}</td>
                                 <td class="td-num">Rp {{ number_format($r5['biaya'], 0, ',', '.') }}</td>
@@ -435,6 +469,31 @@
                         </tr>
                     </tbody>
                 </table>
+                @php
+                    $pejabat = config('tarif.pejabat');
+                    $ttdDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                        ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+                @endphp
+                <div class="footer-wrap">
+                    <div class="footer-date">{{ $ttdDate }}</div>
+                    <div class="ttd-grid">
+                        <div class="ttd-item">
+                            <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item center">
+                            <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item right">
+                            <div class="ttd-label">Bendahara Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             @endif
         @endforeach
@@ -466,7 +525,7 @@
                         @foreach($block['rows'] as $row)
                             <tr>
                                 <td class="td-no">{{ $row['no'] }}</td>
-                                <td class="td-nama">{{ $row['nama'] }}</td>
+                                <td class="td-nama" data-hon-key="hon_kep_{{ $ki }}_{{ $loop->index }}">{{ $row['nama'] }}</td>
                                 <td class="td-jab">{{ $row['jabatan'] }}</td>
                                 <td class="td-count">{{ number_format($row['jml_perkara'], 0, ',', '.') }}</td>
                                 <td class="td-num">Rp {{ number_format($row['biaya'], 0, ',', '.') }}</td>
@@ -487,6 +546,31 @@
                         </tr>
                     </tbody>
                 </table>
+                @php
+                    $pejabat = config('tarif.pejabat');
+                    $ttdDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                        ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+                @endphp
+                <div class="footer-wrap">
+                    <div class="footer-date">{{ $ttdDate }}</div>
+                    <div class="ttd-grid">
+                        <div class="ttd-item">
+                            <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item center">
+                            <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                        </div>
+                        <div class="ttd-item right">
+                            <div class="ttd-label">Bendahara Biaya Proses</div>
+                            <div class="ttd-space"></div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             @endif
         @endforeach
@@ -595,7 +679,11 @@
                 </table>
 
                 {{-- Footer / Tanda Tangan --}}
-                @php $fi = $block['footerInfo']; @endphp
+                @php
+                    $fi = $block['footerInfo'];
+                    $sessionDate = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi');
+                    if ($sessionDate) { $fi['date'] = $sessionDate; }
+                @endphp
                 <div class="footer-wrap">
                     @if($fi['date'])
                         <div class="footer-date">{{ $fi['date'] }}</div>
@@ -649,6 +737,19 @@
     @endif
 
 </div>{{-- /.pages --}}
+
+<script>
+// Isi nama dari localStorage sebelum print
+(function() {
+    document.querySelectorAll('[data-hon-key]').forEach(function(td) {
+        var key = td.getAttribute('data-hon-key');
+        var stored = localStorage.getItem(key);
+        if (stored !== null && stored !== '') {
+            td.textContent = stored;
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

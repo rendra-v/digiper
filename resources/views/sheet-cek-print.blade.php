@@ -130,6 +130,14 @@
         /* ── PRINT ──────────────────────────────────────────────────────── */
         @@page {
             margin: 0;
+            size: 330mm 215.9mm;
+            /* Hapus header/footer bawaan browser */
+            @top-left   { content: ''; }
+            @top-center { content: ''; }
+            @top-right  { content: ''; }
+            @bottom-left   { content: ''; }
+            @bottom-center { content: ''; }
+            @bottom-right  { content: ''; }
         }
         @media print {
             html { background: #fff; }

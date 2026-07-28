@@ -34,6 +34,7 @@
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
                             <option value="{{ route('rekap-keseluruhan-3') }}">📋&nbsp; Rekap Keseluruhan 3</option>
                             <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
+                                <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,8 +90,9 @@
             <p class="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mt-0.5">
                 YANG USIANYA KURANG DARI 120 HARI SEJAK REGISTER PERKARA MASUK
             </p>
-            @if($recapDate)
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Periode: {{ strtoupper($recapDate) }}</p>
+            @php $laporan_periode = \Illuminate\Support\Facades\Session::get('excel_laporan_periode'); @endphp
+            @if($laporan_periode)
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Periode: {{ strtoupper($laporan_periode) }}</p>
             @endif
         </div>
 
@@ -122,10 +124,10 @@
                         </tr>
                         {{-- Baris header 2 --}}
                         <tr class="bg-sky-100 dark:bg-sky-900/40 border-b border-neutral-300 dark:border-neutral-700">
-                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Perkara</th>
                             <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Biaya (Rp)</th>
                             <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Biaya (Rp)</th>
-                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah</th>
+                            <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Perkara</th>
                             <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Biaya (Rp)</th>
                             <th class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center font-bold text-neutral-700 dark:text-neutral-300">Jumlah Biaya (Rp)</th>
                         </tr>
@@ -213,22 +215,32 @@
                             <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-left text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">
                                 JUMLAH TOTAL KESELURUHAN
                             </td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
-                                {{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}
-                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['kasasiTotal'] > 0 ? number_format($final_total['kasasiTotal'], 0, ',', '.') : '-' }}
                             </td>
-                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
-                                {{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}
-                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-400">—</td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}
                             </td>
                             <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
                                 {{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}
+                            </td>
+                        </tr>
+                        <tr class="bg-blue-100 dark:bg-blue-900/40 font-bold">
+                            <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-left text-neutral-900 dark:text-neutral-100">
+                                Jumlah Total Perkara
+                            </td>
+                            <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['kasasiJml'] > 0 ? number_format($final_total['kasasiJml'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100">
+                                {{ $final_total['pkJml'] > 0 ? number_format($final_total['pkJml'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2.5 text-center text-neutral-900 dark:text-neutral-100 text-lg font-black">
+                                {{ ($final_total['kasasiJml'] + $final_total['pkJml']) > 0 ? number_format($final_total['kasasiJml'] + $final_total['pkJml'], 0, ',', '.') : '-' }}
                             </td>
                         </tr>
                         @endif
@@ -245,7 +257,8 @@
                 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
                 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
             ];
-            $dateNow = 'Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y');
+            $dateNow = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+                ?: ('Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y'));
         @endphp
         <div class="mt-12 mb-16">
             <div class="flex justify-end mb-8">
