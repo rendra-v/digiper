@@ -36,7 +36,7 @@
         }
         @media print {
             .no-print { display: none !important; }
-            body { padding: 10mm 12mm; }
+            body { padding: 20mm 12mm 10mm; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
@@ -46,10 +46,11 @@
         /* ── title ── */
         .doc-title {
             text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            margin-top: 0;
         }
-        .doc-title .t1 { font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 9px; color: #555; margin-top: 1px; }
+        .doc-title .t1 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
 
         /* ── table ── */
         table {

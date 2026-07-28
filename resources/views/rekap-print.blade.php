@@ -35,24 +35,25 @@
 
         .title {
             text-align: center;
-            line-height: 1.08;
-            margin-bottom: 6px;
+            line-height: 1.35;
+            margin-bottom: 8px;
+            margin-top: 0;
         }
 
         .title-line-1 {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
         .title-line-2 {
-            font-size: 10px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
         .title-line-3 {
-            font-size: 10px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
             margin-top: 1px;
@@ -120,51 +121,55 @@
         }
 
         .signature-area {
-            margin-top: 10px;
-            width: 100%;
+            margin-top: 14px;
+            width: 96%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .signature-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
+            gap: 16px;
             align-items: start;
         }
 
         .signature-block {
-            min-height: 78px;
-            font-size: 8px;
-            line-height: 1.15;
+            min-height: 5cm;
+            font-size: 10px;
+            line-height: 1.4;
             text-align: center;
-            white-space: pre-line;
-        }
-
-        .signature-block.left {
-            text-align: left;
-        }
-
-        .signature-block.right {
-            text-align: right;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .signature-name {
-            margin-top: 28px;
-            font-size: 8px;
+            margin-top: 5cm;
+            font-size: 10px;
+            font-weight: 700;
+            text-decoration: underline;
         }
 
-        .signature-note {
-            margin-top: 18px;
+        .signature-date {
+            text-align: right;
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
         .signature-centered {
-            margin-top: 14px;
+            margin-top: 10px;
             text-align: center;
-            font-size: 8px;
-            line-height: 1.15;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.4;
+            text-transform: uppercase;
         }
 
         .signature-centered .name {
-            margin-top: 28px;
+            margin-top: 5cm;
+            font-weight: 700;
+            text-decoration: underline;
         }
 
         .notice {
@@ -181,17 +186,18 @@
             .no-print {
                 display: none !important;
             }
-            body { padding: 10mm 12mm; }
+            body { padding: 20mm 15mm 10mm; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
             .signature-area { break-inside: avoid; page-break-inside: avoid; }
             .signature-centered { break-inside: avoid; page-break-inside: avoid; }
+            table { width: 96%; margin-left: auto; margin-right: auto; }
         }
     </style>
 </head>
 
-<body>
+<body style="padding: 20mm 15mm 10mm;">
     <div class="page">
         @if ($error)
             <div class="notice">
@@ -292,36 +298,27 @@
             </table>
 
             <div class="signature-area">
+                <div class="signature-date">{{ $recapDate }}</div>
                 <div class="signature-row">
-                    <div class="signature-block left">
-                        {{ $getCellValue(36, 'B36', 'KUASA PENGELOLA BIAYA PROSES') }}
+                    <div class="signature-block">
+                        <div>PETUGAS PEMBUAT KOMITMEN<br>BIAYA PROSES</div>
+                        <div class="signature-name">
+                            {{ $getCellValue(40, 'F40', 'ST. KRIS NUGROHO, S.H., M.H.') }}
+                        </div>
+                    </div>
+
+                    <div class="signature-block">
+                        <div>MENGETAHUI,<br>KUASA PENGELOLA BIAYA PROSES</div>
                         <div class="signature-name">
                             {{ $getCellValue(40, 'B40', 'ASEP NURSOBAH, S.Ag., M.H.') }}
                         </div>
                     </div>
 
                     <div class="signature-block">
-                        {{ $getCellValue(36, 'F36', 'PETUGAS PEMBUAT KOMITMEN') }}
-                        <br>{{ $getCellValue(37, 'F37', 'BIAYA PROSES') }}
+                        <div>BENDAHARA BIAYA PROSES</div>
                         <div class="signature-name">
-                            {{ $getCellValue(40, 'F40', 'ST. KRIS NUGROHO, S.H., M.H.') }}
+                            {{ $getCellValue(40, 'L40', 'FARIDA, S.H.') }}
                         </div>
-                    </div>
-
-                    <div class="signature-block right">
-                        {{ $recapDate }}
-                        <br>{{ $getCellValue(36, 'L36', 'BENDAHARA BIAYA PROSES') }}
-                        <div class="signature-name">
-                            {{ $getCellValue(40, 'L40', 'FARIDA,SH') }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="signature-centered">
-                    {{ $getCellValue(43, 'F43', 'MENGETAHUI,') }}<br>
-                    {{ $getCellValue(44, 'F44', 'PANITERA MA-RI') }}
-                    <div class="name">
-                        {{ $getCellValue(49, 'F49', 'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.') }}
                     </div>
                 </div>
             </div>

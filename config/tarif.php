@@ -132,8 +132,57 @@ return [
     |--------------------------------------------------------------------------
     */
     'pejabat' => [
-        'bendahara'       => 'FARIDA, S.H.',
+        'bendahara'        => 'FARIDA, S.H.',
         'kuasa_pengelola'  => 'ASEP NURSOBAH, S.Ag., M.H.',
-        'ppk'             => 'ST. KRIS NUGROHO, S.H., M.H.',
+        'ppk'              => 'ST. KRIS NUGROHO, S.H., M.H.',
+        'petugas_pembuat'  => 'ST. KRIS NUGROHO, S.H., M.H.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Operator Kamar (Footer/Tanda Tangan OP-STAF per jenis perkara)
+    |--------------------------------------------------------------------------
+    | Key harus cocok dengan label di computeOpStafBlocks (def['label']).
+    | Gunakan '*' sebagai fallback default jika tidak ada entry spesifik.
+    */
+    'operator_kamar' => [
+        // ── Perdata Umum ──────────────────────────────────────────────────
+        'KASASI PERDATA UMUM'                            => ['jabatan' => 'OPERATOR KAMAR PERDATA',   'nama' => 'Mulki Ardiansyah, S.Kom.'],
+        'PENINJAUAN KEMBALI PERDATA UMUM'                => ['jabatan' => 'OPERATOR KAMAR PERDATA',   'nama' => 'Mulki Ardiansyah, S.Kom.'],
+
+        // ── Perdata Khusus (semua sub-jenis) ─────────────────────────────
+        'KASASI PERDATA KHUSUS'                          => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (PHI)'                    => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (HKI)'                    => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (KEPAILITAN)'             => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (ARBITRASE)'              => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (PARPOL)'                 => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (KPPU)'                   => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (BPSK)'                   => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'KASASI PERDATA KHUSUS (KIP)'                    => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS'              => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (PHI)'        => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (HKI)'        => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (KEPAILITAN)' => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (ARBITRASE)'  => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (PARPOL)'     => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (KPPU)'       => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (BPSK)'       => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+        'PENINJAUAN KEMBALI PERDATA KHUSUS (KIP)'        => ['jabatan' => 'OPERATOR PERDATA KHUSUS',  'nama' => 'Ahmad Faizal, SH.'],
+
+        // ── Perdata Agama ─────────────────────────────────────────────────
+        // (nama belum tercantum di file Excel — isi sesuai dokumen resmi)
+        'KASASI PERDATA AGAMA'                           => ['jabatan' => 'OPERATOR KAMAR AGAMA',     'nama' => ''],
+        'PENINJAUAN KEMBALI PERDATA AGAMA'               => ['jabatan' => 'OPERATOR KAMAR AGAMA',     'nama' => ''],
+
+        // ── TUN, P-HUM, P-KHS, PK-TUN, PK-PAJAK ─────────────────────────
+        'KASASI TATA USAHA NEGARA (K-TUN)'               => ['jabatan' => 'OPERATOR KAMAR TUN',       'nama' => 'Raini Hara Hutagalung, SH.'],
+        'P-HUM (PERMOHONAN HAK UJI MATERIL)'             => ['jabatan' => 'OPERATOR KAMAR TUN',       'nama' => 'Raini Hara Hutagalung, SH.'],
+        'P-KHS (PERMOHONAN HAK UJI PENDAPAT)'            => ['jabatan' => 'OPERATOR KAMAR TUN',       'nama' => 'Raini Hara Hutagalung, SH.'],
+        'PENINJAUAN KEMBALI TATA USAHA NEGARA (PK-TUN)'  => ['jabatan' => 'OPERATOR KAMAR TUN',       'nama' => 'Raini Hara Hutagalung, SH.'],
+        'PENINJAUAN KEMBALI PAJAK (PK-PJK)'              => ['jabatan' => 'OPERATOR KAMAR TUN',       'nama' => 'Raini Hara Hutagalung, SH.'],
+
+        // ── Fallback ──────────────────────────────────────────────────────
+        '*'                                              => ['jabatan' => 'OPERATOR KAMAR',            'nama' => ''],
     ],
 ];

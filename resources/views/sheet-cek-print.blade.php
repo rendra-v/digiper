@@ -76,14 +76,15 @@
             padding: 16mm 14mm 12mm;
         }
 
-        /* ── Judul ─────────────────────────────────────────────────────── */
+        /* ── Judul ────────────────────────────────────────────────────────── */
         .doc-title {
             text-align: center;
             margin-bottom: 8px;
+            margin-top: 0;
             line-height: 1.45;
         }
-        .doc-title .t1 { font-size: 12pt; font-weight: 700; text-transform: uppercase; color: #111; }
-        .doc-title .t2 { font-size: 11pt; font-weight: 700; color: #111; }
+        .doc-title .t1 { font-size: 14pt; font-weight: 700; text-transform: uppercase; color: #111; }
+        .doc-title .t2 { font-size: 14pt; font-weight: 700; color: #111; }
 
         /* ── Tabel ─────────────────────────────────────────────────────── */
         table {
@@ -121,11 +122,10 @@
             gap: 16px;
             font-size: 11pt;
         }
-        .ttd-label { font-weight: 700; text-transform: uppercase; color: var(--accent); line-height: 1.4; }
-        .ttd-space { height: 60px; border-bottom: 1px dashed var(--border); margin: 8px 0 4px; }
-        .ttd-name  { color: #4a4a6a; font-style: italic; }
-        .ttd-center { text-align: center; }
-        .ttd-right  { text-align: right; }
+        .ttd-label { font-weight: 700; text-transform: uppercase; line-height: 1.4; }
+        .ttd-space { height: 5cm; margin: 6px 0 4px; }
+        .ttd-name  { font-weight: 700; text-decoration: underline; }
+        .ttd-item  { text-align: center; }
 
         /* ── PRINT ──────────────────────────────────────────────────────── */
         @@page {
@@ -141,7 +141,7 @@
         }
         @media print {
             html { background: #fff; }
-            body { background: #fff; font-size: 9.5pt; padding: 10mm 12mm; }
+            body { background: #fff; font-size: 9.5pt; padding: 20mm 15mm 10mm; }
             .action-bar { display: none !important; }
             .pages { margin-top: 0; padding: 0; background: none; }
             .page {
@@ -152,12 +152,13 @@
             }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
-            table { font-size: 7pt; }
+            table { font-size: 7pt; width: 96%; margin: 0 auto; }
             thead th, tbody td { padding: 3px 4px; }
             tbody tr { break-inside: avoid; page-break-inside: avoid; }
             .td-right { white-space: nowrap; }
             .footer-wrap { break-inside: avoid; page-break-inside: avoid; }
             .ttd-grid { break-inside: avoid; page-break-inside: avoid; }
+            .ttd-space { height: 5cm; }
         }
     </style>
 </head>
@@ -334,22 +335,22 @@
     </table>
 
     {{-- Footer / Tanda Tangan --}}
-    <div class="footer-wrap">
-        <div class="ttd-grid">
-            <div>
-                <div class="ttd-label">Bendahara Biaya Proses</div>
+    <div class="footer-wrap" style="width:96%;margin:16px auto 0;">
+        <div class="ttd-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:11pt;">
+            <div class="ttd-item">
+                <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                 <div class="ttd-space"></div>
-                <div class="ttd-name">FARIDA, S.H.</div>
+                <div class="ttd-name">ST. KRIS NUGROHO, S.H., M.H.</div>
             </div>
-            <div class="ttd-center">
+            <div class="ttd-item">
                 <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                 <div class="ttd-space"></div>
                 <div class="ttd-name">ASEP NURSOBAH, S.Ag., M.H.</div>
             </div>
-            <div class="ttd-right">
-                <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+            <div class="ttd-item">
+                <div class="ttd-label">Bendahara Biaya Proses</div>
                 <div class="ttd-space"></div>
-                <div class="ttd-name">ST. KRIS NUGROHO, S.H., M.H.</div>
+                <div class="ttd-name">FARIDA, S.H.</div>
             </div>
         </div>
     </div>

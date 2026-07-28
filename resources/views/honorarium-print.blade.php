@@ -77,41 +77,43 @@
             background: #fff;
             box-shadow: 0 4px 32px rgba(0,0,0,.18), 0 1px 6px rgba(0,0,0,.08);
             border-radius: 3px;
-            padding: 10mm 15mm 10mm;
+            padding: 20mm 15mm 10mm;
             position: relative;
         }
 
         /* ── Judul dokumen ────────────────────────────────────── */
         .doc-title-wrap {
             text-align: center;
+            margin-top: 0;
             margin-bottom: 8px;
         }
         .doc-title-wrap .title-main {
-            font-size: 11pt;
+            font-size: 14pt;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.3;
+            line-height: 1.35;
         }
         .doc-title-wrap .title-sub {
-            font-size: 11pt;
+            font-size: 14pt;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.3;
+            line-height: 1.35;
         }
         .doc-title-wrap .title-info {
-            font-size: 11pt;
-            font-weight: 400;
+            font-size: 14pt;
+            font-weight: 700;
             margin-top: 2px;
+            line-height: 1.35;
         }
 
         /* ── Tabel ────────────────────────────────────────────── */
         table {
-            width: 100%;
+            width: 96%;
+            margin: 8px auto 0;
             border-collapse: collapse;
             font-size: 9pt;
             font-family: Arial, Helvetica, sans-serif;
-            table-layout: auto;
-            margin-top: 6px;
+            table-layout: fixed;
         }
         thead tr {
             background: #d9d9d9;
@@ -131,12 +133,12 @@
         }
         tbody tr:nth-child(even) { background: #f5f5f5; }
 
-        .td-no    { text-align: center; width: 24px;  white-space: nowrap; }
-        .td-nama  { text-align: left;   min-width: 110px; }
-        .td-jab   { text-align: center; min-width: 120px; }
-        .td-num   { text-align: center; white-space: nowrap; min-width: 60px; }
-        .td-count { text-align: center; white-space: nowrap; min-width: 50px; }
-        .td-ttd   { text-align: center; min-width: 60px; }
+        .td-no    { text-align: center; width: 4%; white-space: nowrap; }
+        .td-nama  { text-align: left;   width: 18%; }
+        .td-jab   { text-align: center; width: 18%; }
+        .td-num   { text-align: center; white-space: nowrap; width: 12%; }
+        .td-count { text-align: center; white-space: nowrap; width: 10%; }
+        .td-ttd   { text-align: center; width: 12%; }
 
         tr.row-total {
             background: #d9d9d9 !important;
@@ -147,31 +149,61 @@
         /* ── Footer / Tanda Tangan ────────────────────────────── */
         .footer-wrap {
             margin-top: 16px;
+            width: 96%;
+            margin-left: auto;
+            margin-right: auto;
         }
         .footer-date {
             text-align: right;
             font-size: 11pt;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .ttd-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+            gap: 16px;
             font-size: 11pt;
         }
-        .ttd-item { }
-        .ttd-item.center { text-align: center; }
-        .ttd-item.right  { text-align: right;  }
+        .ttd-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            font-size: 11pt;
+        }
+        .ttd-item { text-align: center; }
         .ttd-label {
             font-weight: 700;
             text-transform: uppercase;
             line-height: 1.4;
         }
         .ttd-space {
-            height: 50px;
+            height: 5cm;
             margin: 6px 0 4px;
         }
-        .ttd-name { }
+        .ttd-name {
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        /* Operator kamar (OP-STAF) footer kanan bawah */
+        .op-footer-wrap {
+            margin-top: 16px;
+            width: 96%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .op-footer-date {
+            text-align: right;
+            font-size: 11pt;
+            margin-bottom: 8px;
+        }
+        .op-ttd-right {
+            text-align: right;
+            font-size: 11pt;
+        }
+        .op-ttd-right .ttd-label { font-weight: 700; text-transform: uppercase; }
+        .op-ttd-right .ttd-space { height: 5cm; }
+        .op-ttd-right .ttd-name  { font-weight: 700; text-decoration: underline; }
 
         /* ── Notice / Error ───────────────────────────────────── */
         .notice {
@@ -187,12 +219,11 @@
         .notice p  { color: #78350f; font-size: 9pt; }
 
         /* ══════════════════════════════════════════════════════
-           PRINT STYLES — bersih hitam-putih, persis seperti contoh
+           PRINT STYLES
         ══════════════════════════════════════════════════════ */
         @@page {
             margin: 0;
             size: 330mm 215.9mm;
-            /* Hapus header/footer bawaan browser (tanggal, URL, nomor halaman) */
             @top-left   { content: ''; }
             @top-center { content: ''; }
             @top-right  { content: ''; }
@@ -209,7 +240,7 @@
                 font-size: 11pt;
                 font-family: Arial, Helvetica, sans-serif;
                 color: #000;
-                padding: 10mm 12mm;
+                padding: 0;
             }
             .action-bar { display: none !important; }
             .pages { margin-top: 0; padding: 0; gap: 0; background: none; }
@@ -219,14 +250,14 @@
                 min-height: auto;
                 box-shadow: none;
                 border-radius: 0;
-                padding: 0;
+                padding: 20mm 15mm 10mm;
                 page-break-after: always;
                 break-after: page;
             }
             .page:last-child { page-break-after: avoid; break-after: avoid; }
 
-            /* Tabel hitam-putih bersih */
-            table { font-size: 8.5pt; width: 100% !important; table-layout: auto; }
+            /* Tabel */
+            table { font-size: 8.5pt; width: 96% !important; table-layout: fixed; margin: 6px auto 0; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             thead tr { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -235,7 +266,6 @@
             tbody tr { break-inside: avoid; page-break-inside: avoid; }
             tbody tr:nth-child(even) { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             tr.row-total { background: #d9d9d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; page-break-inside: avoid; }
-
             tbody tr:hover { background: inherit; }
 
             /* Judul */
@@ -243,14 +273,20 @@
             .doc-title-wrap .title-main,
             .doc-title-wrap .title-sub,
             .doc-title-wrap .title-info {
-                font-size: 9.5pt;
+                font-size: 12pt;
+                font-weight: 700;
             }
 
             /* Footer */
-            .footer-wrap { margin-top: 8px; break-inside: avoid; page-break-inside: avoid; }
-            .footer-date { font-size: 9.5pt; }
-            .ttd-grid { font-size: 9.5pt; }
-            .ttd-space { height: 40px; }
+            .footer-wrap { margin-top: 10px; break-inside: avoid; page-break-inside: avoid; width: 96%; margin-left: auto; margin-right: auto; }
+            .footer-date { font-size: 10pt; }
+            .ttd-grid { font-size: 10pt; gap: 16px; }
+            .ttd-grid-2col { font-size: 10pt; gap: 16px; }
+            .ttd-space { height: 5cm; }
+
+            .op-footer-wrap { margin-top: 10px; break-inside: avoid; page-break-inside: avoid; width: 96%; margin-left: auto; margin-right: auto; }
+            .op-footer-date { font-size: 10pt; }
+            .op-ttd-right { font-size: 10pt; }
         }
     </style>
 </head>
@@ -294,8 +330,17 @@
         </div>
 
     @elseif($computedType === 'op-staf')
+        @php
+            $pejabat        = config('tarif.pejabat');
+            $operatorKamar  = config('tarif.operator_kamar', []);
+            $ttdDate        = \Illuminate\Support\Facades\Session::get('excel_tgl_kwitansi')
+                ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+        @endphp
         @foreach($opStafData as $oi => $block)
             @if(($block['total_perkara'] ?? 0) > 0)
+            @php
+                $opInfo = $operatorKamar[$block['title']] ?? $operatorKamar['*'] ?? ['jabatan' => 'OPERATOR KAMAR TUN', 'nama' => ''];
+            @endphp
             <div class="page">
                 <div class="doc-title-wrap">
                     <div class="title-main">HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['title'] }}</div>
@@ -303,11 +348,20 @@
                     <div class="title-info">Sebanyak {{ number_format($block['total_perkara'], 0, ',', '.') }} Perkara</div>
                 </div>
                 <table>
+                    <colgroup>
+                        <col class="td-no">
+                        <col class="td-nama">
+                        <col class="td-count">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-ttd">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="td-no">NO</th>
                             <th class="td-nama">NAMA OPERATOR</th>
-                            <th class="td-jab">JABATAN</th>
                             <th class="td-count">JUMLAH PERKARA</th>
                             <th class="td-num">BIAYA</th>
                             <th class="td-num">JUMLAH BIAYA</th>
@@ -322,7 +376,6 @@
                             <tr>
                                 <td class="td-no">{{ $row['no'] }}</td>
                                 <td class="td-nama" data-hon-key="hon_op_{{ $oi }}_{{ $loop->index }}"></td>
-                                <td class="td-jab">OPERATOR/PENGETIK</td>
                                 <td class="td-count">{{ number_format($row['jml'], 0, ',', '.') }}</td>
                                 <td class="td-num">Rp {{ number_format($row['tarif'], 0, ',', '.') }}</td>
                                 <td class="td-num">Rp {{ number_format($row['bruto'], 0, ',', '.') }}</td>
@@ -333,7 +386,7 @@
                             @endif
                         @endforeach
                         <tr class="row-total">
-                            <td colspan="5" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                            <td colspan="4" style="text-align: right; padding-right: 15px;">TOTAL</td>
                             <td class="td-num">Rp {{ number_format($block['total']['bruto'], 0, ',', '.') }}</td>
                             <td class="td-num">{{ $block['total']['pph5'] > 0 ? 'Rp ' . number_format($block['total']['pph5'], 0, ',', '.') : '-' }}</td>
                             <td class="td-num">Rp {{ number_format($block['total']['netto'], 0, ',', '.') }}</td>
@@ -341,6 +394,15 @@
                         </tr>
                     </tbody>
                 </table>
+                {{-- Footer: hanya tanggal + operator kamar di kanan --}}
+                <div class="op-footer-wrap">
+                    <div class="op-footer-date">{{ $ttdDate }}</div>
+                    <div class="op-ttd-right">
+                        <div class="ttd-label">{{ $opInfo['jabatan'] }}</div>
+                        <div class="ttd-space"></div>
+                        <div class="ttd-name">{{ $opInfo['nama'] }}</div>
+                    </div>
+                </div>
             </div>
             @endif
         @endforeach
@@ -354,6 +416,18 @@
                     <div class="title-sub">Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara</div>
                 </div>
                 <table>
+                    <colgroup>
+                        <col class="td-no">
+                        <col class="td-nama">
+                        <col class="td-jab">
+                        <col class="td-count">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-ttd">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="td-no">NO</th>
@@ -404,17 +478,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item center">
+                        <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item right">
+                        <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -430,6 +504,18 @@
                     <div class="title-info">{{ $b5['kamar_info'] }}</div>
                 </div>
                 <table>
+                    <colgroup>
+                        <col class="td-no">
+                        <col class="td-nama">
+                        <col class="td-jab">
+                        <col class="td-count">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-ttd">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="td-no">NO</th>
@@ -480,17 +566,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item center">
+                        <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item right">
+                        <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -507,6 +593,18 @@
                     <div class="title-sub">Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara</div>
                 </div>
                 <table>
+                    <colgroup>
+                        <col class="td-no">
+                        <col class="td-nama">
+                        <col class="td-jab">
+                        <col class="td-count">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-num">
+                        <col class="td-ttd">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="td-no">NO</th>
@@ -557,17 +655,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item center">
+                        <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
-                        <div class="ttd-item right">
+                        <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA,SH' }}</div>
+                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -633,7 +731,6 @@
                                         $isTtd   = str_contains($hdrUp, 'TANDA TANGAN');
                                         $isNum   = !$isNo && !$isNama && !$isJab && !$isCount && !$isTtd;
 
-                                        // Format rupiah untuk kolom angka (bukan jumlah perkara)
                                         if ($isNum && $val !== '' && $val !== '-') {
                                             $stripped = str_replace([',', '.', ' '], '', preg_replace('/^Rp\s*/i', '', (string)$val));
                                             if (is_numeric($stripped) && (float)$stripped != 0) {
@@ -703,7 +800,7 @@
                         </div>
 
                         {{-- Tengah --}}
-                        <div class="ttd-item center">
+                        <div class="ttd-item">
                             @if($fi['center'])
                                 @foreach(explode("\n", $fi['center']) as $line)
                                     <div class="ttd-label">{{ $line }}</div>
@@ -716,7 +813,7 @@
                         </div>
 
                         {{-- Kanan --}}
-                        <div class="ttd-item right">
+                        <div class="ttd-item">
                             @if($fi['right'])
                                 @foreach(explode("\n", $fi['right']) as $line)
                                     <div class="ttd-label">{{ $line }}</div>

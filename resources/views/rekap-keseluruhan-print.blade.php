@@ -24,6 +24,7 @@
             font-size: 10px;
             color: #111;
             background: #fff;
+            padding: 20mm 12mm 10mm;
         }
 
         /* ── Screen-only toolbar ─── */
@@ -40,23 +41,30 @@
 
         @media print {
             .no-print { display: none !important; }
-            body { padding: 6mm 10mm; }
+            body { padding: 8mm 12mm 6mm; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
             .recap-table .subtot,
             .recap-table .gtot { break-inside: avoid; page-break-inside: avoid; }
-            .sig-space { height: 35px; }
+            /* Jangan potong blok TTD — paksa masuk di halaman yang sama */
+            .sig-wrap {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .sig-space { height: 2cm; }
+            .sig-bottom .sig-name { margin-top: 2cm; }
         }
 
         /* ── Title ─── */
         .doc-title {
             text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            margin-top: 0;
             line-height: 1.45;
         }
-        .doc-title .t1 { font-size: 12px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t1 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
 
         /* ── Table ─── */
         .recap-table {
@@ -100,43 +108,43 @@
         .b { font-weight: 700; }
 
         /* ── Signature ─── */
-        .sig-wrap { margin-top: 5px; }
+        .sig-wrap { margin-top: 10px; }
 
         .sig-date {
             text-align: right;
-            font-size: 8px;
+            font-size: 10px;
             font-weight: 700;
-            margin-bottom: 2px;
+            margin-bottom: 6px;
         }
 
         .sig-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
         }
 
         .sig-col {
-            font-size: 8px;
-            line-height: 1.3;
+            font-size: 10px;
+            line-height: 1.4;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
-        .sig-col.left   { align-items: flex-start; text-align: left; }
-        .sig-col.center { align-items: center;      text-align: center; }
-        .sig-col.right  { align-items: flex-end;    text-align: right; }
 
         .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
-        .sig-space  { height: 40px; }
+        .sig-space  { height: 2cm; }
         .sig-name   { font-weight: 700; text-decoration: underline; font-size: 11px; }
 
         .sig-bottom {
-            margin-top: 4px;
+            margin-top: 8px;
             text-align: center;
-            font-size: 8px;
+            font-size: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .sig-bottom .sig-name { margin-top: 18px; }
+        .sig-bottom .sig-name { margin-top: 3cm; }
 
         /* ── Error ─── */
         .notice {
@@ -270,7 +278,7 @@
         </table>
 
         {{-- ══ Signature Area ══ --}}
-        <div class="sig-wrap">
+        <div class="sig-wrap" style="break-inside: avoid; page-break-inside: avoid; margin-top: 10px;">
 
             {{-- Tanggal kanan --}}
             @php
@@ -287,31 +295,24 @@
             {{-- 3 kolom --}}
             <div class="sig-row">
 
-                <div class="sig-col left">
-                    <div class="sig-label">Kuasa Pengelola Biaya Proses</div>
+                <div class="sig-col">
+                    <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                    <div class="sig-space"></div>
+                    <div class="sig-name">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                </div>
+
+                <div class="sig-col">
+                    <div class="sig-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                     <div class="sig-space"></div>
                     <div class="sig-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                 </div>
 
-                <div class="sig-col center">
-                    <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
-                    <div class="sig-space"></div>
-                    <div class="sig-name">{{ $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
-                </div>
-
-                <div class="sig-col right">
+                <div class="sig-col">
                     <div class="sig-label">Bendahara Biaya Proses</div>
                     <div class="sig-space"></div>
                     <div class="sig-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                 </div>
 
-            </div>
-
-            {{-- Mengetahui --}}
-            <div class="sig-bottom">
-                <div class="sig-label">Mengetahui,</div>
-                <div class="sig-label">Panitera MA-RI</div>
-                <div class="sig-name">Dr. SUDHARMAWATININGSIH, S.H., M.Hum.</div>
             </div>
 
         </div>
