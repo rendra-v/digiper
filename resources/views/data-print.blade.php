@@ -236,6 +236,36 @@
                                     <p class="text-neutral-500 dark:text-neutral-400">Belum ada data untuk kategori ini</p>
                                 </div>
                             @endif
+
+                            {{-- TTD Section per Kategori --}}
+                            @php
+                                $dpMonths = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+                                $dpDate = \Illuminate\Support\Facades\Session::get('excel_tgl_data_laporan')
+                                    ?: ('Jakarta, ' . date('d') . ' ' . $dpMonths[(int)date('m')] . ' ' . date('Y'));
+                                $dpJabatan = 'Panitera Muda ' . ucwords(strtolower($category['title'] ?? ''));
+                                $dpLsKey = 'ttd_dp_' . $idx;
+                            @endphp
+                            <div class="mt-8 flex justify-end">
+                                <div class="text-center text-sm">
+                                    <p class="font-medium text-neutral-700 dark:text-neutral-300">{{ $dpDate }}</p>
+                                    <p class="font-semibold text-neutral-700 dark:text-neutral-300 mt-0.5">Mengetahui,</p>
+                                    <p class="font-semibold text-neutral-700 dark:text-neutral-300">{{ $dpJabatan }}</p>
+                                    <div class="mt-14"
+                                         x-data="{ editing: false, val: localStorage.getItem('{{ $dpLsKey }}') ?? @js($category['ttd_name'] ?? '') }"
+                                         x-init="$watch('val', v => localStorage.setItem('{{ $dpLsKey }}', v))"
+                                         @dblclick="orig=val; editing=true" title="Klik 2x untuk edit nama">
+                                        <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal text-xs tracking-wide' : ''" class="cursor-text block text-sm font-bold text-neutral-900 dark:text-neutral-100"></span>
+                                        <div x-show="editing" x-cloak class="flex items-center gap-1 justify-center">
+                                            <input x-model="val" type="text"
+                                                   x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
+                                                   @keyup.enter="editing=false" @keyup.escape="val=orig; editing=false"
+                                                   class="border border-blue-400 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 w-60">
+                                            <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
+                                            <button @click="val=orig; editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                 </div>

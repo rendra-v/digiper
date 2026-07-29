@@ -449,7 +449,7 @@ class DashboardController extends Controller
             }
 
             // Ambil dari cache session jika tersedia
-            $cacheKey = $this->getCacheKey($filePath, 'data_print_v4');
+            $cacheKey = $this->getCacheKey($filePath, 'data_print_v5');
             $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
@@ -523,7 +523,7 @@ class DashboardController extends Controller
         }
 
         // Reuse cache dari dataPrint()
-        $cacheKey = $this->getCacheKey($filePath, 'data_print_v4');
+        $cacheKey = $this->getCacheKey($filePath, 'data_print_v5');
         $cached = Session::get($cacheKey);
 
         if ($cached !== null) {
@@ -987,6 +987,12 @@ class DashboardController extends Controller
         $currentHeaders = [];
         $maxRowsToProcess = min(50000, $highestRow);
 
+        // State machine per section to extract TTD name from signature rows
+        $ttdState = [];
+        foreach ($categoryDefinitions as $_ => $sectionId) {
+            $ttdState[$sectionId] = 'idle'; // idle → looking → jabatan_pending → name_pending → done
+        }
+
         for ($row = 1; $row <= $maxRowsToProcess; $row++) {
             $firstCell = trim($worksheet->getCell('A'.$row)->getValue() ?? '');
             $isSectionHeader = false;
@@ -1053,6 +1059,10 @@ class DashboardController extends Controller
                         if ($secondCol && isset($rowData[$secondCol])) {
                             $categories[$currentSection]['total'] = $rowData[$secondCol];
                         }
+                        // Signal that data is done — start looking for TTD name
+                        if (isset($ttdState[$currentSection]) && $ttdState[$currentSection] === 'idle') {
+                            $ttdState[$currentSection] = 'looking';
+                        }
 
                         continue;
                     }
@@ -1062,6 +1072,48 @@ class DashboardController extends Controller
                         $categories[$currentSection]['data'][] = $rowData;
                     }
                     $categories[$currentSection]['count']++;
+                }
+
+                // ── TTD name scanner ─────────────────────────────────────────────────
+                if (
+                    $currentSection &&
+                    isset($ttdState[$currentSection]) &&
+                    !in_array($ttdState[$currentSection], ['idle', 'done'], true)
+                ) {
+                    // Scan all columns for first non-empty raw value (handles merged cells)
+                    $ttdRowText = '';
+                    $scanLimit = min($highestColumnIndex, 50);
+                    for ($ci = 1; $ci <= $scanLimit; $ci++) {
+                        $colLtr = $indexToColumn($ci);
+                        $rawVal = trim((string) ($worksheet->getCell($colLtr.$row)->getValue() ?? ''));
+                        if ($rawVal !== '' && !str_starts_with($rawVal, '=')) {
+                            $ttdRowText = $rawVal;
+                            break;
+                        }
+                    }
+
+                    if ($ttdRowText !== '') {
+                        $st = $ttdState[$currentSection];
+                        if ($st === 'looking') {
+                            if (stripos($ttdRowText, 'Mengetahui') !== false) {
+                                $ttdState[$currentSection] = 'jabatan_pending';
+                            }
+                        } elseif ($st === 'jabatan_pending') {
+                            // This row is the jabatan (e.g. "Panitera Muda Perdata Khusus") — skip it
+                            $ttdState[$currentSection] = 'name_pending';
+                        } elseif ($st === 'name_pending') {
+                            // Next non-empty row that is not a metadata label is the name
+                            if (
+                                stripos($ttdRowText, 'Jakarta') === false &&
+                                stripos($ttdRowText, 'Mengetahui') === false &&
+                                stripos($ttdRowText, 'Panitera') === false &&
+                                stripos($ttdRowText, 'TOTAL') === false
+                            ) {
+                                $categories[$currentSection]['ttd_name'] = $ttdRowText;
+                                $ttdState[$currentSection] = 'done';
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1831,7 +1883,7 @@ class DashboardController extends Controller
             if ($cached !== null) return $cached;
 
             // Gunakan data_print_v4 cache yang sudah di-expand (konsisten dengan computeTimData)
-            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v4'));
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v5'));
             if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
@@ -1882,7 +1934,7 @@ class DashboardController extends Controller
             }
 
             // Gunakan data_print cache jika ada (supaya jumlah perkara konsisten dengan halaman data-print)
-            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v4'));
+            $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v5'));
             if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {

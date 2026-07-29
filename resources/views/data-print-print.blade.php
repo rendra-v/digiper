@@ -225,11 +225,38 @@
                 </tbody>
             </table>
 
+        @if($loop->last)
+            @php
+                $dpPrintMonths = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+                $dpPrintDate = \Illuminate\Support\Facades\Session::get('excel_tgl_data_laporan')
+                    ?: ('Jakarta, ' . date('d') . ' ' . $dpPrintMonths[(int)date('m')] . ' ' . date('Y'));
+                $dpPrintJabatan = 'Panitera Muda ' . ucwords(strtolower($category['title'] ?? ''));
+                $dpPrintKey = 'ttd_dp_' . $catKey;
+            @endphp
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
+                <div style="text-align: center; min-width: 180px;">
+                <p style="font-size: 9px; font-weight: 600;">{{ $dpPrintDate }}</p>
+                <p style="font-size: 9px; font-weight: 700; margin-top: 3px;">Mengetahui,</p>
+                <p style="font-size: 9px; font-weight: 700;">{{ $dpPrintJabatan }}</p>
+                <div style="height: 2.5cm;"></div>
+                <div data-ttd-key="{{ $dpPrintKey }}" style="font-size: 11px; font-weight: 700;">{{ $category['ttd_name'] ?? '' }}</div>
+                </div>
+            </div>
+        @endif
+
         </div>
         @endforeach
 
     @endforeach
 @endif
+<script>
+    window.addEventListener('load', function () {
+        document.querySelectorAll('[data-ttd-key]').forEach(function (el) {
+            var stored = localStorage.getItem(el.getAttribute('data-ttd-key'));
+            if (stored !== null && stored !== '') el.textContent = stored;
+        });
+    });
+</script>
 
 </body>
 </html>

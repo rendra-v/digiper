@@ -13,10 +13,16 @@
                 Atur tanggal yang digunakan di semua halaman print
             </p>
         </div>
-        <a href="{{ route('dashboard') }}"
-           class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
-            Dashboard
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('data-print') }}"
+               class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
+                Kembali
+            </a>
+            <a href="{{ route('dashboard') }}"
+               class="px-4 py-2.5 text-sm bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg transition-colors duration-200">
+                Dashboard
+            </a>
+        </div>
     </div>
 
     {{-- --- Success --- --}}

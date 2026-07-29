@@ -400,7 +400,7 @@
                     <div class="op-ttd-right">
                         <div class="ttd-label">{{ $opInfo['jabatan'] }}</div>
                         <div class="ttd-space"></div>
-                        <div class="ttd-name">{{ $opInfo['nama'] }}</div>
+                        <div class="ttd-name" data-ttd-key="ttd_op_mulki">{{ $opInfo['nama'] }}</div>
                     </div>
                 </div>
             </div>
@@ -478,17 +478,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -566,17 +566,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -655,17 +655,17 @@
                         <div class="ttd-item">
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
-                            <div class="ttd-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
+                            <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -843,6 +843,13 @@
         var stored = localStorage.getItem(key);
         if (stored !== null && stored !== '') {
             td.textContent = stored;
+        }
+    });
+    document.querySelectorAll('[data-ttd-key]').forEach(function(el) {
+        var key = el.getAttribute('data-ttd-key');
+        var stored = localStorage.getItem(key);
+        if (stored !== null) {
+            el.textContent = stored;
         }
     });
 })();

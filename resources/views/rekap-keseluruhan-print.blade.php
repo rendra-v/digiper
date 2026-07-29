@@ -134,7 +134,7 @@
 
         .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
         .sig-space  { height: 2cm; }
-        .sig-name   { font-weight: 700; text-decoration: underline; font-size: 11px; }
+        .sig-name   { font-weight: 700; font-size: 11px; }
 
         .sig-bottom {
             margin-top: 8px;
@@ -298,19 +298,19 @@
                 <div class="sig-col">
                     <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                    <div class="sig-name" data-ttd-key="ttd_petugas">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
                     <div class="sig-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                    <div class="sig-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
                     <div class="sig-label">Bendahara Biaya Proses</div>
                     <div class="sig-space"></div>
-                    <div class="sig-name">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
+                    <div class="sig-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                 </div>
 
             </div>
@@ -321,6 +321,10 @@
     <script>
         @if(!$error)
         window.addEventListener('load', function () {
+            document.querySelectorAll('[data-ttd-key]').forEach(function(el) {
+                var stored = localStorage.getItem(el.getAttribute('data-ttd-key'));
+                if (stored !== null) el.textContent = stored;
+            });
             setTimeout(function () { window.print(); }, 400);
         });
         @endif
