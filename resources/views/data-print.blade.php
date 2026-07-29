@@ -101,11 +101,24 @@
                                         </svg>
                                     </div>
                                 </div>
+                            {{-- Divider vertikal --}}
+                            <div class="hidden sm:block self-stretch w-px bg-neutral-200 dark:bg-neutral-700 mb-0.5"></div>
+
+                            {{-- Tombol Cetak Data Print --}}
+                            <div class="sm:w-auto">
+                                <label class="block text-xs font-medium text-transparent mb-1 hidden sm:block">Aksi</label>
+                                <a href="{{ route('data-print.print') }}" target="_blank"
+                                   class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-neutral-950 font-bold text-xs shadow-sm transition-all cursor-pointer whitespace-nowrap">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                                        <rect x="6" y="14" width="12" height="8"></rect>
+                                    </svg>
+                                    <span>🖨️ Cetak / PDF Semua</span>
+                                </a>
                             </div>
 
                         </div>
-
-
 
                     </div>
                 </div>
@@ -114,11 +127,22 @@
                 <div class="p-6">
                     @foreach ($categories as $idx => $category)
                         <div x-show="activeCategory === {{ $idx }}" class="space-y-4">
-                            <div>
-                                <h3 class="text-xl font-semibold mb-1">{{ $category['title'] ?? 'N/A' }}</h3>
-                                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total perkara: <span
-                                        class="font-bold text-neutral-700 dark:text-neutral-300">{{ $category['count'] ?? 0 }}</span>
-                                </p>
+                            <div class="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-1">{{ $category['title'] ?? 'N/A' }}</h3>
+                                    <p class="text-sm text-neutral-500 dark:text-neutral-400">Total perkara: <span
+                                            class="font-bold text-neutral-700 dark:text-neutral-300">{{ $category['count'] ?? 0 }}</span>
+                                    </p>
+                                </div>
+                                <a href="{{ route('data-print.print', ['cat' => $category['id']]) }}" target="_blank"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-amber-500 hover:text-neutral-950 active:bg-amber-600 text-neutral-700 dark:text-neutral-300 font-semibold text-xs border border-neutral-200 dark:border-neutral-700 transition-all shadow-2xs">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                                        <rect x="6" y="14" width="12" height="8"></rect>
+                                    </svg>
+                                    <span>Cetak Kategori Ini</span>
+                                </a>
                             </div>
 
                             @php
@@ -243,7 +267,13 @@
                                 $dpDate = \Illuminate\Support\Facades\Session::get('excel_tgl_data_laporan')
                                     ?: ('Jakarta, ' . date('d') . ' ' . $dpMonths[(int)date('m')] . ' ' . date('Y'));
                                 $dpJabatan = 'Panitera Muda ' . ucwords(strtolower($category['title'] ?? ''));
-                                $dpLsKey = 'ttd_dp_' . $idx;
+                                $catSlug = \Str::slug($category['title'] ?? ('cat_' . $idx));
+                                $dpLsKey = 'ttd_dp_' . $catSlug;
+                                $defaultTtdName = $category['ttd_name'] ?? '';
+                                if (empty($defaultTtdName)) {
+                                    $opCfg = config('tarif.operator_kamar.' . ($category['title'] ?? '')) ?? config('tarif.operator_kamar.*');
+                                    $defaultTtdName = $opCfg['nama'] ?? '';
+                                }
                             @endphp
                             <div class="mt-8 flex justify-end">
                                 <div class="text-center text-sm">
@@ -251,7 +281,7 @@
                                     <p class="font-semibold text-neutral-700 dark:text-neutral-300 mt-0.5">Mengetahui,</p>
                                     <p class="font-semibold text-neutral-700 dark:text-neutral-300">{{ $dpJabatan }}</p>
                                     <div class="mt-14"
-                                         x-data="{ editing: false, val: localStorage.getItem('{{ $dpLsKey }}') ?? @js($category['ttd_name'] ?? '') }"
+                                         x-data="{ editing: false, val: (localStorage.getItem('{{ $dpLsKey }}') || @js($defaultTtdName)) }"
                                          x-init="$watch('val', v => localStorage.setItem('{{ $dpLsKey }}', v))"
                                          @dblclick="orig=val; editing=true" title="Klik 2x untuk edit nama">
                                         <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal text-xs tracking-wide' : ''" class="cursor-text block text-sm font-bold text-neutral-900 dark:text-neutral-100"></span>

@@ -334,23 +334,29 @@
         </tbody>
     </table>
 
+    @php
+        $dpMonths = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+        $tglRekap = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+            ?: \Illuminate\Support\Facades\Session::get('excel_period')
+            ?: ('Jakarta, ' . date('d') . ' ' . $dpMonths[(int)date('m')] . ' ' . date('Y'));
+    @endphp
     {{-- Footer / Tanda Tangan --}}
-    <div class="footer-wrap" style="width:96%;margin:16px auto 0;">
-        <div class="ttd-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:11pt;">
-            <div class="ttd-item">
-                <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
-                <div class="ttd-space"></div>
-                <div class="ttd-name">ST. KRIS NUGROHO, S.H., M.H.</div>
+    <div class="footer-wrap" style="width:96%;margin:16px auto 0; page-break-inside: avoid; break-inside: avoid;">
+        <div class="ttd-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:10pt;text-align:center;">
+            <div class="ttd-item" style="display:flex;flex-direction:column;justify-content:space-between;height:110px;">
+                <div class="ttd-label" style="font-weight:bold;">PETUGAS PEMBUAT KOMITMEN<br>BIAYA PROSES</div>
+                <div class="ttd-name" style="font-weight:bold;">ST. KRIS NUGROHO, S.H., M.H.</div>
             </div>
-            <div class="ttd-item">
-                <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
-                <div class="ttd-space"></div>
-                <div class="ttd-name">ASEP NURSOBAH, S.Ag., M.H.</div>
+            <div class="ttd-item" style="display:flex;flex-direction:column;justify-content:space-between;height:110px;">
+                <div class="ttd-label" style="font-weight:bold;">MENGETAHUI,<br>KUASA PENGELOLA BIAYA PROSES</div>
+                <div class="ttd-name" style="font-weight:bold;">ASEP NURSOBAH, S.Ag., M.H.</div>
             </div>
-            <div class="ttd-item">
-                <div class="ttd-label">Bendahara Biaya Proses</div>
-                <div class="ttd-space"></div>
-                <div class="ttd-name">FARIDA, S.H.</div>
+            <div class="ttd-item" style="display:flex;flex-direction:column;justify-content:space-between;height:110px;">
+                <div class="ttd-label">
+                    <div style="font-weight:600;margin-bottom:4px;">{{ $tglRekap }}</div>
+                    <div style="font-weight:bold;">BENDAHARA BIAYA PROSES</div>
+                </div>
+                <div class="ttd-name" style="font-weight:bold;">FARIDA, SH</div>
             </div>
         </div>
     </div>

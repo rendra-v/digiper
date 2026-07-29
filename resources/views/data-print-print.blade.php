@@ -5,7 +5,7 @@
     <title>Cetak Data Print</title>
     <style>
         @page {
-            margin: 0;
+            margin: 2cm 1.2cm 1.2cm 1.2cm;
             size: 330mm 215.9mm;
             /* Hapus header/footer bawaan browser */
             @top-left   { content: ''; }
@@ -98,11 +98,15 @@
 
         @media print {
             .no-print { display: none !important; }
-            body { padding: 10mm 12mm; }
+            body { padding: 0; margin: 0; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
             .cat-title, .cat-subtitle { break-after: avoid; page-break-after: avoid; }
+            .page-group { break-after: page !important; page-break-after: always !important; }
+            .cat-section { break-after: page !important; page-break-after: always !important; }
+            .page-group:last-child, .cat-section:last-child { break-after: avoid !important; page-break-after: avoid !important; }
+            .sig-block { break-inside: avoid !important; page-break-inside: avoid !important; }
         }
     </style>
 </head>
@@ -182,7 +186,8 @@
         @foreach($rowChunks as $ci => $chunk)
         <div class="{{ ($loop->last && $loop->parent->last) ? 'cat-section' : 'page-group' }}">
 
-            {{-- Judul --}}
+            {{-- Judul Utama & Subtitle --}}
+            <div class="cat-title">{{ $category['title'] ?? '' }}</div>
             <div class="cat-subtitle">
                 {{ $fileName ?? '' }}
                 ({{ count($validRows) }} data)
@@ -231,15 +236,21 @@
                 $dpPrintDate = \Illuminate\Support\Facades\Session::get('excel_tgl_data_laporan')
                     ?: ('Jakarta, ' . date('d') . ' ' . $dpPrintMonths[(int)date('m')] . ' ' . date('Y'));
                 $dpPrintJabatan = 'Panitera Muda ' . ucwords(strtolower($category['title'] ?? ''));
-                $dpPrintKey = 'ttd_dp_' . $catKey;
+                $catSlug = \Str::slug($category['title'] ?? ('cat_' . $catKey));
+                $dpPrintKey = 'ttd_dp_' . $catSlug;
+                $defaultPrintTtdName = $category['ttd_name'] ?? '';
+                if (empty($defaultPrintTtdName)) {
+                    $opCfg = config('tarif.operator_kamar.' . ($category['title'] ?? '')) ?? config('tarif.operator_kamar.*');
+                    $defaultPrintTtdName = $opCfg['nama'] ?? '';
+                }
             @endphp
-            <div style="margin-top: 24px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
+            <div class="sig-block" style="margin-top: 24px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
                 <div style="text-align: center; min-width: 180px;">
                 <p style="font-size: 9px; font-weight: 600;">{{ $dpPrintDate }}</p>
                 <p style="font-size: 9px; font-weight: 700; margin-top: 3px;">Mengetahui,</p>
                 <p style="font-size: 9px; font-weight: 700;">{{ $dpPrintJabatan }}</p>
                 <div style="height: 2.5cm;"></div>
-                <div data-ttd-key="{{ $dpPrintKey }}" style="font-size: 11px; font-weight: 700;">{{ $category['ttd_name'] ?? '' }}</div>
+                <div data-ttd-key="{{ $dpPrintKey }}" style="font-size: 11px; font-weight: 700;">{{ $defaultPrintTtdName }}</div>
                 </div>
             </div>
         @endif

@@ -496,18 +496,37 @@ class HonorariumCalculator
 
             foreach ($gDef['subGroups'] as $sg) {
                 $count = 0;
+                $count5 = 0;
                 $catId = $sg['countKey'];
                 if (isset($categories[$catId])) {
                     $allData = $categories[$catId]['data'];
-                    if (isset($sg['filter'])) {
-                        foreach ($allData as $row) {
+                    foreach ($allData as $row) {
+                        $isMatch = false;
+                        if (isset($sg['filter'])) {
                             $klas = $this->resolveKlasifikasi($row);
-                            if ($klas === $sg['filter']) {
-                                $count++;
+                            $targetFilter = $sg['filter'];
+                            if (($targetFilter === 'HAKI' || $targetFilter === 'HKI') && ($klas === 'HAKI' || $klas === 'HKI')) {
+                                $isMatch = true;
+                            } elseif ($klas === $targetFilter) {
+                                $isMatch = true;
+                            }
+                        } else {
+                            $isMatch = true;
+                        }
+
+                        if ($isMatch) {
+                            $count++;
+                            $pCount = 0;
+                            foreach (['Nama P1', 'Nama P2', 'Nama P3', 'Nama P4', 'Nama P5'] as $pCol) {
+                                $val = trim((string)($row[$pCol] ?? ''));
+                                if ($val !== '' && $val !== '0' && $val !== '-' && !str_starts_with($val, '#')) {
+                                    $pCount++;
+                                }
+                            }
+                            if ($pCount >= 5) {
+                                $count5++;
                             }
                         }
-                    } else {
-                        $count = count($allData);
                     }
                 }
 
@@ -519,16 +538,20 @@ class HonorariumCalculator
                 $biaya15 = $t['pph15'];
                 $totalDpp15 = $count * $biaya15;
                 
-                $kep15 = $totalDpp15 * (23 / 56);
-                $pemilah15 = $totalDpp15 * (1 / 14);
-                $majelis15 = 0; // As per user prompt
+                $kep15 = (int) round($totalDpp15 * (23 / 56));
+                $pemilah15 = (int) round($totalDpp15 * (1 / 14));
+                $majelis15 = 0;
+                if ($count > 0 && $count5 > 0) {
+                    $ratio5 = $count5 / $count;
+                    $majelis15 = (int) round($totalDpp15 * (17 / 252) * $ratio5);
+                }
                 $tim15 = $totalDpp15 - $kep15 - $pemilah15 - $majelis15;
                 
                 // 5% Row Calculations
                 $biaya5 = $t['pph5'];
                 $totalDpp5 = $count * $biaya5;
                 
-                $kep5 = $totalDpp5 * (11 / 16);
+                $kep5 = (int) round($totalDpp5 * (11 / 16));
                 $pemilah5 = 0;
                 $majelis5 = 0;
                 $tim5 = $totalDpp5 - $kep5 - $pemilah5 - $majelis5;

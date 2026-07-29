@@ -228,64 +228,43 @@
         @if(isset($footer) && count($footer) > 0)
             <div class="mt-16 mb-24 px-8">
                 @php
-                    $fullText = '';
-                    foreach($footer as $fRow) {
-                        foreach($fRow as $k => $v) {
-                            if($k !== '_rowspans' && $k !== '_original_row' && $v && $v !== 'SKIP_OR_NULL') {
-                                $fullText .= ' ' . $v;
-                            }
-                        }
-                    }
-
-                    // Extract Date
-                    $date = '';
-                    if (preg_match('/(Jakarta,\s*\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/', $fullText, $matches)) {
-                        $date = $matches[1];
-                    }
-
-                    // Extract People
-                    // Bendahara
-                    $bendaharaName = '';
-                    if (preg_match('/FARIDA,\s*SH/', $fullText, $m)) $bendaharaName = 'FARIDA, S.H.';
-                    
-                    // Mengetahui
-                    $mengetahuiName = '';
-                    if (preg_match('/ASEP NURSOBAH,\s*S\.Ag\.,\s*M\.H\./', $fullText, $m)) $mengetahuiName = 'ASEP NURSOBAH, S.Ag., M.H.';
-                    
-                    // PPK
-                    $ppkName = '';
-                    if (preg_match('/ST\.\s*KRIS NUGROHO,\s*S\.H\.,\s*M\.H\./', $fullText, $m)) $ppkName = 'ST. KRIS NUGROHO, S.H., M.H.';
+                    $dpMonths = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+                    $tglRekap = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+                        ?: \Illuminate\Support\Facades\Session::get('excel_period')
+                        ?: ('Jakarta, ' . date('d') . ' ' . $dpMonths[(int)date('m')] . ' ' . date('Y'));
                 @endphp
 
-                <div class="flex flex-col items-end mb-12">
-                    <p class="text-sm font-medium text-neutral-800 dark:text-neutral-200">{{ $date ?: 'Jakarta, 05 Maret 2026' }}</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-                    <!-- Column 1: Bendahara -->
-                    <div class="flex flex-col justify-between h-48">
-                        <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">Bendahara Biaya Proses</p>
-                        <div class="mt-auto">
-                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $bendaharaName ?: 'FARIDA, S.H.' }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Column 2: Mengetahui -->
-                    <div class="flex flex-col justify-between h-48">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center pt-8">
+                    <!-- Column 1: PPK (Kiri) -->
+                    <div class="flex flex-col justify-between h-44">
                         <div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500 mb-1">Mengetahui</p>
-                            <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Kuasa Pengelola Biaya Proses</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">PETUGAS PEMBUAT KOMITMEN</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">BIAYA PROSES</p>
                         </div>
                         <div class="mt-auto">
-                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $mengetahuiName ?: 'ASEP NURSOBAH, S.Ag., M.H.' }}</p>
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase">ST. KRIS NUGROHO, S.H., M.H.</p>
                         </div>
                     </div>
 
-                    <!-- Column 3: PPK -->
-                    <div class="flex flex-col justify-between h-48">
-                        <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">Petugas Pembuat Komitmen Biaya Proses</p>
+                    <!-- Column 2: Mengetahui (Tengah) -->
+                    <div class="flex flex-col justify-between h-44">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">MENGETAHUI,</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">KUASA PENGELOLA BIAYA PROSES</p>
+                        </div>
                         <div class="mt-auto">
-                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 underline decoration-2 underline-offset-4">{{ $ppkName ?: 'ST. KRIS NUGROHO, S.H., M.H.' }}</p>
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase">ASEP NURSOBAH, S.Ag., M.H.</p>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Bendahara (Kanan) -->
+                    <div class="flex flex-col justify-between h-44">
+                        <div>
+                            <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">{{ $tglRekap }}</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">BENDAHARA BIAYA PROSES</p>
+                        </div>
+                        <div class="mt-auto">
+                            <p class="text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase">FARIDA, SH</p>
                         </div>
                     </div>
                 </div>

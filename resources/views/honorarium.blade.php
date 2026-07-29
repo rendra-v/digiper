@@ -17,6 +17,24 @@
             </p>
         </div>
         <div class="flex items-center gap-3">
+            {{-- Dropdown Navigasi Halaman Lain --}}
+            <div class="relative w-56">
+                <select onchange="if(this.value) window.location.href = this.value"
+                    class="w-full appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-3.5 py-2.5 pr-10 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                    <option value="" disabled selected>— Lihat halaman lain —</option>
+                    <option value="{{ route('dashboard') }}">🏠&nbsp; Dashboard</option>
+                    <option value="{{ route('data-print') }}">🖨️&nbsp; Data Print</option>
+                    <option value="{{ route('sheet-cek') }}">📋&nbsp; Lihat Sheet Cek</option>
+                    <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                    <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </div>
+            </div>
+
             @if(!$error && (count($sheets) > 0 || !empty($timData) || !empty($kepaniteraanData) || !empty($opStafData)))
                 {{-- Dropdown Cetak --}}
 

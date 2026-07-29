@@ -62,52 +62,72 @@
 
             <div class="divide-y divide-neutral-100 dark:divide-neutral-800">
 
-                <div class="flex items-center px-6 py-5 gap-6">
+                <div class="flex items-center px-6 py-5 gap-6 bg-emerald-50/30 dark:bg-emerald-950/10">
                     <div class="w-64 shrink-0">
-                        <label for="laporan_periode" class="block text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Laporan Periode</label>
-                        <p class="text-xs text-neutral-400 mt-1">Contoh: DESEMBER 2025 S/D FEBRUARI 2026</p>
+                        <div class="flex items-center gap-2">
+                            <label for="laporan_periode" class="block text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">Laporan Periode</label>
+                            @if(!empty($laporan_periode))
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded">Terisi</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Contoh: DESEMBER 2025 S/D FEBRUARI 2026</p>
                     </div>
                     <span class="text-neutral-400 font-bold shrink-0">:</span>
                     <input type="text" id="laporan_periode" name="laporan_periode"
                            value="{{ old('laporan_periode', $laporan_periode) }}"
                            placeholder="DESEMBER 2025 S/D FEBRUARI 2026"
-                           class="flex-1 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
+                           class="flex-1 px-4 py-3 rounded-lg border border-emerald-400 dark:border-emerald-700 bg-white dark:bg-neutral-950 text-base font-bold text-emerald-900 dark:text-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 shadow-sm transition-colors">
                 </div>
 
                 <div class="flex items-center px-6 py-5 gap-6">
                     <div class="w-64 shrink-0">
-                        <label for="tgl_data_laporan" class="block text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Tanggal Data Laporan</label>
-                        <p class="text-xs text-neutral-400 mt-1">Digunakan di print Data Laporan</p>
+                        <div class="flex items-center gap-2">
+                            <label for="tgl_data_laporan" class="block text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">Tanggal Data Laporan</label>
+                            @if(!empty($tgl_data_laporan))
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded">Terisi</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Digunakan di print Data Laporan</p>
                     </div>
                     <span class="text-neutral-400 font-bold shrink-0">:</span>
                     <input type="text" id="tgl_data_laporan" name="tgl_data_laporan"
                            value="{{ old('tgl_data_laporan', $tgl_data_laporan) }}"
                            placeholder="Jakarta, 02 Maret 2026"
-                           class="flex-1 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
+                           class="flex-1 px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-base font-bold text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 shadow-sm transition-colors">
                 </div>
 
-                <div class="flex items-center px-6 py-5 gap-6 bg-emerald-50/50 dark:bg-emerald-950/10">
+                <div class="flex items-center px-6 py-5 gap-6 bg-emerald-50/40 dark:bg-emerald-950/20">
                     <div class="w-64 shrink-0">
-                        <label for="tgl_rekap_keseluruhan" class="block text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Tanggal Rekap Keseluruhan</label>
-                        <p class="text-xs text-neutral-400 mt-1">Digunakan di print Rekap Keseluruhan 1, 2, 3</p>
+                        <div class="flex items-center gap-2">
+                            <label for="tgl_rekap_keseluruhan" class="block text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">Tanggal Rekap Keseluruhan</label>
+                            @if(!empty($tgl_rekap_keseluruhan))
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded">Terisi</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Digunakan di print Rekap Keseluruhan 1, 2, 3</p>
                     </div>
                     <span class="text-neutral-400 font-bold shrink-0">:</span>
                     <input type="text" id="tgl_rekap_keseluruhan" name="tgl_rekap_keseluruhan"
                            value="{{ old('tgl_rekap_keseluruhan', $tgl_rekap_keseluruhan) }}"
                            placeholder="Jakarta, 05 Maret 2026"
-                           class="flex-1 px-4 py-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
+                           class="flex-1 px-4 py-3 rounded-lg border border-emerald-400 dark:border-emerald-700 bg-white dark:bg-neutral-950 text-base font-bold text-emerald-900 dark:text-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 shadow-sm transition-colors">
                 </div>
 
                 <div class="flex items-center px-6 py-5 gap-6">
                     <div class="w-64 shrink-0">
-                        <label for="tgl_kwitansi" class="block text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Tanggal Kwitansi</label>
-                        <p class="text-xs text-neutral-400 mt-1">Digunakan di print Honorarium</p>
+                        <div class="flex items-center gap-2">
+                            <label for="tgl_kwitansi" class="block text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">Tanggal Kwitansi</label>
+                            @if(!empty($tgl_kwitansi))
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded">Terisi</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Digunakan di print Honorarium</p>
                     </div>
                     <span class="text-neutral-400 font-bold shrink-0">:</span>
                     <input type="text" id="tgl_kwitansi" name="tgl_kwitansi"
                            value="{{ old('tgl_kwitansi', $tgl_kwitansi) }}"
                            placeholder="Jakarta, 05 Maret 2026"
-                           class="flex-1 px-4 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-colors">
+                           class="flex-1 px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-base font-bold text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 shadow-sm transition-colors">
                 </div>
 
             </div>

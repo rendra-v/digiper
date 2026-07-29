@@ -197,32 +197,53 @@ class DashboardController extends Controller
             'tgl_kwitansi'          => '',
         ];
 
-        $sheet = $spreadsheet->getSheetByName('Periode Laporan');
-        if (! $sheet) {
-            return $result;
-        }
-
-        $labelMap = [
-            'LAPORAN PERIODE'           => 'laporan_periode',
-            'TANGGAL DATA LAPORAN'      => 'tgl_data_laporan',
-            'TANGGAL REKAP KESELURUHAN' => 'tgl_rekap_keseluruhan',
-            'TANGGAL KWITANSI'          => 'tgl_kwitansi',
-        ];
-
-        $highestRow = min((int) $sheet->getHighestRow(), 30);
-        for ($row = 1; $row <= $highestRow; $row++) {
-            $label = strtoupper(trim((string) $sheet->getCell('A'.$row)->getValue()));
-            if (isset($labelMap[$label])) {
-                // Nilai bisa di kolom C atau D (tergantung format file)
-                $val = trim((string) $sheet->getCell('C'.$row)->getFormattedValue());
-                if ($val === '') {
-                    $val = trim((string) $sheet->getCell('D'.$row)->getFormattedValue());
+        // Search for sheet named "Periode Laporan" case-insensitively
+        $targetSheet = null;
+        foreach ($spreadsheet->getSheetNames() as $sName) {
+            if (stripos($sName, 'periode') !== false || stripos($sName, 'laporan') !== false) {
+                $targetSheet = $spreadsheet->getSheetByName($sName);
+                if (stripos($sName, 'periode laporan') !== false) {
+                    break;
                 }
-                $result[$labelMap[$label]] = $val;
             }
         }
 
-        \Log::info('parsePeriodeLaporan()', $result);
+        if (!$targetSheet) {
+            return $result;
+        }
+
+        $highestRow = min((int) $targetSheet->getHighestRow(), 40);
+        for ($row = 1; $row <= $highestRow; $row++) {
+            // Scan columns A to E for labels
+            for ($colIdx = 1; $colIdx <= 5; $colIdx++) {
+                $cellVal = strtoupper(trim((string) $targetSheet->getCell([$colIdx, $row])->getValue()));
+                if ($cellVal === '') continue;
+
+                $targetKey = null;
+                if (stripos($cellVal, 'LAPORAN PERIODE') !== false || ($cellVal === 'PERIODE' && empty($result['laporan_periode']))) {
+                    $targetKey = 'laporan_periode';
+                } elseif (stripos($cellVal, 'DATA LAPORAN') !== false) {
+                    $targetKey = 'tgl_data_laporan';
+                } elseif (stripos($cellVal, 'REKAP KESELURUHAN') !== false) {
+                    $targetKey = 'tgl_rekap_keseluruhan';
+                } elseif (stripos($cellVal, 'KWITANSI') !== false) {
+                    $targetKey = 'tgl_kwitansi';
+                }
+
+                if ($targetKey && empty($result[$targetKey])) {
+                    // Find next non-empty cell in the same row
+                    for ($valCol = $colIdx + 1; $valCol <= 8; $valCol++) {
+                        $v = trim((string) $targetSheet->getCell([$valCol, $row])->getFormattedValue());
+                        if ($v !== '' && $v !== ':') {
+                            $result[$targetKey] = $v;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        \Log::info('parsePeriodeLaporan() parsed:', $result);
         return $result;
     }
 
@@ -551,9 +572,17 @@ class DashboardController extends Controller
             }
         }
 
-        // Filter per kategori jika diminta
-        if ($catFilter !== null && isset($categories[$catFilter])) {
-            $categories = [$catFilter => $categories[$catFilter]];
+        // Filter per kategori jika diminta (bisa berdasarkan id string atau numeric index)
+        if ($catFilter !== null && $catFilter !== '') {
+            $filtered = [];
+            foreach ($categories as $k => $catItem) {
+                if ((string)$k === (string)$catFilter || ($catItem['id'] ?? '') === (string)$catFilter) {
+                    $filtered[$k] = $catItem;
+                }
+            }
+            if (!empty($filtered)) {
+                $categories = $filtered;
+            }
         }
 
         return view('data-print-print', compact('categories', 'fileName', 'catFilter') + ['error' => null]);
@@ -837,12 +866,13 @@ class DashboardController extends Controller
                 }));
                 $cnt    = count($rows);
                 $subs[] = [
-                    'id'      => "{$parentId}-{$klas}",
-                    'title'   => "{$titlePrefix} ({$klas})",
-                    'data'    => $rows,
-                    'count'   => $cnt,
-                    'columns' => $parent['columns'],
-                    'total'   => $cnt > 0 ? $cnt : null,
+                    'id'       => "{$parentId}-{$klas}",
+                    'title'    => "{$titlePrefix} ({$klas})",
+                    'data'     => $rows,
+                    'count'    => $cnt,
+                    'columns'  => $parent['columns'],
+                    'total'    => $cnt > 0 ? $cnt : null,
+                    'ttd_name' => $parent['ttd_name'] ?? '',
                 ];
             }
             $insertions[$parentId] = $subs;
@@ -1075,42 +1105,48 @@ class DashboardController extends Controller
                 }
 
                 // ── TTD name scanner ─────────────────────────────────────────────────
-                if (
-                    $currentSection &&
-                    isset($ttdState[$currentSection]) &&
-                    !in_array($ttdState[$currentSection], ['idle', 'done'], true)
-                ) {
-                    // Scan all columns for first non-empty raw value (handles merged cells)
-                    $ttdRowText = '';
-                    $scanLimit = min($highestColumnIndex, 50);
+                if ($currentSection && empty($categories[$currentSection]['ttd_name'])) {
+                    $rowTexts = [];
+                    $scanLimit = min($highestColumnIndex, 60);
                     for ($ci = 1; $ci <= $scanLimit; $ci++) {
                         $colLtr = $indexToColumn($ci);
-                        $rawVal = trim((string) ($worksheet->getCell($colLtr.$row)->getValue() ?? ''));
-                        if ($rawVal !== '' && !str_starts_with($rawVal, '=')) {
-                            $ttdRowText = $rawVal;
-                            break;
+                        $cell = $worksheet->getCell($colLtr.$row);
+                        $cVal = trim((string) ($cell->getValue() ?? ''));
+                        if ($cVal === '') {
+                            $cVal = trim((string) ($cell->getFormattedValue() ?? ''));
+                        }
+                        if ($cVal !== '' && !str_starts_with($cVal, '=')) {
+                            $rowTexts[] = $cVal;
                         }
                     }
 
-                    if ($ttdRowText !== '') {
-                        $st = $ttdState[$currentSection];
-                        if ($st === 'looking') {
-                            if (stripos($ttdRowText, 'Mengetahui') !== false) {
-                                $ttdState[$currentSection] = 'jabatan_pending';
-                            }
-                        } elseif ($st === 'jabatan_pending') {
-                            // This row is the jabatan (e.g. "Panitera Muda Perdata Khusus") — skip it
+                    if (!empty($rowTexts)) {
+                        $joinedText = implode(' ', $rowTexts);
+                        if (
+                            stripos($joinedText, 'Mengetahui') !== false ||
+                            stripos($joinedText, 'Panitera') !== false ||
+                            stripos($joinedText, 'Jakarta') !== false
+                        ) {
                             $ttdState[$currentSection] = 'name_pending';
-                        } elseif ($st === 'name_pending') {
-                            // Next non-empty row that is not a metadata label is the name
-                            if (
-                                stripos($ttdRowText, 'Jakarta') === false &&
-                                stripos($ttdRowText, 'Mengetahui') === false &&
-                                stripos($ttdRowText, 'Panitera') === false &&
-                                stripos($ttdRowText, 'TOTAL') === false
-                            ) {
-                                $categories[$currentSection]['ttd_name'] = $ttdRowText;
-                                $ttdState[$currentSection] = 'done';
+                        } elseif (
+                            isset($ttdState[$currentSection]) &&
+                            $ttdState[$currentSection] === 'name_pending'
+                        ) {
+                            foreach ($rowTexts as $cand) {
+                                if (
+                                    stripos($cand, 'Jakarta') === false &&
+                                    stripos($cand, 'Mengetahui') === false &&
+                                    stripos($cand, 'Panitera') === false &&
+                                    stripos($cand, 'TOTAL') === false &&
+                                    stripos($cand, 'Halaman') === false &&
+                                    stripos($cand, 'NO') === false &&
+                                    stripos($cand, 'PERKARA') === false &&
+                                    strlen($cand) >= 3
+                                ) {
+                                    $categories[$currentSection]['ttd_name'] = $cand;
+                                    $ttdState[$currentSection] = 'done';
+                                    break;
+                                }
                             }
                         }
                     }
