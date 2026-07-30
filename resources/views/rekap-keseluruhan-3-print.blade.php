@@ -80,6 +80,15 @@
 
         .notice { margin: 30px auto; max-width: 400px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
         .period { text-align: right; font-size: 9px; font-weight: 700; margin-top: 5px; }
+
+        /* signature */
+        .sig-wrap   { break-inside: avoid; page-break-inside: avoid; margin-top: 15px; }
+        .sig-date   { text-align: right; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
+        .sig-row    { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+        .sig-col    { flex: 1; text-align: center; }
+        .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
+        .sig-space  { height: 2cm; }
+        .sig-name   { font-weight: 700; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -203,10 +212,46 @@
             </div>{{-- end chunk div --}}
             @endforeach {{-- colChunks --}}
 
+            {{-- ══ Signature Area ══ --}}
+            <div class="sig-wrap">
+                @php
+                    $months = [
+                        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                    ];
+                    $dateNow = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
+                        ?: ('Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y'));
+                    $pejabat = config('tarif.pejabat');
+                @endphp
+                <div class="sig-date">{{ $dateNow }}</div>
+                <div class="sig-row">
+                    <div class="sig-col">
+                        <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
+                        <div class="sig-space"></div>
+                        <div class="sig-name" data-ttd-key="ttd_petugas">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
+                    </div>
 
+                    <div class="sig-col">
+                        <div class="sig-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
+                        <div class="sig-space"></div>
+                        <div class="sig-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
+                    </div>
+
+                    <div class="sig-col">
+                        <div class="sig-label">Bendahara Biaya Proses</div>
+                        <div class="sig-space"></div>
+                        <div class="sig-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
+                    </div>
+                </div>
+            </div>
 
         <script>
             window.addEventListener('load', function () {
+                document.querySelectorAll('[data-ttd-key]').forEach(function(el) {
+                    var stored = localStorage.getItem(el.getAttribute('data-ttd-key'));
+                    if (stored !== null && stored !== '') el.textContent = stored;
+                });
                 setTimeout(function () { window.print(); }, 400);
             });
         </script>
