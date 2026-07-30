@@ -907,26 +907,38 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                             Pilih Kategori Perkara
                         </label>
-                        <div class="relative">
-                            <select x-model="kepBlock"
-                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
-                                <option value="">— Semua Kategori ({{ count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 11)) }}) —</option>
-                                @foreach($kepaniteraanData as $ki => $kb)
-                                @if(count($kb['rows']) >= 11)
-                                <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
-                                @endif
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
-                                </svg>
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex-1">
+                                <select x-model="kepBlock"
+                                        class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
+                                    <option value="">— Semua Kategori ({{ count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 1)) }}) —</option>
+                                    @foreach($kepaniteraanData as $ki => $kb)
+                                    @if(count($kb['rows']) >= 1)
+                                    <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
+                                    @endif
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                </div>
                             </div>
+                            <a :href="kepBlock !== '' ? '{{ route('honorarium.print') }}?computed=kepaniteraan&cat=' + kepBlock : '{{ route('honorarium.print') }}?computed=kepaniteraan'"
+                               target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
+                               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <polyline points="6 9 6 2 18 2 18 9"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                    <rect x="6" y="14" width="12" height="8"/>
+                                </svg>
+                                <span x-text="kepBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua Kepaniteraan'">🖨️ Cetak Kategori Ini</span>
+                            </a>
                         </div>
                     </div>
 
                     @foreach($kepaniteraanData as $ki => $block)
-                    @if(count($block['rows']) >= 11)
+                    @if(count($block['rows']) >= 1)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="kepBlock === '' || kepBlock === '{{ $ki }}'">
 
@@ -940,7 +952,10 @@
                                         Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara
                                     </p>
                                 </div>
-
+                                <a href="{{ route('honorarium.print') }}?computed=kepaniteraan&cat={{ $ki }}" target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                    🖨️ Cetak Kategori Ini
+                                </a>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -1093,32 +1108,52 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                         Pilih Kategori Perkara
                     </label>
-                    <div class="relative">
-                        <select x-model="timCat3"
-                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
-                            <option value="">— Semua Kategori ({{ count($timData) }}) —</option>
-                            @foreach($timData as $ti3 => $tBlock3)
-                            <option value="{{ $ti3 }}">{{ $tBlock3['label'] }} ({{ number_format($tBlock3['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
-                            @endforeach
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
-                            </svg>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1">
+                            <select x-model="timCat3"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
+                                <option value="">— Semua Kategori ({{ count($timData) }}) —</option>
+                                @foreach($timData as $ti3 => $tBlock3)
+                                <option value="{{ $ti3 }}">{{ $tBlock3['label'] }} ({{ number_format($tBlock3['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </div>
                         </div>
+                        <a :href="timCat3 !== '' ? '{{ route('honorarium.print') }}?computed=tim&cat=' + timCat3 : '{{ route('honorarium.print') }}?computed=tim'"
+                           target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                            <span x-text="timCat3 !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua TIM'">🖨️ Cetak Kategori Ini</span>
+                        </a>
                     </div>
                 </div>
 
                     @foreach($timData as $ti3 => $block)
                     @if(count($block['rows']) >= 1)
                     <div x-show="timCat3 === '' || timCat3 === '{{ $ti3 }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
-                            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                                HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
-                            </p>
-                            <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
-                                Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
-                            </p>
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="text-center flex-1">
+                                    <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                                        HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
+                                    </p>
+                                    <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1">
+                                        Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
+                                    </p>
+                                </div>
+                                <a href="{{ route('honorarium.print') }}?computed=tim&cat={{ $ti3 }}" target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                    🖨️ Cetak Kategori Ini
+                                </a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-xs border-collapse">
