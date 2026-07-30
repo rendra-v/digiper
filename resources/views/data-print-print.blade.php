@@ -43,8 +43,6 @@
             font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 4px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
         }
         .cat-subtitle {
             text-align: center;
@@ -187,9 +185,12 @@
         <div class="{{ ($loop->last && $loop->parent->last) ? 'cat-section' : 'page-group' }}">
 
             {{-- Judul Utama & Subtitle --}}
+            @php
+                $cleanFileName = preg_replace('/\.(xlsx?|xlsm|xlsb|csv)$/i', '', $fileName ?? '');
+            @endphp
             <div class="cat-title">{{ $category['title'] ?? '' }}</div>
             <div class="cat-subtitle">
-                {{ $fileName ?? '' }}
+                {{ $cleanFileName }}
                 ({{ count($validRows) }} data)
             </div>
 

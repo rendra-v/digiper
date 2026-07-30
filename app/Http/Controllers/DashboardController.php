@@ -2125,6 +2125,7 @@ class DashboardController extends Controller
         $computedType = $request->query('computed'); // 'kepaniteraan', 'tim', 'op-staf'
         $sheetIdx = $request->query('sheet');   // integer index or null
         $blockIdx = $request->query('block');   // integer index or 'all' or null
+        $catIdx   = $request->query('cat');     // category index filter
 
         if (! $filePath || ! file_exists($filePath)) {
             return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.', 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
@@ -2134,6 +2135,17 @@ class DashboardController extends Controller
         $timData = $this->computeTimData($filePath);
         $kepaniteraanData = $this->computeKepaniteraanData($filePath);
         $opStafData = $this->computeOpStafData($filePath);
+
+        if ($catIdx !== null && is_numeric($catIdx)) {
+            $cIndex = (int) $catIdx;
+            if ($computedType === 'tim' && isset($timData[$cIndex])) {
+                $timData = [$timData[$cIndex]];
+            } elseif ($computedType === 'kepaniteraan' && isset($kepaniteraanData[$cIndex])) {
+                $kepaniteraanData = [$kepaniteraanData[$cIndex]];
+            } elseif ($computedType === 'op-staf' && isset($opStafData[$cIndex])) {
+                $opStafData = [$opStafData[$cIndex]];
+            }
+        }
 
         // Same cache key as honorarium()
         $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');

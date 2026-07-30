@@ -21,7 +21,7 @@
             <div class="relative w-56">
                 <select onchange="if(this.value) window.location.href = this.value"
                     class="w-full appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-3.5 py-2.5 pr-10 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                    <option value="" disabled selected>— Lihat halaman lain —</option>
+                    <option value="" disabled selected>Lihat halaman lain</option>
                     <option value="{{ route('dashboard') }}">🏠&nbsp; Dashboard</option>
                     <option value="{{ route('data-print') }}">🖨️&nbsp; Data Print</option>
                     <option value="{{ route('sheet-cek') }}">📋&nbsp; Lihat Sheet Cek</option>
@@ -203,7 +203,7 @@
         @foreach($sheets as $si => $sheet)
         <div x-show="activeSheet === {{ $si }}" x-cloak>
 
-            @if($sheet['sheetName'] === 'TIM' && !empty($timData))
+            @if((strtoupper(trim($sheet['sheetName'])) === 'TIM' || str_contains(strtoupper($sheet['sheetName']), 'TIM')) && !empty($timData))
                 {{-- TIM: filter kategori + computed blocks dari Data Print --}}
                 @php
                     $timVisibleCount = count($timData);
@@ -226,32 +226,52 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                         Pilih Kategori Perkara
                     </label>
-                    <div class="relative">
-                        <select x-model="timCat"
-                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
-                            <option value="">— Semua Kategori ({{ $timVisibleCount }}) —</option>
-                            @foreach($timData as $ti => $tBlock)
-                            <option value="{{ $ti }}">{{ $tBlock['label'] }} ({{ number_format($tBlock['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
-                            @endforeach
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
-                            </svg>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1">
+                            <select x-model="timCat"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors cursor-pointer">
+                                <option value="">— Semua Kategori ({{ $timVisibleCount }}) —</option>
+                                @foreach($timData as $ti => $tBlock)
+                                <option value="{{ $ti }}">{{ $tBlock['label'] }} ({{ number_format($tBlock['jumlah_perkara'], 0, ',', '.') }} Perkara)</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </div>
                         </div>
+                        <a :href="timCat !== '' ? '{{ route('honorarium.print') }}?computed=tim&cat=' + timCat : '{{ route('honorarium.print') }}?computed=tim'"
+                           target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                            <span x-text="timCat !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua TIM'"></span>
+                        </a>
                     </div>
                 </div>
 
                 @foreach($timData as $ti => $block)
                 @if(count($block['rows']) >= 1)
                 <div x-show="timCat === '' || timCat === '{{ $ti }}'" class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
-                        <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                            HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
-                        </p>
-                        <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
-                            Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
-                        </p>
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="text-center flex-1">
+                                <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                                    HONORARIUM BIAYA PENYELESAIAN PERKARA {{ $block['label'] }}
+                                </p>
+                                <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1">
+                                    Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
+                                </p>
+                            </div>
+                            <a href="{{ route('honorarium.print') }}?computed=tim&cat={{ $ti }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                🖨️ Cetak Kategori Ini
+                            </a>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-xs border-collapse">
@@ -382,7 +402,7 @@
                 </div>{{-- /x-data timCat --}}
 
 
-            @elseif($sheet['sheetName'] === 'Kepaniteraan' && !empty($kepaniteraanData))
+            @elseif((strtoupper(trim($sheet['sheetName'])) === 'KEPANITERAAN' || str_contains(strtoupper($sheet['sheetName']), 'KEPANITERAAN')) && !empty($kepaniteraanData))
                 {{-- KEPANITERAAN: tampilkan computed blocks dari Data Print --}}
                 @php $kepVisibleCount = count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 11)); @endphp
                 <div x-data="{ kepBlock: '' }">
@@ -403,21 +423,33 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                         Pilih Kategori Perkara
                     </label>
-                    <div class="relative">
-                        <select x-model="kepBlock"
-                                class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
-                            <option value="">— Semua Kategori ({{ $kepVisibleCount }}) —</option>
-                            @foreach($kepaniteraanData as $ki => $kb)
-                            @if(count($kb['rows']) >= 11)
-                            <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
-                            @endif
-                            @endforeach
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
-                            </svg>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1">
+                            <select x-model="kepBlock"
+                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
+                                <option value="">— Semua Kategori ({{ $kepVisibleCount }}) —</option>
+                                @foreach($kepaniteraanData as $ki => $kb)
+                                @if(count($kb['rows']) >= 11)
+                                <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
+                                @endif
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </div>
                         </div>
+                        <a :href="kepBlock !== '' ? '{{ route('honorarium.print') }}?computed=kepaniteraan&cat=' + kepBlock : '{{ route('honorarium.print') }}?computed=kepaniteraan'"
+                           target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                            <span x-text="kepBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua Kepaniteraan'"></span>
+                        </a>
                     </div>
                 </div>
 
@@ -437,7 +469,10 @@
                                     Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara
                                 </p>
                             </div>
-
+                            <a href="{{ route('honorarium.print') }}?computed=kepaniteraan&cat={{ $ki }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                🖨️ Cetak Kategori Ini
+                            </a>
                         </div>
                     </div>
 
@@ -602,9 +637,16 @@
                             </svg>
                         </div>
                     </div>
-                    <span class="text-xs text-neutral-400 dark:text-neutral-500 whitespace-nowrap">
-                        <span x-text="activeBlock[{{ $si }}] === null ? '{{ count($sheet['blocks']) }} dokumen ditampilkan' : '1 dokumen ditampilkan'"></span>
-                    </span>
+                    <a :href="activeBlock[{{ $si }}] !== null ? '{{ route('honorarium.print') }}?sheet={{ $si }}&block=' + activeBlock[{{ $si }}] : '{{ route('honorarium.print') }}?sheet={{ $si }}'"
+                       target="_blank" rel="noopener"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <polyline points="6 9 6 2 18 2 18 9"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                            <rect x="6" y="14" width="12" height="8"/>
+                        </svg>
+                        <span x-text="activeBlock[{{ $si }}] !== null ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua {{ $sheet['sheetName'] }}'"></span>
+                    </a>
                 </div>
             </div>
 
@@ -615,16 +657,24 @@
                  class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
 
                 {{-- Judul dokumen --}}
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-5 text-center">
-                    <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
-                        {{ $block['title1'] }}
-                    </p>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 mt-1">
-                        {{ $block['title2'] }}
-                    </p>
-                    <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
-                        {{ $block['title3'] }}
-                    </p>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-100 dark:border-blue-900/50 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="text-center flex-1">
+                            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100">
+                                {{ $block['title1'] }}
+                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-300 mt-1">
+                                {{ $block['title2'] }}
+                            </p>
+                            <p class="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1.5">
+                                {{ $block['title3'] }}
+                            </p>
+                        </div>
+                        <a href="{{ route('honorarium.print') }}?sheet={{ $si }}&block={{ $bi }}" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                            🖨️ Cetak Kategori Ini
+                        </a>
+                    </div>
                 </div>
 
                 {{-- Tabel data --}}
@@ -1357,19 +1407,31 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                             Pilih Kategori Perkara
                         </label>
-                        <div class="relative">
-                            <select x-model="opBlock"
-                                    class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-colors cursor-pointer">
-                                <option value="">— Semua Kategori ({{ count($opStafData) }}) —</option>
-                                @foreach($opStafData as $oi => $ob)
-                                    <option value="{{ $oi }}">{{ $ob['title'] }} — {{ number_format($ob['total']['jml'], 0, ',', '.') }} Perkara</option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
-                                </svg>
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex-1">
+                                <select x-model="opBlock"
+                                        class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-colors cursor-pointer">
+                                    <option value="">— Semua Kategori ({{ count($opStafData) }}) —</option>
+                                    @foreach($opStafData as $oi => $ob)
+                                        <option value="{{ $oi }}">{{ $ob['title'] }} — {{ number_format($ob['total']['jml'], 0, ',', '.') }} Perkara</option>
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                </div>
                             </div>
+                            <a :href="opBlock !== '' ? '{{ route('honorarium.print') }}?computed=op-staf&cat=' + opBlock : '{{ route('honorarium.print') }}?computed=op-staf'"
+                               target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <polyline points="6 9 6 2 18 2 18 9"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                    <rect x="6" y="14" width="12" height="8"/>
+                                </svg>
+                                <span x-text="opBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua OP-STAF'"></span>
+                            </a>
                         </div>
                     </div>
 
@@ -1378,14 +1440,22 @@
                          x-show="opBlock === '' || opBlock === '{{ $oi }}'">
 
                         {{-- Header --}}
-                        <div class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b border-orange-100 dark:border-orange-900/50 px-6 py-4 text-center">
-                            <p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400 tracking-wider">HONORARIUM BIAYA PENYELESAIAN PERKARA</p>
-                            <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100 mt-0.5">
-                                {{ $block['title'] }}
-                            </p>
-                            <p class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                Sebanyak {{ number_format($block['total_perkara'] ?? $block['total']['jml'], 0, ',', '.') }} Perkara — Yang Diterima Operator
-                            </p>
+                        <div class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b border-orange-100 dark:border-orange-900/50 px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="text-center flex-1">
+                                    <p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400 tracking-wider">HONORARIUM BIAYA PENYELESAIAN PERKARA</p>
+                                    <p class="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-neutral-100 mt-0.5">
+                                        {{ $block['title'] }}
+                                    </p>
+                                    <p class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                        Sebanyak {{ number_format($block['total_perkara'] ?? $block['total']['jml'], 0, ',', '.') }} Perkara — Yang Diterima Operator
+                                    </p>
+                                </div>
+                                <a href="{{ route('honorarium.print') }}?computed=op-staf&cat={{ $oi }}" target="_blank" rel="noopener"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
+                                    🖨️ Cetak Kategori Ini
+                                </a>
+                            </div>
                         </div>
 
                         {{-- Tabel --}}

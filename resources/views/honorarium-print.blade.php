@@ -303,7 +303,7 @@
         </svg>
         Cetak Honorarium
         @if($fileName)
-            <span style="font-weight:400;opacity:.7;font-size:10pt">— {{ $fileName }}</span>
+            <span style="font-weight:400;opacity:.7;font-size:10pt">— {{ preg_replace('/\.(xlsx?|xlsm|xlsb|csv)$/i', '', $fileName) }}</span>
         @endif
     </div>
     <span class="hint">Pratinjau dokumen siap cetak &middot; Ukuran kertas: <b>F4 Landscape</b></span>

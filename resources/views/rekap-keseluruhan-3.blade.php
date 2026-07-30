@@ -23,7 +23,7 @@
                     <div class="relative">
                         <select onchange="if(this.value) window.location.href = this.value"
                             class="appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-3 py-2 pr-8 text-sm font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none cursor-pointer">
-                            <option value="" disabled selected>— Pilih —</option>
+                            <option value="" disabled selected>Pilih halaman</option>
                             <option value="{{ route('data-print') }}">📄 Data Print</option>
                             <option value="{{ route('sheet-cek') }}">📋 Sheet Cek</option>
                             <option value="{{ route('rekap-keseluruhan') }}">📊 Rekap 1</option>

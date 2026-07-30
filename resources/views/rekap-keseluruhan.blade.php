@@ -28,7 +28,7 @@
                         <select id="nav-page-select-rekap"
                             onchange="if(this.value) window.location.href = this.value"
                             class="appearance-none rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm font-medium text-neutral-900 dark:text-neutral-100 shadow-sm transition-colors duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                            <option value="" disabled selected>— Pilih halaman —</option>
+                            <option value="" disabled selected>Pilih halaman</option>
                             <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
                             <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
