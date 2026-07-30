@@ -193,14 +193,8 @@
                     $isHeader  = $row['type'] === 'header';
                     $isJmlOnly = $row['type'] === 'jml_only';
                     $colCount  = count($colChunk);
-                    // Hitung row total hanya dari kolom di chunk ini
-                    $chunkRowTotal = 0;
-                    if (!$isHeader) {
-                        foreach ($colChunk as $col) {
-                            $cell = $cells[$row['key']][$col['key']] ?? null;
-                            $chunkRowTotal += $cell ? ($cell['sub_total'] ?? 0) : 0;
-                        }
-                    }
+                    // Gunakan row_totals (total semua kolom) untuk kolom TOTAL
+                    $fullRowTotal = $isHeader ? 0 : ($row_totals[$row['key']] ?? 0);
                 @endphp
 
                 @if($isHeader)
@@ -234,7 +228,7 @@
                         <td class="c">{{ $cell ? number_format($cell['jml'], 0, ',', '.') : '-' }}</td>
                         <td class="c">{{ ($cell && $cell['sub_total'] > 0) ? number_format($cell['sub_total'], 0, ',', '.') : '-' }}</td>
                     @endforeach
-                    <td class="c b">{{ $chunkRowTotal > 0 ? number_format($chunkRowTotal, 0, ',', '.') : '-' }}</td>
+                    <td class="c b">{{ $fullRowTotal > 0 ? number_format($fullRowTotal, 0, ',', '.') : '-' }}</td>
                 </tr>
                 @endif
             @endforeach
@@ -249,9 +243,9 @@
                 <td class="muted">-</td>
                 @endforeach
                 @php
-                    $chunkGrandTotal = array_sum(array_map(fn($c) => $row_totals[$c['key']] ?? 0, $colChunk));
+                    $grandTotal = array_sum($row_totals);
                 @endphp
-                <td class="c b">{{ $chunkGrandTotal > 0 ? number_format($chunkGrandTotal, 0, ',', '.') : '-' }}</td>
+                <td class="c b">{{ $grandTotal > 0 ? number_format($grandTotal, 0, ',', '.') : '-' }}</td>
             </tr>
             </tbody>
         </table>

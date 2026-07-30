@@ -184,29 +184,7 @@
                                 </tr>
                             @endforeach
 
-                            {{-- Baris total per kelompok --}}
-                            <tr class="border-b border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800/60 font-bold">
-                                <td colspan="3" class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-left text-neutral-900 dark:text-neutral-100">
-                                    Total {{ $group['label'] }}
-                                </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
-                                    {{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}
-                                </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
-                                    {{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}
-                                </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
-                                    {{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}
-                                </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-400">—</td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
-                                    {{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}
-                                </td>
-                                <td class="border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-center text-neutral-900 dark:text-neutral-100">
-                                    {{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}
-                                </td>
-                            </tr>
+
                         @endforeach
 
                         {{-- Baris Grand Total --}}

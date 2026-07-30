@@ -238,21 +238,11 @@
                             <td class="c">{{ $row['pk_biaya'] > 0 ? number_format($row['pk_biaya'], 0, ',', '.') : '-' }}</td>
                             <td class="c">{{ $row['pk_total'] > 0 ? number_format($row['pk_total'], 0, ',', '.') : '-' }}</td>
                             {{-- Grand Total per row --}}
-                            <td class="c">{{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}</td>
+                            <td class="r">{{ $row['grand_total'] > 0 ? number_format($row['grand_total'], 0, ',', '.') : '-' }}</td>
                         </tr>
                     @endforeach
 
-                    {{-- Sub-total per kelompok --}}
-                    <tr class="subtot">
-                        <td colspan="3" class="l">Total {{ $group['label'] }}</td>
-                        <td class="c">{{ $group['kasasiJml'] > 0 ? number_format($group['kasasiJml'], 0, ',', '.') : '-' }}</td>
-                        <td class="c">—</td>
-                        <td class="c">{{ $group['kasasiTotal'] > 0 ? number_format($group['kasasiTotal'], 0, ',', '.') : '-' }}</td>
-                        <td class="c">{{ $group['pkJml'] > 0 ? number_format($group['pkJml'], 0, ',', '.') : '-' }}</td>
-                        <td class="c">—</td>
-                        <td class="c">{{ $group['pkTotal'] > 0 ? number_format($group['pkTotal'], 0, ',', '.') : '-' }}</td>
-                        <td class="c">{{ $group['grand'] > 0 ? number_format($group['grand'], 0, ',', '.') : '-' }}</td>
-                    </tr>
+
                 @endforeach
 
                 {{-- Grand Total --}}
@@ -265,7 +255,7 @@
                     <td class="c">—</td>
                     <td class="c">—</td>
                     <td class="c">{{ $final_total['pkTotal'] > 0 ? number_format($final_total['pkTotal'], 0, ',', '.') : '-' }}</td>
-                    <td class="c">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
+                    <td class="r">{{ $final_total['grand'] > 0 ? number_format($final_total['grand'], 0, ',', '.') : '-' }}</td>
                 </tr>
                 <tr class="gtot">
                     <td colspan="3" class="l">Jumlah Total Perkara</td>
@@ -280,7 +270,6 @@
         {{-- ══ Signature Area ══ --}}
         <div class="sig-wrap" style="break-inside: avoid; page-break-inside: avoid; margin-top: 10px;">
 
-            {{-- Tanggal kanan --}}
             @php
                 $months = [
                     1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -290,26 +279,32 @@
                 $dateNow = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
                     ?: ('Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y'));
             @endphp
-            <div class="sig-date">{{ $dateNow }}</div>
 
-            {{-- 3 kolom --}}
-            <div class="sig-row">
+            {{-- 4 kolom tanda tangan --}}
+            <div class="sig-row" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
 
                 <div class="sig-col">
                     <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
-                    <div class="sig-space"></div>
+                    <div class="sig-space" style="height:3cm;"></div>
                     <div class="sig-name" data-ttd-key="ttd_petugas">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
                     <div class="sig-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
-                    <div class="sig-space"></div>
+                    <div class="sig-space" style="height:3cm;"></div>
                     <div class="sig-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
+                    <div class="sig-label">Mengetahui,<br>Panitera MA-RI</div>
+                    <div class="sig-space" style="height:3cm;"></div>
+                    <div class="sig-name" data-ttd-key="ttd_panitera">{{ $pejabat['panitera'] ?? 'Dr. SUDHARMAWATININGSIH, S.H., M.Hum.' }}</div>
+                </div>
+
+                <div class="sig-col">
+                    <div style="text-align:center; font-size:10px; font-weight:700; width:100%; margin-bottom:4px;">{{ $dateNow }}</div>
                     <div class="sig-label">Bendahara Biaya Proses</div>
-                    <div class="sig-space"></div>
+                    <div class="sig-space" style="height:3cm;"></div>
                     <div class="sig-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
                 </div>
 

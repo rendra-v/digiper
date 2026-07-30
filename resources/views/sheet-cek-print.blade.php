@@ -17,7 +17,7 @@
         }
 
         html, body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 10pt;
             color: var(--ink);
             background: #e8ecf3;

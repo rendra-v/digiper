@@ -130,15 +130,16 @@
             padding: 5px 7px;
             vertical-align: middle;
             font-size: 9pt;
+            height: 1.8cm; /* acts as min-height in table cells */
         }
         tbody tr:nth-child(even) { background: #f5f5f5; }
 
         .td-no    { text-align: center; width: 4%; white-space: nowrap; }
         .td-nama  { text-align: left;   width: 18%; }
-        .td-jab   { text-align: center; width: 18%; }
-        .td-num   { text-align: center; white-space: nowrap; width: 12%; }
-        .td-count { text-align: center; white-space: nowrap; width: 10%; }
-        .td-ttd   { text-align: center; width: 12%; }
+        .td-jab   { text-align: center; width: 16%; }
+        .td-num   { text-align: center; white-space: nowrap; width: 10%; }
+        .td-count { text-align: center; white-space: nowrap; width: 9%; }
+        .td-ttd   { text-align: center; width: 20%; min-height: 2cm; }
 
         tr.row-total {
             background: #d9d9d9 !important;
@@ -177,7 +178,7 @@
             line-height: 1.4;
         }
         .ttd-space {
-            height: 5cm;
+            height: 3.5cm;
             margin: 6px 0 4px;
         }
         .ttd-name {
@@ -281,7 +282,7 @@
             .footer-date { font-size: 10pt; }
             .ttd-grid { font-size: 10pt; gap: 16px; }
             .ttd-grid-2col { font-size: 10pt; gap: 16px; }
-            .ttd-space { height: 5cm; }
+            .ttd-space { height: 3.5cm; }
 
             .op-footer-wrap { margin-top: 10px; break-inside: avoid; page-break-inside: avoid; width: 96%; margin-left: auto; margin-right: auto; }
             .op-footer-date { font-size: 10pt; }
