@@ -242,7 +242,7 @@
                             </div>
                         </div>
                         <a :href="timCat !== '' ? '{{ route('honorarium.print') }}?computed=tim&cat=' + timCat : '{{ route('honorarium.print') }}?computed=tim'"
-                           target="_blank" rel="noopener"
+                           target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
                            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <polyline points="6 9 6 2 18 2 18 9"/>
@@ -267,7 +267,7 @@
                                     Sebanyak {{ number_format($block['jumlah_perkara'], 0, ',', '.') }} Perkara
                                 </p>
                             </div>
-                            <a href="{{ route('honorarium.print') }}?computed=tim&cat={{ $ti }}" target="_blank" rel="noopener"
+                            <a href="{{ route('honorarium.print') }}?computed=tim&cat={{ $ti }}" target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
                                 🖨️ Cetak Kategori Ini
                             </a>
@@ -441,7 +441,7 @@
                             </div>
                         </div>
                         <a :href="kepBlock !== '' ? '{{ route('honorarium.print') }}?computed=kepaniteraan&cat=' + kepBlock : '{{ route('honorarium.print') }}?computed=kepaniteraan'"
-                           target="_blank" rel="noopener"
+                           target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
                            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <polyline points="6 9 6 2 18 2 18 9"/>
@@ -469,7 +469,7 @@
                                     Sebanyak {{ number_format($block['jml_perkara'], 0, ',', '.') }} Perkara
                                 </p>
                             </div>
-                            <a href="{{ route('honorarium.print') }}?computed=kepaniteraan&cat={{ $ki }}" target="_blank" rel="noopener"
+                            <a href="{{ route('honorarium.print') }}?computed=kepaniteraan&cat={{ $ki }}" target="_blank" rel="noopener" style="background-color: #f59e0b; color: #ffffff;"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors shadow-sm shrink-0">
                                 🖨️ Cetak Kategori Ini
                             </a>
