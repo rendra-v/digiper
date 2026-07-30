@@ -404,7 +404,7 @@
 
             @elseif((strtoupper(trim($sheet['sheetName'])) === 'KEPANITERAAN' || str_contains(strtoupper($sheet['sheetName']), 'KEPANITERAAN')) && !empty($kepaniteraanData))
                 {{-- KEPANITERAAN: tampilkan computed blocks dari Data Print --}}
-                @php $kepVisibleCount = count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 11)); @endphp
+                @php $kepVisibleCount = count(array_filter($kepaniteraanData, fn($b) => count($b['rows']) >= 1)); @endphp
                 <div x-data="{ kepBlock: '' }">
 
                 {{-- ── Tombol Kembali ── --}}
@@ -429,7 +429,7 @@
                                     class="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-4 py-2.5 pr-10 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors cursor-pointer">
                                 <option value="">— Semua Kategori ({{ $kepVisibleCount }}) —</option>
                                 @foreach($kepaniteraanData as $ki => $kb)
-                                @if(count($kb['rows']) >= 11)
+                                @if(count($kb['rows']) >= 1)
                                 <option value="{{ $ki }}">{{ $kb['title'] }} — {{ number_format($kb['jml_perkara'], 0, ',', '.') }} Perkara</option>
                                 @endif
                                 @endforeach
@@ -454,7 +454,7 @@
                 </div>
 
                 @foreach($kepaniteraanData as $ki => $block)
-                @if(count($block['rows']) >= 11)
+                @if(count($block['rows']) >= 1)
                 <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm"
                      x-show="kepBlock === '' || kepBlock === '{{ $ki }}'"
                      x-cloak>
@@ -652,7 +652,7 @@
 
             {{-- Dokumen per blok --}}
             @foreach($sheet['blocks'] as $bi => $block)
-            @if(count($block['rows']) >= 11)
+            @if(count($block['rows']) >= 1)
             <div x-show="activeBlock[{{ $si }}] === null || activeBlock[{{ $si }}] === {{ $bi }}"
                  class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
 
