@@ -182,7 +182,6 @@
         }
         .ttd-name {
             font-weight: 700;
-            text-decoration: underline;
         }
 
         /* Operator kamar (OP-STAF) footer kanan bawah */
@@ -203,7 +202,7 @@
         }
         .op-ttd-right .ttd-label { font-weight: 700; text-transform: uppercase; }
         .op-ttd-right .ttd-space { height: 5cm; }
-        .op-ttd-right .ttd-name  { font-weight: 700; text-decoration: underline; }
+        .op-ttd-right .ttd-name  { font-weight: 700; }
 
         /* ── Notice / Error ───────────────────────────────────── */
         .notice {

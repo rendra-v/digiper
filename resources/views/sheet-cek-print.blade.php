@@ -124,7 +124,7 @@
         }
         .ttd-label { font-weight: 700; text-transform: uppercase; line-height: 1.4; }
         .ttd-space { height: 5cm; margin: 6px 0 4px; }
-        .ttd-name  { font-weight: 700; text-decoration: underline; }
+        .ttd-name  { font-weight: 700; }
         .ttd-item  { text-align: center; }
 
         /* ── PRINT ──────────────────────────────────────────────────────── */

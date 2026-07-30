@@ -147,7 +147,6 @@
             margin-top: 5cm;
             font-size: 10px;
             font-weight: 700;
-            text-decoration: underline;
         }
 
         .signature-date {
@@ -169,7 +168,6 @@
         .signature-centered .name {
             margin-top: 5cm;
             font-weight: 700;
-            text-decoration: underline;
         }
 
         .notice {
