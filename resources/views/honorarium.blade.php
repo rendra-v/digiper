@@ -249,7 +249,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                                 <rect x="6" y="14" width="12" height="8"/>
                             </svg>
-                            <span x-text="timCat !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua TIM'"></span>
+                            <span x-text="timCat !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua TIM'">🖨️ Cetak Kategori Ini</span>
                         </a>
                     </div>
                 </div>
@@ -448,7 +448,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                                 <rect x="6" y="14" width="12" height="8"/>
                             </svg>
-                            <span x-text="kepBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua Kepaniteraan'"></span>
+                            <span x-text="kepBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua Kepaniteraan'">🖨️ Cetak Kategori Ini</span>
                         </a>
                     </div>
                 </div>
@@ -645,7 +645,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                             <rect x="6" y="14" width="12" height="8"/>
                         </svg>
-                        <span x-text="activeBlock[{{ $si }}] !== null ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua {{ $sheet['sheetName'] }}'"></span>
+                        <span x-text="activeBlock[{{ $si }}] !== null ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua {{ $sheet['sheetName'] }}'">🖨️ Cetak Kategori Ini</span>
                     </a>
                 </div>
             </div>
@@ -1430,7 +1430,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                                     <rect x="6" y="14" width="12" height="8"/>
                                 </svg>
-                                <span x-text="opBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua OP-STAF'"></span>
+                                <span x-text="opBlock !== '' ? '🖨️ Cetak Kategori Ini' : '🖨️ Cetak Semua OP-STAF'">🖨️ Cetak Kategori Ini</span>
                             </a>
                         </div>
                     </div>
