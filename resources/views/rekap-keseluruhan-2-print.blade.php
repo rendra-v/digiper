@@ -302,5 +302,7 @@
                 setTimeout(function () { window.print(); }, 400);
             });
         </script>
+
+    @endif
 </body>
 </html>
