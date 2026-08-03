@@ -2100,7 +2100,16 @@ class DashboardController extends Controller
             $catIdx   = $request->query('cat');     // category index filter
 
             if (! $filePath || ! file_exists($filePath)) {
-                return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.', 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
+                return view('honorarium-print', [
+                    'fileName'         => null,
+                    'sheets'           => [],
+                    'error'            => 'File tidak ditemukan.',
+                    'timData'          => [],
+                    'kepaniteraanData' => [],
+                    'opStafData'       => [],
+                    'opStafIdxMap'     => [],
+                    'computedType'     => null
+                ]);
             }
 
             // Helper: filter full sheets array down to user's selection
@@ -2169,6 +2178,12 @@ class DashboardController extends Controller
             $kepaniteraanData = $this->computeKepaniteraanData($filePath);
             $opStafData = $this->computeOpStafData($filePath);
 
+            // Build map before filtering opStafData
+            $opStafIdxMap = [];
+            foreach ($opStafData as $oi => $opBlock) {
+                $opStafIdxMap[strtoupper(trim($opBlock['title'] ?? ''))] = $oi;
+            }
+
             if ($catIdx !== null && is_numeric($catIdx)) {
                 $cIndex = (int) $catIdx;
                 if ($computedType === 'tim' && isset($timData[$cIndex])) {
@@ -2182,11 +2197,29 @@ class DashboardController extends Controller
 
             $sheets = $applyFilter($sheets);
 
-            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null, 'timData' => $timData, 'kepaniteraanData' => $kepaniteraanData, 'opStafData' => $opStafData, 'computedType' => $computedType]);
+            return view('honorarium-print', [
+                'fileName'         => $fileName,
+                'sheets'           => $sheets,
+                'error'            => null,
+                'timData'          => $timData,
+                'kepaniteraanData' => $kepaniteraanData,
+                'opStafData'       => $opStafData,
+                'opStafIdxMap'     => $opStafIdxMap,
+                'computedType'     => $computedType
+            ]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorariumPrint', ['error' => $e->getMessage()]);
 
-            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: '.$e->getMessage(), 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
+            return view('honorarium-print', [
+                'fileName'         => $fileName,
+                'sheets'           => [],
+                'error'            => 'Error: '.$e->getMessage(),
+                'timData'          => [],
+                'kepaniteraanData' => [],
+                'opStafData'       => [],
+                'opStafIdxMap'     => [],
+                'computedType'     => null
+            ]);
         }
     }
 

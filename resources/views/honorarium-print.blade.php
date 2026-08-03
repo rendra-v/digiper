@@ -437,9 +437,14 @@
                     </thead>
                     <tbody>
                         @foreach($block['rows'] as $row)
+                            @php
+                                $opStafIdx = $opStafIdxMap[strtoupper(trim($block['label']))] ?? null;
+                                $isOp = $row['jabatan'] === 'OPERATOR/ PENGETIK';
+                                $lsKey = ($isOp && $opStafIdx !== null) ? "ttd_op_{$opStafIdx}" : "hon_tim_{$ti}_{$loop->index}";
+                            @endphp
                             <tr>
                                 <td class="td-no">{{ $row['no'] }}</td>
-                                <td class="td-nama" data-hon-key="hon_tim_{{ $ti }}_{{ $loop->index }}">{{ $row['nama'] }}</td>
+                                <td class="td-nama" data-hon-key="{{ $lsKey }}">{{ $row['nama'] }}</td>
                                 <td class="td-jab">{{ $row['jabatan'] }}</td>
                                 <td class="td-count">{{ $row['jumlah_perkara'] > 0 ? number_format($row['jumlah_perkara'], 0, ',', '.') : '-' }}</td>
                                 <td class="td-num">{{ $row['biaya'] > 0 ? 'Rp ' . number_format($row['biaya'], 0, ',', '.') : '-' }}</td>
