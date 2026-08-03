@@ -36,7 +36,7 @@
         }
         @media print {
             .no-print { display: none !important; }
-            body { padding: 20mm 12mm 10mm; }
+            body { padding: 10mm 12mm 8mm; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { break-inside: avoid; page-break-inside: avoid; }
@@ -49,8 +49,8 @@
             margin-bottom: 5px;
             margin-top: 0;
         }
-        .doc-title .t1 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
-        .doc-title .t2 { font-size: 14px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t1 { font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .doc-title .t2 { font-size: 13px; font-weight: 700; text-transform: uppercase; }
 
         /* ── table ── */
         table {
@@ -60,9 +60,9 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 12px 8px;
-            font-size: 11px;
-            line-height: 1.4;
+            padding: 5px 6px;
+            font-size: 9.5px;
+            line-height: 1.3;
             overflow: hidden;
         }
         .hdr  { background: #d9d9d9; font-weight: 700; text-align: center; }
@@ -82,13 +82,13 @@
         .period { text-align: right; font-size: 9px; font-weight: 700; margin-top: 5px; }
 
         /* signature */
-        .sig-wrap   { break-inside: avoid; page-break-inside: avoid; margin-top: 15px; }
-        .sig-date   { text-align: right; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
-        .sig-row    { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+        .sig-wrap   { break-inside: avoid; page-break-inside: avoid; margin-top: 10px; }
+        .sig-date   { text-align: right; font-size: 9.5px; font-weight: 700; margin-bottom: 5px; }
+        .sig-row    { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
         .sig-col    { flex: 1; text-align: center; }
-        .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 10px; line-height: 1.35; }
-        .sig-space  { height: 2cm; }
-        .sig-name   { font-weight: 700; font-size: 11px; }
+        .sig-label  { font-weight: 700; text-transform: uppercase; font-size: 9.5px; line-height: 1.3; }
+        .sig-space  { height: 1.3cm; }
+        .sig-name   { font-weight: 700; font-size: 10px; }
     </style>
 </head>
 <body>
