@@ -1786,88 +1786,48 @@ class DashboardController extends Controller
      */
     public function honorariumDebug()
     {
-        ini_set('memory_limit', '1024M');
         $filePath = Session::get('excel_file_path');
-        if (! $filePath || ! file_exists($filePath)) {
-            return response()->json(['error' => 'Tidak ada file. Upload dulu.'], 404);
+        if (!$filePath || !file_exists($filePath)) {
+            return response()->json(['error' => 'No file in session']);
         }
 
-        $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setReadDataOnly(false);
-        $spreadsheet = $reader->load($filePath);
+        $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar_v2');
+        $cached   = Session::get($cacheKey);
+        $sheets   = $cached['sheets'] ?? [];
+
+        // Jika cache kosong, parse ulang
+        if (empty($sheets)) {
+            ini_set('memory_limit', '1024M');
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(false);
+            $spreadsheet = $reader->load($filePath);
+            foreach (['OP - STAF'] as $sheetName) {
+                $ws = $spreadsheet->getSheetByName($sheetName);
+                if (!$ws) continue;
+                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                if (!empty($blocks)) $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+            }
+            $spreadsheet->disconnectWorksheets();
+        }
 
         $result = [];
-        foreach ($spreadsheet->getAllSheets() as $ws) {
-            $lower = strtolower($ws->getTitle());
-            if (! str_contains($lower, 'honor')) {
-                continue;
-            }
-
-            $highestRow = $ws->getHighestRow();
-            $highestColIdx = Coordinate::columnIndexFromString($ws->getHighestColumn());
-
-            // Cari header row
-            $headerRow = null;
-            for ($r = 1; $r <= min($highestRow, 20); $r++) {
-                $hasNo = $hasNama = false;
-                for ($c = 1; $c <= min($highestColIdx, 20); $c++) {
-                    $v = strtoupper(trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).$r)->getFormattedValue()));
-                    if (in_array($v, ['NO', 'NO.', 'NOMOR'])) {
-                        $hasNo = true;
-                    }
-                    if (str_contains($v, 'NAMA')) {
-                        $hasNama = true;
-                    }
-                }
-                if ($hasNo && $hasNama) {
-                    $headerRow = $r;
-                    break;
+        foreach ($sheets as $sh) {
+            if (stripos($sh['sheetName'] ?? '', 'OP') !== false && stripos($sh['sheetName'] ?? '', 'STAF') !== false) {
+                foreach ($sh['blocks'] ?? [] as $blk) {
+                    $result[] = [
+                        'title1'        => $blk['title1'] ?? '',
+                        'right_name'    => $blk['footerInfo']['right_name'] ?? '',
+                        'right_jabatan' => $blk['footerInfo']['right_jabatan'] ?? '',
+                        'clean_key'     => strtoupper(trim(preg_replace('/^HONORARIUM BIAYA PENYELESAIAN PERKARA\s*/i', '', $blk['title1'] ?? ''))),
+                    ];
                 }
             }
-
-            // Baca headers
-            $headers = [];
-            for ($c = 1; $c <= $highestColIdx; $c++) {
-                $v = trim((string) $ws->getCell(Coordinate::stringFromColumnIndex($c).$headerRow)->getFormattedValue());
-                $headers[$c] = $v ?: Coordinate::stringFromColumnIndex($c);
-            }
-
-            // Baca 30 baris pertama data
-            $sampleRows = [];
-            for ($r = $headerRow + 1; $r <= min($highestRow, $headerRow + 50); $r++) {
-                $rowData = [];
-                $hasContent = false;
-                for ($c = 1; $c <= $highestColIdx; $c++) {
-                    $cell = $ws->getCell(Coordinate::stringFromColumnIndex($c).$r);
-                    try {
-                        $cell->getCalculatedValue();
-                    } catch (\Throwable $e) {
-                    }
-                    $v = trim((string) $cell->getFormattedValue());
-                    $rowData['col_'.Coordinate::stringFromColumnIndex($c).'_'.$headers[$c]] = $v;
-                    if ($v !== '') {
-                        $hasContent = true;
-                    }
-                }
-                if ($hasContent) {
-                    $sampleRows[] = $rowData;
-                }
-                if (count($sampleRows) >= 30) {
-                    break;
-                }
-            }
-
-            $result[$ws->getTitle()] = [
-                'headerRow' => $headerRow,
-                'headers' => $headers,
-                'totalCols' => $highestColIdx,
-                'sampleRows' => $sampleRows,
-            ];
         }
 
-        $spreadsheet->disconnectWorksheets();
-
-        return response()->json($result, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        return response()->json([
+            'op_staf_blocks' => $result,
+            'opSignatures'   => $this->getOpSignatures($sheets),
+        ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -1876,7 +1836,7 @@ class DashboardController extends Controller
     private function computeOpStafData(string $filePath): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v5');
+            $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v6');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) return $cached;
 
@@ -1960,10 +1920,10 @@ class DashboardController extends Controller
     /**
      * Load & compute TIM honorarium blocks dari Data Print (dengan cache session).
      */
-    private function computeTimData(string $filePath): array
+    private function computeTimData(string $filePath, array $opSignatures = []): array
     {
         try {
-            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v14');
+            $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v17');
             $cached   = Session::get($cacheKey);
             if ($cached !== null) {
                 return $cached;
@@ -2009,7 +1969,7 @@ class DashboardController extends Controller
             }
 
             $calculator = new \App\Services\HonorariumCalculator();
-            $blocks     = $calculator->computeTimHonorariumBlocks($categories);
+            $blocks     = $calculator->computeTimHonorariumBlocks($categories, $opSignatures);
 
             Session::put($cacheKey, $blocks);
             return $blocks;
@@ -2040,58 +2000,64 @@ class DashboardController extends Controller
             }
 
             // Cek cache (sama dengan honorariumPrint agar shared)
-            $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar_v2');
             $cached   = Session::get($cacheKey);
 
+            $sheets = [];
+            if ($cached !== null) {
+                $sheets = $cached['sheets'];
+            } else {
+                // Load semua sheet honorarium kamar (Kepaniteraan, TIM, OP - STAF)
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(false);
+                $spreadsheet = $reader->load($filePath);
+
+                foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
+                    $ws = $spreadsheet->getSheetByName($sheetName);
+                    if (! $ws) {
+                        continue;
+                    }
+                    $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                    if (! empty($blocks)) {
+                        $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+                    }
+                }
+
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+
+                // Simpan ke cache untuk honorariumPrint juga
+                Session::put($cacheKey, compact('sheets'));
+            }
+
+            $opSignatures = $this->getOpSignatures($sheets);
+
             // Compute TIM, Kepaniteraan & OP STAF honorarium dari Data Print
-            $timData          = $this->computeTimData($filePath);
+            $timData          = $this->computeTimData($filePath, $opSignatures);
             $kepaniteraanData = $this->computeKepaniteraanData($filePath);
             $opStafData       = $this->computeOpStafData($filePath);
 
-            if ($cached !== null) {
-                return view('honorarium', [
-                    'fileName'         => $fileName,
-                    'sheets'           => $cached['sheets'],
-                    'timData'          => $timData,
-                    'kepaniteraanData' => $kepaniteraanData,
-                    'opStafData'       => $opStafData,
-                    'error'            => null,
-                ]);
-            }
-
-            // Load semua sheet honorarium kamar (Kepaniteraan, TIM, OP - STAF)
-            $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(false);
-            $spreadsheet = $reader->load($filePath);
-
-            $sheets = [];
-            foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
-                $ws = $spreadsheet->getSheetByName($sheetName);
-                if (! $ws) {
-                    continue;
-                }
-                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
-                if (! empty($blocks)) {
-                    $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+            // Map: UPPERCASE label → numeric index dalam opStafData
+            // Dipakai view TIM agar OPERATOR/PENGETIK membaca dari key localStorage
+            // yang SAMA dengan tanda tangan OP-STAF (ttd_op_N)
+            $opStafIdxMap = [];
+            $opNamaList   = [];
+            foreach ($opStafData as $oi => $opBlock) {
+                $opStafIdxMap[strtoupper(trim($opBlock['title'] ?? ''))] = $oi;
+                if (!empty($opBlock['op_nama'])) {
+                    $opNamaList[] = $opBlock['op_nama'];
                 }
             }
-
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-
-            // Simpan ke cache untuk honorariumPrint juga
-            Session::put($cacheKey, compact('sheets'));
-
-            if (empty($sheets)) {
-                return view('honorarium', [
-                    'fileName'         => $fileName,
-                    'sheets'           => [],
-                    'timData'          => $timData,
-                    'kepaniteraanData' => $kepaniteraanData,
-                    'opStafData'       => $opStafData,
-                    'error'            => null,
-                ]);
+            // Tambahkan juga dari config agar dropdown selalu punya pilihan meski opStafData kosong
+            foreach (config('tarif.operator_kamar', []) as $entry) {
+                if (!empty($entry['nama'])) $opNamaList[] = $entry['nama'];
             }
+            // Daftar tambahan khusus dropdown (config tarif.operator_names)
+            foreach (config('tarif.operator_names', []) as $n) {
+                if (!empty($n)) $opNamaList[] = $n;
+            }
+            $opNamaList = array_values(array_unique($opNamaList));
+            sort($opNamaList);
 
             return view('honorarium', [
                 'fileName'         => $fileName,
@@ -2099,6 +2065,8 @@ class DashboardController extends Controller
                 'timData'          => $timData,
                 'kepaniteraanData' => $kepaniteraanData,
                 'opStafData'       => $opStafData,
+                'opStafIdxMap'     => $opStafIdxMap,
+                'opNamaList'       => $opNamaList,
                 'error'            => null,
             ]);
 
@@ -2111,96 +2079,106 @@ class DashboardController extends Controller
                 'timData'          => [],
                 'kepaniteraanData' => [],
                 'opStafData'       => [],
+                'opStafIdxMap'     => [],
+                'opNamaList'       => [],
                 'error'            => 'Error: '.$e->getMessage(),
             ]);
         }
     }
 
+
     public function honorariumPrint(Request $request)
     {
-        // Reuse the same cache + data as honorarium() to avoid re-parsing the Excel file.
-        $filePath = Session::get('excel_file_path');
-        $fileName = Session::get('excel_file_name');
+        try {
+            // Reuse the same cache + data as honorarium() to avoid re-parsing the Excel file.
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
 
-        $computedType = $request->query('computed'); // 'kepaniteraan', 'tim', 'op-staf'
-        $sheetIdx = $request->query('sheet');   // integer index or null
-        $blockIdx = $request->query('block');   // integer index or 'all' or null
-        $catIdx   = $request->query('cat');     // category index filter
+            $computedType = $request->query('computed'); // 'kepaniteraan', 'tim', 'op-staf'
+            $sheetIdx = $request->query('sheet');   // integer index or null
+            $blockIdx = $request->query('block');   // integer index or 'all' or null
+            $catIdx   = $request->query('cat');     // category index filter
 
-        if (! $filePath || ! file_exists($filePath)) {
-            return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.', 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
-        }
-
-        // Get computed data in case they want to print it
-        $timData = $this->computeTimData($filePath);
-        $kepaniteraanData = $this->computeKepaniteraanData($filePath);
-        $opStafData = $this->computeOpStafData($filePath);
-
-        if ($catIdx !== null && is_numeric($catIdx)) {
-            $cIndex = (int) $catIdx;
-            if ($computedType === 'tim' && isset($timData[$cIndex])) {
-                $timData = [$timData[$cIndex]];
-            } elseif ($computedType === 'kepaniteraan' && isset($kepaniteraanData[$cIndex])) {
-                $kepaniteraanData = [$kepaniteraanData[$cIndex]];
-            } elseif ($computedType === 'op-staf' && isset($opStafData[$cIndex])) {
-                $opStafData = [$opStafData[$cIndex]];
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('honorarium-print', ['fileName' => null, 'sheets' => [], 'error' => 'File tidak ditemukan.', 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
             }
-        }
 
-        // Same cache key as honorarium()
-        $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar');
-        $cached = Session::get($cacheKey);
-
-        // Helper: filter full sheets array down to user's selection
-        $applyFilter = function (array $sheets) use ($sheetIdx, $blockIdx) {
-            // Filter by sheet tab
-            if ($sheetIdx !== null && isset($sheets[(int) $sheetIdx])) {
-                $sheets = [$sheets[(int) $sheetIdx]];
-            }
-            // Filter by block within that sheet
-            if ($blockIdx !== null && $blockIdx !== 'all') {
-                foreach ($sheets as &$sheet) {
-                    if (isset($sheet['blocks'][(int) $blockIdx])) {
-                        $sheet['blocks'] = [$sheet['blocks'][(int) $blockIdx]];
+            // Helper: filter full sheets array down to user's selection
+            $applyFilter = function (array $sheets) use ($sheetIdx, $blockIdx) {
+                // Filter by sheet tab
+                if ($sheetIdx !== null && isset($sheets[(int) $sheetIdx])) {
+                    $sheets = [$sheets[(int) $sheetIdx]];
+                }
+                // Filter by block within that sheet
+                if ($blockIdx !== null && $blockIdx !== 'all') {
+                    foreach ($sheets as &$sheet) {
+                        if (isset($sheet['blocks'][(int) $blockIdx])) {
+                            $sheet['blocks'] = [$sheet['blocks'][(int) $blockIdx]];
+                        }
                     }
                 }
-            }
 
-            return $sheets;
-        };
+                return $sheets;
+            };
 
-        if ($cached !== null) {
-            $sheets = $applyFilter($cached['sheets']);
-
-            return view('honorarium-print', ['fileName' => $fileName, 'sheets' => $sheets, 'error' => null, 'timData' => $timData, 'kepaniteraanData' => $kepaniteraanData, 'opStafData' => $opStafData, 'computedType' => $computedType]);
-        }
-
-        // Cache miss: load & parse (same logic as honorarium())
-        try {
-            ini_set('memory_limit', '1024M');
-            ini_set('max_execution_time', '300');
-            set_time_limit(300);
-
-            $reader = IOFactory::createReaderForFile($filePath);
-            $reader->setReadDataOnly(false);
-            $spreadsheet = $reader->load($filePath);
+            // Same cache key as honorarium()
+            $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar_v2');
+            $cached = Session::get($cacheKey);
 
             $sheets = [];
-            foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
-                $ws = $spreadsheet->getSheetByName($sheetName);
-                if (! $ws) {
-                    continue;
-                }
-                $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
-                if (! empty($blocks)) {
-                    $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+            if ($cached !== null) {
+                $sheets = $cached['sheets'];
+            } else {
+                // Cache miss: load & parse (same logic as honorarium())
+                try {
+                    ini_set('memory_limit', '1024M');
+                    ini_set('max_execution_time', '300');
+                    set_time_limit(300);
+
+                    $reader = IOFactory::createReaderForFile($filePath);
+                    $reader->setReadDataOnly(false);
+                    $spreadsheet = $reader->load($filePath);
+
+                    $sheets = [];
+                    foreach (['Kepaniteraan', 'TIM', 'OP - STAF'] as $sheetName) {
+                        $ws = $spreadsheet->getSheetByName($sheetName);
+                        if (! $ws) {
+                            continue;
+                        }
+                        $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
+                        if (! empty($blocks)) {
+                            $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+                        }
+                    }
+
+                    $spreadsheet->disconnectWorksheets();
+                    unset($spreadsheet);
+
+                    Session::put($cacheKey, compact('sheets'));
+                } catch (\Throwable $e) {
+                    \Log::error('Error in honorariumPrint parsing', ['error' => $e->getMessage()]);
+
+                    return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: '.$e->getMessage(), 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
                 }
             }
 
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
+            $opSignatures = $this->getOpSignatures($sheets);
 
-            Session::put($cacheKey, compact('sheets'));
+            // Get computed data in case they want to print it
+            $timData = $this->computeTimData($filePath, $opSignatures);
+            $kepaniteraanData = $this->computeKepaniteraanData($filePath);
+            $opStafData = $this->computeOpStafData($filePath);
+
+            if ($catIdx !== null && is_numeric($catIdx)) {
+                $cIndex = (int) $catIdx;
+                if ($computedType === 'tim' && isset($timData[$cIndex])) {
+                    $timData = [$timData[$cIndex]];
+                } elseif ($computedType === 'kepaniteraan' && isset($kepaniteraanData[$cIndex])) {
+                    $kepaniteraanData = [$kepaniteraanData[$cIndex]];
+                } elseif ($computedType === 'op-staf' && isset($opStafData[$cIndex])) {
+                    $opStafData = [$opStafData[$cIndex]];
+                }
+            }
 
             $sheets = $applyFilter($sheets);
 
@@ -2210,6 +2188,31 @@ class DashboardController extends Controller
 
             return view('honorarium-print', ['fileName' => $fileName, 'sheets' => [], 'error' => 'Error: '.$e->getMessage(), 'timData' => [], 'kepaniteraanData' => [], 'opStafData' => [], 'computedType' => null]);
         }
+    }
+
+    private function getOpSignatures(array $sheets): array
+    {
+        $opSignatures = [];
+        foreach ($sheets as $sh) {
+            if (stripos($sh['sheetName'] ?? '', 'OP') !== false && stripos($sh['sheetName'] ?? '', 'STAF') !== false) {
+                foreach ($sh['blocks'] ?? [] as $blk) {
+                    $title1 = $blk['title1'] ?? '';
+                    // Hapus prefix saja — JANGAN strip suffix (ARBITRASE), (PHI), dll
+                    // supaya blok induk "KASASI PERDATA KHUSUS" tidak ditimpa sub-bloknya
+                    $cleanLabel = trim(preg_replace('/^HONORARIUM BIAYA PENYELESAIAN PERKARA\s*/i', '', $title1));
+                    $cleanLabel = strtoupper(trim($cleanLabel));
+
+                    $name = $blk['footerInfo']['right_name'] ?? '';
+                    if ($cleanLabel !== '' && $name !== '') {
+                        // Tulis hanya jika belum ada — blok pertama (induk/parent) yang menang
+                        if (!isset($opSignatures[$cleanLabel])) {
+                            $opSignatures[$cleanLabel] = $name;
+                        }
+                    }
+                }
+            }
+        }
+        return $opSignatures;
     }
 
     /**
@@ -3222,11 +3225,12 @@ class DashboardController extends Controller
                         $newHeaders[$jabatanIdx] = 'JABATAN';
                         ksort($newHeaders);
 
-                        // Rebuild rows: kosongkan NAMA OPERATOR, isi JABATAN = 'OPERATOR'
+                        // Rebuild rows: isi NAMA OPERATOR dengan nama ttd operator, isi JABATAN = 'OPERATOR'
+                        $opSignName = $footerInfo['right_name'] ?? '';
                         foreach ($dataRows as &$row) {
                             $newRow = [];
                             foreach ($keyMap as $oldCi => $newCi) {
-                                $newRow[$newCi] = ($oldCi === $colOperator) ? '' : ($row[$oldCi] ?? '');
+                                $newRow[$newCi] = ($oldCi === $colOperator) ? $opSignName : ($row[$oldCi] ?? '');
                             }
                             $newRow[$jabatanIdx] = 'OPERATOR';
                             $row = $newRow;

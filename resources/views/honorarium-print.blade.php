@@ -391,9 +391,9 @@
                 <div class="op-footer-wrap">
                     <div class="op-ttd-right" style="text-align: center; float: right; min-width: 250px;">
                         <div class="op-footer-date" style="text-align: center;">{{ $ttdDate }}</div>
-                        <div class="ttd-label">{{ $opInfo['jabatan'] }}</div>
+                        <div class="ttd-label">{{ $block['op_jabatan'] ?? $opInfo['jabatan'] ?? 'OPERATOR KAMAR' }}</div>
                         <div class="ttd-space"></div>
-                        <div class="ttd-name" data-ttd-key="ttd_op_mulki">{{ $opInfo['nama'] }}</div>
+                        <div class="ttd-name" data-ttd-key="ttd_op_{{ $oi }}">{{ $block['op_nama'] ?? $opInfo['nama'] ?? '' }}</div>
                     </div>
                 </div>
             </div>

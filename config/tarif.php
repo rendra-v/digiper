@@ -185,4 +185,22 @@ return [
         // ── Fallback ──────────────────────────────────────────────────────
         '*'                                              => ['jabatan' => 'OPERATOR KAMAR',            'nama' => ''],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Daftar Nama Operator untuk Dropdown Pilihan
+    |--------------------------------------------------------------------------
+    | Tambahkan nama baru di sini agar muncul di dropdown saat mengedit
+    | tanda tangan di tab OP-STAF. Nama tidak harus terkait dengan
+    | jenis perkara tertentu.
+    |
+    | Contoh menambah orang baru:
+    |   'Nama Lengkap, Gelar.',
+    */
+    'operator_names' => [
+        'Mulki Ardiansyah, S.Kom.',
+        'Ahmad Faizal, SH.',
+        'Raini Hara Hutagalung, SH.',
+        // Tambahkan nama baru di bawah ini:
+    ],
 ];

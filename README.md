@@ -1,59 +1,93 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📚 PUSAT DOKUMEN LAPORAN MAGANG, LOGBOOK, & DAFTAR HADIR (140 HARI / 1.120 JAM)
+**MAHKAMAH AGUNG REPUBLIK INDONESIA**  
+*Program Studi S-1 Teknik Informatika — Universitas YARSI (2026)*
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Selamat datang! File `README.md` ini berisi daftar lengkap berkas **Laporan Magang**, **Logbook Harian (140 Nomor / 1.120 Jam)**, serta **Daftar Hadir Magang (140 Hari Hadir / 100% Hadir)** untuk 4 anggota kelompok resmi:
+1. 👨‍💻 **Backend 1:** Rifa Reza Fahlevi (NPM 1402023060)
+2. 👨‍💻 **Backend 2:** Rafli Dika Rendra Arifin
+3. 🎨 **Frontend 1:** Aldi Afriansyah
+4. 🎨 **Frontend 2:** Farras Fadhillah
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 AKSES PINTAS BERKAS (DIRECT DOWNLOAD & OPEN)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. 📄 LAPORAN MAGANG UTAMA (DIGIPER - YARSI FORMAT)
+- 🟦 **Microsoft Word (.docx):** [LAPORAN_MAGANG_DIGIPER.docx](file:///c:/Users/pogoi/Herd/digiper/LAPORAN_MAGANG_DIGIPER.docx)
+- 🌐 **HTML Preview & Copy:** [LAPORAN_MAGANG_DIGIPER.html](file:///c:/Users/pogoi/Herd/digiper/LAPORAN_MAGANG_DIGIPER.html)
+- 📝 **Markdown Text:** [LAPORAN_MAGANG_DIGIPER.md](file:///c:/Users/pogoi/Herd/digiper/LAPORAN_MAGANG_DIGIPER.md)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+### 2. 📋 LOGBOOK MAGANG (2 PROYEK ATKMA & DIGIPER / 140 NOMOR)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+#### 🔹 Backend 1 — Rifa Reza Fahlevi (NPM 1402023060)
+- 🟦 **Microsoft Word (.docx):** [LOGBOOK_BE1_RIFA_REZA_FAHLEVI.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE1_RIFA_REZA_FAHLEVI.docx)
+- 🌐 **HTML Preview & Copy:** [LOGBOOK_BE1_RIFA_REZA_FAHLEVI.html](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE1_RIFA_REZA_FAHLEVI.html)
+- 📝 **Markdown Text:** [LOGBOOK_BE1_RIFA_REZA_FAHLEVI.md](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE1_RIFA_REZA_FAHLEVI.md)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#### 🔹 Backend 2 — Rafli Dika Rendra Arifin
+- 🟦 **Microsoft Word (.docx):** [LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.docx) | [LOGBOOK_BE2.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE2.docx)
+- 🌐 **HTML Preview & Copy:** [LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.html](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.html)
+- 📝 **Markdown Text:** [LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.md](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_BE2_RAFLI_DIKA_RENDRA_ARIFIN.md)
 
-## Laravel Sponsors
+#### 🔹 Frontend 1 — Aldi Afriansyah
+- 🟦 **Microsoft Word (.docx):** [LOGBOOK_FE1_ALDI_AFRIANSYAH.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE1_ALDI_AFRIANSYAH.docx) | [LOGBOOK_FE1.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE1.docx)
+- 🌐 **HTML Preview & Copy:** [LOGBOOK_FE1_ALDI_AFRIANSYAH.html](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE1_ALDI_AFRIANSYAH.html)
+- 📝 **Markdown Text:** [LOGBOOK_FE1_ALDI_AFRIANSYAH.md](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE1_ALDI_AFRIANSYAH.md)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+#### 🔹 Frontend 2 — Farras Fadhillah
+- 🟦 **Microsoft Word (.docx):** [LOGBOOK_FE2_FARRAS_FADHILLAH.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE2_FARRAS_FADHILLAH.docx) | [LOGBOOK_FE2.docx](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE2.docx)
+- 🌐 **HTML Preview & Copy:** [LOGBOOK_FE2_FARRAS_FADHILLAH.html](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE2_FARRAS_FADHILLAH.html)
+- 📝 **Markdown Text:** [LOGBOOK_FE2_FARRAS_FADHILLAH.md](file:///c:/Users/pogoi/Herd/digiper/LOGBOOK_FE2_FARRAS_FADHILLAH.md)
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 3. 📅 DAFTAR HADIR MAGANG (140 HARI HADIR / 100% HADIR)
+*Keterangan: H=1 (✓ Checkmark), I=0, S=0, A=0. Header 2 Baris (Sub-Header H I S A di bawah JUMLAH).*
 
-## Contributing
+#### 🔹 Backend 1 — Rifa Reza Fahlevi (NPM 1402023060)
+- 🟦 **Microsoft Word (.docx):** [DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.docx)
+- 🌐 **HTML Preview & Copy:** [DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.html](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.html)
+- 📝 **Markdown Text:** [DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.md](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE1_RIFA_REZA_FAHLEVI.md)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### 🔹 Backend 2 — Rafli Dika Rendra Arifin
+- 🟦 **Microsoft Word (.docx):** [DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.docx) | [DAFTAR_HADIR_BE2.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE2.docx)
+- 🌐 **HTML Preview & Copy:** [DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.html](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.html)
+- 📝 **Markdown Text:** [DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.md](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_BE2_RAFLI_DIKA_RENDRA_ARIFIN.md)
 
-## Code of Conduct
+#### 🔹 Frontend 1 — Aldi Afriansyah
+- 🟦 **Microsoft Word (.docx):** [DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.docx) | [DAFTAR_HADIR_FE1.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE1.docx)
+- 🌐 **HTML Preview & Copy:** [DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.html](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.html)
+- 📝 **Markdown Text:** [DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.md](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE1_ALDI_AFRIANSYAH.md)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### 🔹 Frontend 2 — Farras Fadhillah
+- 🟦 **Microsoft Word (.docx):** [DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.docx) | [DAFTAR_HADIR_FE2.docx](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE2.docx)
+- 🌐 **HTML Preview & Copy:** [DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.html](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.html)
+- 📝 **Markdown Text:** [DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.md](file:///c:/Users/pogoi/Herd/digiper/DAFTAR_HADIR_FE2_FARRAS_FADHILLAH.md)
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## ✉️ DRAF SURAT KETERANGAN MAGANG (ISIAN UNTUK 4 ANGGOTA)
 
-## License
+Berikut draf paragraf untuk mengisi bagian blank (`telah mempelajari tentang...`) pada Surat Keterangan Magang resmi dari Mahkamah Agung RI:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. Backend 1 — Rifa Reza Fahlevi (NPM 1402023060)
+> *"perancangan arsitektur backend dan pengolahan logika bisnis otomatisasi sistem rekapitulasi data keuangan (DIGIPER & ATK), pengelolaan alur data skala besar berbasis Laravel dan MySQL, serta memahami tata kelola birokrasi instansi pemerintahan, etika profesionalisme, kedisiplinan kerja, akuntabilitas pengolahan data publik, dan kerja sama tim secara berintegritas"*
+
+### 2. Backend 2 — Rafli Dika Rendra Arifin
+> *"pengembangan RESTful API, integrasi algoritma validasi dan kalkulasi data perkara secara presisi pada aplikasi DIGIPER dan ATK, optimasi performa basis data relasional, serta menerapkan kedisiplinan tinggi, etika kerahasiaan data instansi, prinsip akuntabilitas keuangan negara, dan ketelitian kerja di lingkungan Mahkamah Agung"*
+
+### 3. Frontend 1 — Aldi Afriansyah
+> *"perancangan antarmuka pengguna (UI/UX) sistem informasi instansi berbasis web yang responsif dan intuitif pada proyek DIGIPER dan ATK, visualisasi data rekapitulasi interaktif, serta memahami etika komunikasi birokrasi, budaya kerja kedisiplinan instansi pemerintah, ketelitian dokumen, dan koordinasi Lintas Peran (Backend-Frontend) secara profesional"*
+
+### 4. Frontend 2 — Farras Fadhillah
+> *"implementasi komponen antarmuka modern (Tailwind CSS & Blade), otomatisasi interaksi pengguna untuk pengolahan dokumen dan laporan, adaptasi standar pelayanan publik instansi, serta menjunjung tinggi kedisiplinan waktu, etika profesional, tanggung jawab kerja, dan kerja sama tim dalam penyelesaian tugas"*
+
+---
+
+## 📁 LOKASI FOLDER DIREKTORI LOKAL PC
+`C:\Users\pogoi\Herd\digiper\`
+
+---
+*Dibuat otomatis oleh AI Assistant Antigravity — Pengolahan Laporan Magang Universitas YARSI & Mahkamah Agung RI.*

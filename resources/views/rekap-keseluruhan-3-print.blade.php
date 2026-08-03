@@ -60,8 +60,8 @@
         }
         th, td {
             border: 0.8px solid #555;
-            padding: 5px 7px;
-            font-size: 10px;
+            padding: 12px 8px;
+            font-size: 11px;
             line-height: 1.4;
             overflow: hidden;
         }
@@ -209,9 +209,7 @@
             </tbody>
             </table>
 
-            </div>{{-- end chunk div --}}
-            @endforeach {{-- colChunks --}}
-
+            @if($chunkIdx === count($colChunks) - 1)
             {{-- ══ Signature Area ══ --}}
             <div class="sig-wrap">
                 @php
@@ -247,6 +245,10 @@
                     </div>
                 </div>
             </div>
+            @endif
+
+            </div>{{-- end chunk div --}}
+            @endforeach {{-- colChunks --}}
 
         <script>
             window.addEventListener('load', function () {

@@ -906,7 +906,7 @@ public function countHakimFromRows(array $rows): int
      * @param  array  $categories  Output dari parseDataPrintSheet()
      * @return array  Array of blocks: ['label', 'jumlah_perkara', 'rows', 'total']
      */
-    public function computeTimHonorariumBlocks(array $categories): array
+    public function computeTimHonorariumBlocks(array $categories, array $opSignatures = []): array
     {
         // Index by id
         $keyed = [];
@@ -1142,9 +1142,20 @@ public function countHakimFromRows(array $rows): int
             // 4. OPERATOR/ PENGETIK — 1 baris, PPH 5%
             $jbOperator   = $totalPerkara * $biayaOperator;
             $pph5Operator = (int) round($jbOperator * 0.05);
+            
+            $opName = '';
+            $cleanKey = strtoupper(trim($def['label']));
+            if (isset($opSignatures[$cleanKey])) {
+                $opName = $opSignatures[$cleanKey];
+            } elseif (isset($this->tarif['operator_kamar'][$def['label']]['nama'])) {
+                $opName = $this->tarif['operator_kamar'][$def['label']]['nama'];
+            } elseif (isset($this->tarif['operator_kamar']['*']['nama'])) {
+                $opName = $this->tarif['operator_kamar']['*']['nama'];
+            }
+
             $tableRows[] = [
                 'no'             => $no++,
-                'nama'           => '',
+                'nama'           => $opName,
                 'jabatan'        => 'OPERATOR/ PENGETIK',
                 'jumlah_perkara' => $totalPerkara,
                 'biaya'          => $biayaOperator,
@@ -1875,10 +1886,14 @@ public function countHakimFromRows(array $rows): int
                            'tarif' => $biayaOperator, 'bruto' => 0, 'pph5' => 0, 'netto' => 0];
             }
 
+            $opInfo = $this->tarif['operator_kamar'][$def['label']] ?? $this->tarif['operator_kamar']['*'] ?? ['jabatan' => 'OPERATOR KAMAR', 'nama' => ''];
+
             $blocks[] = [
                 'title'         => $def['label'],
                 'tarif'         => $biayaOperator,
                 'total_perkara' => $totalPerkara,
+                'op_nama'       => $opInfo['nama'],
+                'op_jabatan'    => $opInfo['jabatan'],
                 'rows'          => $rows,
                 'total'         => ['jml'   => array_sum(array_column($rows, 'jml')),
                                     'bruto' => $gBruto, 'pph5' => $gPph5, 'netto' => $gNetto],

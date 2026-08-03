@@ -295,9 +295,17 @@
                                     @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                     <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-800 dark:text-neutral-200">{{ $row['no'] }}</td>
+                                        @php
+                                            $opStafIdx = $opStafIdxMap[strtoupper(trim($block['label']))] ?? null;
+                                            $isOp = $row['jabatan'] === 'OPERATOR/ PENGETIK';
+                                            $lsKey = ($isOp && $opStafIdx !== null)
+                                                ? "ttd_op_{$opStafIdx}"
+                                                : "hon_tim_{$ti}_{$loop->index}";
+                                            $defaultVal = $isOp ? ($row['nama'] ?? '') : ($row['nama'] ?? '');
+                                        @endphp
                                         <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                            x-data="{ editing: false, val: localStorage.getItem('hon_tim_{{ $ti }}_{{ $loop->index }}') ?? @js($row['nama']) }"
-                                            x-init="$watch('val', v => localStorage.setItem('hon_tim_{{ $ti }}_{{ $loop->index }}', v))"
+                                            x-data="{ editing: false, val: localStorage.getItem('{{ $lsKey }}') || @js($defaultVal) }"
+                                            x-init="$watch('val', v => localStorage.setItem('{{ $lsKey }}', v)); {{ $isOp && $opStafIdx !== null ? "window.addEventListener('storage', e => { if(e.key === '{$lsKey}') val = e.newValue || ''; })" : '' }}"
                                             @dblclick="orig=val; editing=true" title="Klik 2x untuk edit nama">
                                             <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal not-italic text-xs tracking-wide' : ''" class="cursor-text block px-1 py-1 text-center text-neutral-800 dark:text-neutral-200"></span>
                                             <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -1177,9 +1185,17 @@
                                         @php $rowNum++; $bg = $rowNum % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''; @endphp
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center">{{ $row['no'] }}</td>
+                                            @php
+                                                $opStafIdx3 = $opStafIdxMap[strtoupper(trim($block['label']))] ?? null;
+                                                $isOp3 = $row['jabatan'] === 'OPERATOR/ PENGETIK';
+                                                $lsKey3 = ($isOp3 && $opStafIdx3 !== null)
+                                                    ? "ttd_op_{$opStafIdx3}"
+                                                    : "hon_tim_{$ti3}_{$loop->index}";
+                                                $defaultVal3 = $row['nama'] ?? '';
+                                            @endphp
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: localStorage.getItem('hon_tim_{{ $ti3 }}_{{ $loop->index }}') ?? @js($row['nama']) }"
-                                                x-init="$watch('val', v => localStorage.setItem('hon_tim_{{ $ti3 }}_{{ $loop->index }}', v))"
+                                                x-data="{ editing: false, val: localStorage.getItem('{{ $lsKey3 }}') || @js($defaultVal3) }"
+                                                x-init="$watch('val', v => localStorage.setItem('{{ $lsKey3 }}', v)); {{ $isOp3 && $opStafIdx3 !== null ? "window.addEventListener('storage', e => { if(e.key === '{$lsKey3}') val = e.newValue || ''; })" : '' }}"
                                                 @dblclick="orig=val; editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal not-italic text-xs tracking-wide' : ''" class="cursor-text block px-1 py-1 text-center"></span>
                                                 <div x-show="editing" x-cloak class="flex items-center gap-1">
@@ -1470,9 +1486,115 @@
                         </div>
                     </div>
 
+                    {{-- Datalist nama operator: diisi dari PHP + custom dari localStorage --}}
+                    <datalist id="op-nama-list">
+                        @foreach($opNamaList as $opNamaItem)
+                            <option value="{{ $opNamaItem }}"></option>
+                        @endforeach
+                    </datalist>
+
+                    {{-- Panel Kelola Daftar Nama Operator --}}
+                    <div x-data="{
+                            open: false,
+                            baseNames: @js($opNamaList),
+                            customNames: JSON.parse(localStorage.getItem('op_custom_names') || '[]'),
+                            get allNames() {
+                                return [...new Set([...this.baseNames, ...this.customNames])].sort();
+                            },
+                            isCustom(n) { return this.customNames.includes(n); },
+                            deleteName(n) {
+                                this.customNames = this.customNames.filter(x => x !== n);
+                                localStorage.setItem('op_custom_names', JSON.stringify(this.customNames));
+                                // Hapus dari datalist DOM
+                                const dl = document.getElementById('op-nama-list');
+                                if (dl) {
+                                    Array.from(dl.options).forEach(o => { if (o.value === n) dl.removeChild(o); });
+                                }
+                            },
+                            init() {
+                                // Inject custom names ke datalist saat init
+                                const dl = document.getElementById('op-nama-list');
+                                if (!dl) return;
+                                const existing = Array.from(dl.options).map(o => o.value);
+                                this.customNames.forEach(n => {
+                                    if (n && !existing.includes(n)) {
+                                        const opt = document.createElement('option');
+                                        opt.value = n;
+                                        dl.appendChild(opt);
+                                    }
+                                });
+                                // Expose helper global untuk signature fields
+                                window.opNamaSave = (name) => {
+                                    if (!name || !name.trim()) return;
+                                    name = name.trim();
+                                    const dl2 = document.getElementById('op-nama-list');
+                                    const existing2 = dl2 ? Array.from(dl2.options).map(o => o.value) : [];
+                                    if (!existing2.includes(name)) {
+                                        if (dl2) { const opt = document.createElement('option'); opt.value = name; dl2.appendChild(opt); }
+                                        if (!this.customNames.includes(name)) {
+                                            this.customNames.push(name);
+                                            localStorage.setItem('op_custom_names', JSON.stringify(this.customNames));
+                                        }
+                                    }
+                                };
+                            }
+                        }"
+                         class="mb-4 flex justify-end">
+                        <button @click="open = !open"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Kelola Daftar Nama Operator
+                            <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+
+                        {{-- Panel --}}
+                        <div x-show="open" x-cloak @click.outside="open = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 translate-y-1"
+                             class="absolute right-4 mt-8 w-80 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wide text-neutral-700 dark:text-neutral-300">Daftar Nama Operator</span>
+                                <button @click="open = false" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-lg leading-none">×</button>
+                            </div>
+                            <div class="max-h-72 overflow-y-auto">
+                                <template x-for="n in allNames" :key="n">
+                                    <div class="flex items-center justify-between px-4 py-2.5 border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
+                                        <span class="text-xs text-neutral-800 dark:text-neutral-200 flex-1 truncate" x-text="n"></span>
+                                        <div class="flex items-center gap-2 ml-2 shrink-0">
+                                            <span x-show="!isCustom(n)" class="text-[10px] text-neutral-400 italic">bawaan</span>
+                                            <button x-show="isCustom(n)"
+                                                    @click="deleteName(n)"
+                                                    class="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-semibold px-2 py-0.5 rounded border border-red-200 dark:border-red-800 transition-colors">
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div x-show="customNames.length === 0 && baseNames.length === 0" class="px-4 py-6 text-center text-xs text-neutral-400">
+                                    Belum ada nama tersimpan
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between gap-2">
+                                <p class="text-[10px] text-neutral-400 dark:text-neutral-500 flex-1">
+                                    Nama <em>bawaan</em> tidak bisa dihapus.<br>Nama yang Anda tambah sendiri bisa dihapus.
+                                </p>
+                                <button x-show="customNames.length > 0"
+                                        @click="customNames.forEach(n => { const dl = document.getElementById('op-nama-list'); if(dl) Array.from(dl.options).forEach(o => { if(o.value === n) dl.removeChild(o); }); }); customNames = []; localStorage.removeItem('op_custom_names');"
+                                        class="text-[10px] text-red-500 hover:text-red-700 font-semibold whitespace-nowrap px-2 py-1 rounded border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
+                                    Hapus semua
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     @foreach($opStafData as $oi => $block)
                     <div class="mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
                          x-show="opBlock === '' || opBlock === '{{ $oi }}'">
+
 
                         {{-- Header --}}
                         <div class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b border-orange-100 dark:border-orange-900/50 px-6 py-4">
@@ -1516,7 +1638,7 @@
                                         <tr class="border-b border-neutral-100 dark:border-neutral-800 hover:bg-orange-50/30 dark:hover:bg-neutral-800/30 transition-colors {{ $bg }}">
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-2 py-2 text-center text-neutral-600">{{ $row['no'] }}</td>
                                             <td class="border border-neutral-200 dark:border-neutral-700 px-1 py-1 font-medium"
-                                                x-data="{ editing: false, val: localStorage.getItem('hon_op_{{ $oi }}_{{ $loop->index }}') ?? '' }"
+                                                x-data="{ editing: false, val: localStorage.getItem('hon_op_{{ $oi }}_{{ $loop->index }}') }"
                                                 x-init="$watch('val', v => localStorage.setItem('hon_op_{{ $oi }}_{{ $loop->index }}', v))"
                                                 @dblclick="orig=val; editing=true" title="Klik 2x untuk edit nama">
                                                 <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal not-italic text-xs tracking-wide' : ''" class="cursor-text block px-1 py-1 min-h-[1.5rem]"></span>
@@ -1560,19 +1682,65 @@
                         <div class="px-4 pt-4 pb-2 border-t border-neutral-200 dark:border-neutral-700">
                             <div class="flex flex-col items-end text-xs">
                                 <div class="text-right font-semibold text-neutral-600 dark:text-neutral-400 mb-1">{{ $ttdDateOp }}</div>
-                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-right mb-1">Operator Kamar Perdata</div>
+                                <div class="font-bold uppercase text-neutral-700 dark:text-neutral-300 text-right mb-1">{{ $block['op_jabatan'] ?? 'Operator Kamar' }}</div>
                                 <div class="h-12"></div>
-                                <div x-data="{ editing: false, val: localStorage.getItem('ttd_op_mulki') ?? @js($pejabatOp['operator_kamar'] ?? 'Mulki Ardiansyah, S.Kom.') }"
-                                     x-init="$watch('val', v => localStorage.setItem('ttd_op_mulki', v))"
-                                     @dblclick="orig=val; editing=true" title="Klik 2x untuk edit">
-                                    <span x-show="!editing" x-text="val !== '' ? val : '— Belum diisi —'" :class="val === '' ? 'text-neutral-400 dark:text-neutral-600 font-normal not-italic text-xs tracking-wide' : ''" class="cursor-text block font-bold text-neutral-900 dark:text-neutral-100 text-right"></span>
-                                    <div x-show="editing" x-cloak class="flex items-center gap-1 justify-end">
-                                        <input x-model="val" type="text"
-                                               x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
-                                               @keyup.enter="editing=false" @keyup.escape="val=orig; editing=false"
-                                               class="border border-orange-400 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
-                                        <button @click="editing=false" class="text-green-500 hover:text-green-700 font-bold shrink-0">✓</button>
-                                        <button @click="val=orig; editing=false" class="text-red-400 hover:text-red-600 font-bold shrink-0">✗</button>
+                                <div x-data="{
+                                        editing: false,
+                                        val: localStorage.getItem('ttd_op_{{ $oi }}') || @js($block['op_nama'] ?? ''),
+                                        query: '',
+                                        open: false,
+                                        allOpts: [],
+                                        get filtered() {
+                                            if (!this.query) return this.allOpts;
+                                            const q = this.query.toLowerCase();
+                                            return this.allOpts.filter(n => n.toLowerCase().includes(q));
+                                        },
+                                        confirm() {
+                                            const v = this.query.trim();
+                                            if (v) { this.val = v; window.opNamaSave && window.opNamaSave(v); }
+                                            this.open = false; this.editing = false;
+                                        },
+                                        cancel() { this.query = ''; this.open = false; this.editing = false; },
+                                        pick(n) { this.val = n; this.query = n; window.opNamaSave && window.opNamaSave(n); this.open = false; this.editing = false; },
+                                        startEdit() {
+                                            this.allOpts = Array.from(document.getElementById('op-nama-list')?.options || []).map(o => o.value).filter(Boolean);
+                                            this.query = ''; this.open = true; this.editing = true;
+                                            this.$nextTick(() => this.$refs.inp?.focus());
+                                        }
+                                    }"
+                                     x-init="$watch('val', v => localStorage.setItem('ttd_op_{{ $oi }}', v))">
+                                    {{-- Display (klik untuk edit) --}}
+                                    <span x-show="!editing"
+                                          @click="startEdit()"
+                                          x-text="val !== '' ? val : '— Klik untuk pilih —'"
+                                          :class="val === '' ? 'text-orange-400 dark:text-orange-500 font-normal text-xs italic' : ''"
+                                          class="block font-bold text-neutral-900 dark:text-neutral-100 text-right underline decoration-dotted underline-offset-2 cursor-pointer select-none"></span>
+
+                                    {{-- Edit mode --}}
+                                    <div x-show="editing" x-cloak class="relative flex items-center gap-1 justify-end mt-1">
+                                        <div class="relative">
+                                            <input x-ref="inp"
+                                                   x-model="query"
+                                                   :placeholder="val || 'Ketik atau pilih nama...'"
+                                                   @focus="open = true"
+                                                   @keydown.arrow-down.prevent="open = true"
+                                                   @keydown.enter.prevent="confirm()"
+                                                   @keydown.escape.prevent="cancel()"
+                                                   class="border border-orange-400 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 w-56">
+
+                                            {{-- Dropdown list --}}
+                                            <div x-show="open && filtered.length > 0"
+                                                 @click.outside="open = false"
+                                                 class="absolute right-0 bottom-full mb-1 w-full min-w-[220px] bg-white dark:bg-neutral-900 border border-orange-300 dark:border-orange-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                                                <template x-for="n in filtered" :key="n">
+                                                    <div @click.stop="pick(n)"
+                                                         class="px-3 py-2 text-xs text-neutral-800 dark:text-neutral-200 hover:bg-orange-50 dark:hover:bg-orange-900/30 cursor-pointer border-b border-neutral-50 dark:border-neutral-800 last:border-0"
+                                                         x-text="n"></div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <button @click.stop="confirm()" class="text-green-500 hover:text-green-700 font-bold shrink-0 text-sm px-1">✓</button>
+                                        <button @click.stop="cancel()" class="text-red-400 hover:text-red-600 font-bold shrink-0 text-sm px-1">✗</button>
                                     </div>
                                 </div>
                             </div>
