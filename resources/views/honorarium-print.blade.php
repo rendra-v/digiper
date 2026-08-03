@@ -224,17 +224,9 @@
         @@page {
             margin: 0;
             size: 330mm 215.9mm;
-            @top-left   { content: ''; }
-            @top-center { content: ''; }
-            @top-right  { content: ''; }
-            @bottom-left   { content: ''; }
-            @bottom-center { content: ''; }
-            @bottom-right  { content: ''; }
         }
         @media print {
-            html {
-                background: #fff;
-            }
+            html { background: #fff; }
             body {
                 background: #fff;
                 font-size: 11pt;
@@ -250,7 +242,7 @@
                 min-height: auto;
                 box-shadow: none;
                 border-radius: 0;
-                padding: 20mm 15mm 10mm;
+                padding: 10mm 15mm 10mm;
                 page-break-after: always;
                 break-after: page;
             }
@@ -277,16 +269,17 @@
                 font-weight: 700;
             }
 
-            /* Footer */
-            .footer-wrap { margin-top: 10px; break-inside: avoid; page-break-inside: avoid; width: 96%; margin-left: auto; margin-right: auto; }
+            /* Footer — signature stays on same page as table */
+            .footer-wrap { margin-top: 8px; break-inside: avoid !important; page-break-inside: avoid !important; width: 100%; }
             .footer-date { font-size: 10pt; }
-            .ttd-grid { font-size: 10pt; gap: 16px; }
-            .ttd-grid-2col { font-size: 10pt; gap: 16px; }
-            .ttd-space { height: 3.5cm; }
+            .ttd-grid { font-size: 10pt; gap: 12px; }
+            .ttd-grid-2col { font-size: 10pt; gap: 12px; }
+            .ttd-space { height: 3cm; }
 
-            .op-footer-wrap { margin-top: 10px; break-inside: avoid; page-break-inside: avoid; width: 96%; margin-left: auto; margin-right: auto; }
+            .op-footer-wrap { margin-top: 8px; break-inside: avoid !important; page-break-inside: avoid !important; width: 100%; }
             .op-footer-date { font-size: 10pt; }
             .op-ttd-right { font-size: 10pt; }
+            .op-ttd-right .ttd-space { height: 3cm; }
         }
     </style>
 </head>
@@ -362,7 +355,7 @@
                         <tr>
                             <th class="td-no">NO</th>
                             <th class="td-nama">NAMA OPERATOR</th>
-                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-count">JUMLAH<br>PERKARA</th>
                             <th class="td-num">BIAYA</th>
                             <th class="td-num">JUMLAH BIAYA</th>
                             <th class="td-num">PPH 5%</th>
@@ -396,8 +389,8 @@
                 </table>
                 {{-- Footer: hanya tanggal + operator kamar di kanan --}}
                 <div class="op-footer-wrap">
-                    <div class="op-footer-date">{{ $ttdDate }}</div>
-                    <div class="op-ttd-right">
+                    <div class="op-ttd-right" style="text-align: center; float: right; min-width: 250px;">
+                        <div class="op-footer-date" style="text-align: center;">{{ $ttdDate }}</div>
                         <div class="ttd-label">{{ $opInfo['jabatan'] }}</div>
                         <div class="ttd-space"></div>
                         <div class="ttd-name" data-ttd-key="ttd_op_mulki">{{ $opInfo['nama'] }}</div>
@@ -433,7 +426,7 @@
                             <th class="td-no">NO</th>
                             <th class="td-nama">NAMA</th>
                             <th class="td-jab">JABATAN</th>
-                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-count">JUMLAH<br>PERKARA</th>
                             <th class="td-num">BIAYA</th>
                             <th class="td-num">JUMLAH BIAYA</th>
                             <th class="td-num">PPH 15%</th>
@@ -473,19 +466,21 @@
                         ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
                 @endphp
                 <div class="footer-wrap">
-                    <div class="footer-date">{{ $ttdDate }}</div>
                     <div class="ttd-grid">
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="text-align: center; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
@@ -521,7 +516,7 @@
                             <th class="td-no">NO</th>
                             <th class="td-nama">NAMA</th>
                             <th class="td-jab">JABATAN</th>
-                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-count">JUMLAH<br>PERKARA</th>
                             <th class="td-num">BIAYA</th>
                             <th class="td-num">JUMLAH BIAYA</th>
                             <th class="td-num">PPH 15%</th>
@@ -561,19 +556,21 @@
                         ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
                 @endphp
                 <div class="footer-wrap">
-                    <div class="footer-date">{{ $ttdDate }}</div>
                     <div class="ttd-grid">
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="text-align: center; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
@@ -610,7 +607,7 @@
                             <th class="td-no">NO</th>
                             <th class="td-nama">NAMA</th>
                             <th class="td-jab">JABATAN</th>
-                            <th class="td-count">JUMLAH PERKARA</th>
+                            <th class="td-count">JUMLAH<br>PERKARA</th>
                             <th class="td-num">BIAYA</th>
                             <th class="td-num">JUMLAH BIAYA</th>
                             <th class="td-num">PPH 15%</th>
@@ -650,19 +647,21 @@
                         ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
                 @endphp
                 <div class="footer-wrap">
-                    <div class="footer-date">{{ $ttdDate }}</div>
                     <div class="ttd-grid">
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_petugas">{{ $pejabat['petugas_pembuat'] ?? $pejabat['ppk'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="visibility: hidden; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                         </div>
                         <div class="ttd-item">
+                            <div class="footer-date" style="text-align: center; margin-bottom: 4px;">{{ $ttdDate }}</div>
                             <div class="ttd-label">Bendahara Biaya Proses</div>
                             <div class="ttd-space"></div>
                             <div class="ttd-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
@@ -713,7 +712,7 @@
                                     $isTtd   = str_contains($hdrUp, 'TANDA TANGAN');
                                     $cls     = $isNo ? 'td-no' : ($isNama ? 'td-nama' : ($isJab ? 'td-jab' : ($isCount ? 'td-count' : ($isTtd ? 'td-ttd' : 'td-num'))));
                                 @endphp
-                                <th class="{{ $cls }}">{{ $hdr ?? '' }}</th>
+                                <th class="{{ $cls }}">{!! str_replace('JUMLAH PERKARA', 'JUMLAH<br>PERKARA', $hdr ?? '') !!}</th>
                             @endforeach
                         </tr>
                     </thead>

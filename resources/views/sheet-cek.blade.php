@@ -230,7 +230,6 @@
                 @php
                     $dpMonths = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
                     $tglRekap = \Illuminate\Support\Facades\Session::get('excel_tgl_rekap_keseluruhan')
-                        ?: \Illuminate\Support\Facades\Session::get('excel_period')
                         ?: ('Jakarta, ' . date('d') . ' ' . $dpMonths[(int)date('m')] . ' ' . date('Y'));
                 @endphp
 

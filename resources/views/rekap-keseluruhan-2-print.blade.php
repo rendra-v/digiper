@@ -265,21 +265,23 @@
                     ?: ('Jakarta, ' . date('d') . ' ' . $months[(int)date('m')] . ' ' . date('Y'));
                 $pejabat = config('tarif.pejabat');
             @endphp
-            <div class="sig-date">{{ $dateNow }}</div>
             <div class="sig-row">
                 <div class="sig-col">
+                    <div class="sig-date" style="visibility: hidden; margin-bottom: 8px;">{{ $dateNow }}</div>
                     <div class="sig-label">Petugas Pembuat Komitmen<br>Biaya Proses</div>
                     <div class="sig-space"></div>
                     <div class="sig-name" data-ttd-key="ttd_petugas">{{ $pejabat['ppk'] ?? $pejabat['petugas_pembuat'] ?? 'ST. KRIS NUGROHO, S.H., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
+                    <div class="sig-date" style="visibility: hidden; margin-bottom: 8px;">{{ $dateNow }}</div>
                     <div class="sig-label">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                     <div class="sig-space"></div>
                     <div class="sig-name" data-ttd-key="ttd_kuasa">{{ $pejabat['kuasa_pengelola'] ?? 'ASEP NURSOBAH, S.Ag., M.H.' }}</div>
                 </div>
 
                 <div class="sig-col">
+                    <div class="sig-date" style="text-align: center; margin-bottom: 8px;">{{ $dateNow }}</div>
                     <div class="sig-label">Bendahara Biaya Proses</div>
                     <div class="sig-space"></div>
                     <div class="sig-name" data-ttd-key="ttd_bendahara">{{ $pejabat['bendahara'] ?? 'FARIDA, S.H.' }}</div>
