@@ -85,7 +85,7 @@
         .sig-col .sig-label { font-weight: 700; }
         .sig-col .sig-space { height: 2.2cm; }
         .sig-col .sig-name  { font-weight: 700; font-size: 10px; }
-        .sig-col .sig-under { text-decoration: underline; font-weight: 700; }
+        .sig-col .sig-under { text-decoration: none; font-weight: 700; }
 
         @media print {
             .no-print { display: none !important; }

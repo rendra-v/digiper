@@ -50,14 +50,14 @@
             </a>
 
             @if(!$error && !empty($tables))
-            <a href="{{ route('rekap-panitera-muda.print', ['kamar' => $activeKamar]) }}" target="_blank" rel="noopener"
+            <a href="{{ route('rekap-panitera-muda.print') }}" target="_blank" rel="noopener"
                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V2h12v7"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14h8v8H8z"/>
                 </svg>
-                Cetak Semua (Kamar {{ $activeKamar }})
+                Cetak Semua (Perdata + Agama + TUN)
             </a>
             @endif
         </div>
