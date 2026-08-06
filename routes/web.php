@@ -32,6 +32,12 @@ Route::get('/honorarium/print', [DashboardController::class, 'honorariumPrint'])
 Route::get('/honorarium/debug', [DashboardController::class, 'honorariumDebug'])->name('honorarium.debug');
 Route::get('/periode-laporan', [DashboardController::class, 'periodeLaporan'])->name('periode-laporan');
 Route::post('/periode-laporan', [DashboardController::class, 'updatePeriodeLaporan'])->name('periode-laporan.update');
+Route::get('/rekap-kepaniteraan-tim', [DashboardController::class, 'rekapKepaniteraanTim'])->name('rekap-kepaniteraan-tim');
+Route::get('/rekap-kepaniteraan-tim/print', [DashboardController::class, 'rekapKepaniteraanTimPrint'])->name('rekap-kepaniteraan-tim.print');
+Route::get('/rekap-panitera-muda', [DashboardController::class, 'rekapPaniteraMuda'])->name('rekap-panitera-muda');
+Route::get('/rekap-panitera-muda/print', [DashboardController::class, 'rekapPaniteraMudaPrint'])->name('rekap-panitera-muda.print');
+Route::get('/rekap-all-panitera-muda', [DashboardController::class, 'rekapAllPaniteraMuda'])->name('rekap-all-panitera-muda');
+Route::get('/rekap-all-panitera-muda/print', [DashboardController::class, 'rekapAllPaniteraMudaPrint'])->name('rekap-all-panitera-muda.print');
 
 // Legacy routes
 Route::resource('perkaras', PerkaraController::class);

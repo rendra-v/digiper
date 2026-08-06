@@ -33,8 +33,11 @@
                             <option value="{{ route('sheet-cek') }}">📋&nbsp; Sheet Cek</option>
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
                             <option value="{{ route('rekap-keseluruhan-3') }}">📋&nbsp; Rekap Keseluruhan 3</option>
+                            <option value="{{ route('rekap-kepaniteraan-tim') }}">📋&nbsp; Rekap Kepaniteraan &amp; Tim</option>
+                            <option value="{{ route('rekap-panitera-muda') }}">📋&nbsp; Rekap Panitera Muda</option>
+                            <option value="{{ route('rekap-all-panitera-muda') }}">📊&nbsp; Rekap All Panitera Muda</option>
                             <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
-                                <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>
+                            <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

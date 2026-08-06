@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Magang DIGIPER</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1 { color: #1f497d; font-size: 24px; border-bottom: 2px solid #1f497d; padding-bottom: 8px; }
+        h2 { color: #1f497d; font-size: 18px; margin-top: 24px; }
+        h3 { color: #333333; font-size: 15px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+        th {
+            background-color: #1f497d;
+            color: white;
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #1f497d;
+            font-weight: bold;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #dce4ec;
+            vertical-align: middle;
+        }
+        tr:nth-child(even) { background-color: #f2f5f9; }
+        tr:hover { background-color: #e9ecef; }
+        .center { text-align: center; }
+        p { line-height: 1.6; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+<h1>LAPORAN MAGANG / KERJA PRAKTIK</h1>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>COVER / HALAMAN JUDUL</h2>
+<p><b>PEMBANGUNAN SISTEM REKAPITULASI BIAYA PERKARA TERINTEGRASI (DIGIPER) BERBASIS WEB MENGGUNAKAN FRAMEWORK LARAVEL DI MAHKAMAH AGUNG<b></p>
+<p>*Untuk Memenuhi Salah Satu Syarat Penyelesaian Program S-1 Teknik Informatika*</p>
+<p><b>Oleh:<b></p>
+<p>[Nama Mahasiswa]</p>
+<p>NPM. [NPM Mahasiswa]</p>
+<p><b>PROGRAM STUDI S-1 TEKNIK INFORMATIKA<b></p>
+<p><b>FAKULTAS TEKNOLOGI INFORMASI<b></p>
+<p><b>UNIVERSITAS YARSI<b></p>
+<p><b>JAKARTA<b></p>
+<p><b>2026<b></p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>LEMBAR PENGESAHAN LAPORAN MAGANG</h2>
+<p><b>LAPORAN MAGANG DENGAN JUDUL:<b></p>
+<p><b>PEMBANGUNAN SISTEM REKAPITULASI BIAYA PERKARA TERINTEGRASI (DIGIPER) BERBASIS WEB MENGGUNAKAN FRAMEWORK LARAVEL DI MAHKAMAH AGUNG<b></p>
+<p>Laporan Magang ini telah disetujui, diperiksa, dan disahkan pada presentasi Laporan Magang pada tanggal: ………………………</p>
+<p><br></p>
+<p><b>Mengetahui,<b></p>
+<table>
+  <tr>
+    <th>Pembimbing Magang PS-TI</th>
+    <th>Pembimbing Magang Instansi</th>
+  </tr>
+  <tr>
+    <td class='center'><br><br><br>____________________<br>NIK: ……………………</td>
+    <td class='center'><br><br><br>____________________<br>NIP: ……………………</td>
+  </tr>
+</table>
+<p><br></p>
+<table>
+  <tr>
+    <th>Kepala Program Studi TI</th>
+    <th>Koordinator Magang</th>
+  </tr>
+  <tr>
+    <td class='center'><br><br><br>Elan Suherlan, M.Kom<br>NIK: ……………………</td>
+    <td class='center'><br><br><br>Muhamad Fathurahman, M.Kom<br>NIK: 531141116036</td>
+  </tr>
+</table>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>KATA PENGANTAR</h2>
+<p>Puji dan syukur penulis panjatkan kehadirat Allah SWT karena atas rahmat dan karunia-Nya, penulis dapat menyelesaikan Kegiatan Magang (Kerja Praktik) beserta penyusunan laporan magang yang berjudul <b>"Pembangunan Sistem Rekapitulasi Biaya Perkara Terintegrasi (DIGIPER) Berbasis Web Menggunakan Framework Laravel di Mahkamah Agung"<b>.</p>
+<p>Laporan ini disusun guna memenuhi salah satu syarat kelulusan dan penyelesaian Program Studi S-1 Teknik Informatika, Fakultas Teknologi Informasi, Universitas Yarsi.</p>
+<p>Dalam pelaksanaan magang hingga penyusunan laporan ini, penulis mendapatkan bantuan, bimbingan, serta dukungan dari berbagai pihak. Oleh karena itu, pada kesempatan ini penulis mengucapkan terima kasih kepada:</p>
+<p>1. Bapak Elan Suherlan, M.Kom selaku Kepala Program Studi S-1 Teknik Informatika Universitas Yarsi.</p>
+<p>2. Bapak Muhamad Fathurahman, M.Kom selaku Koordinator Magang Prodi S-1 Teknik Informatika Universitas Yarsi.</p>
+<p>3. [Nama Dosen Pembimbing] selaku Dosen Pembimbing Magang dari Universitas Yarsi.</p>
+<p>4. [Nama Pembimbing Lapangan] selaku Pembimbing Lapangan di Mahkamah Agung Republik Indonesia.</p>
+<p>5. Seluruh jajaran Pimpinan, Hakim Agung, Pejabat Kepaniteraan, dan Staf Mahkamah Agung yang telah memberikan kesempatan serta bimbingan selama kegiatan magang berlangsung.</p>
+<p>6. Orang tua dan keluarga terkasih atas doa, motivasi, dan dukungan moril maupun materil.</p>
+<p>7. Rekan-rekan mahasiswa Teknik Informatika Universitas Yarsi atas kerja sama dan dukungannya.</p>
+<p>Penulis menyadari bahwa dalam penyusunan laporan ini masih terdapat kekurangan. Oleh karena itu, kritik dan saran yang membangun sangat penulis harapkan demi perbaikan di masa mendatang. Semoga laporan ini dapat memberikan manfaat bagi pembaca dan pihak yang membutuhkan.</p>
+<p>Jakarta, ……………………… 2026</p>
+<p><br></p>
+<p><b>Penulis<b></p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>DAFTAR ISI</h2>
+<p>- <b>LEMBAR PENGESAHAN LAPORAN MAGANG<b></p>
+<p>- <b>KATA PENGANTAR<b></p>
+<p>- <b>DAFTAR ISI<b></p>
+<p>- <b>DAFTAR TABEL<b></p>
+<p>- <b>DAFTAR GAMBAR<b></p>
+<p>- <b>BAB I PENDAHULUAN<b></p>
+<p>- 1.1 Latar Belakang</p>
+<p>- 1.2 Perumusan Masalah</p>
+<p>- 1.3 Tujuan Magang</p>
+<p>- 1.4 Batasan Masalah</p>
+<p>- 1.5 Sistematika Penulisan</p>
+<p>- 1.6 Waktu Pelaksanaan Magang</p>
+<p>- <b>BAB II LANDASAN TEORI<b></p>
+<p>- 2.1 Metode Pengembangan Software (Prototyping)</p>
+<p>- 2.2 Framework Web Laravel & PHP 8.4</p>
+<p>- 2.3 Database Management System (MySQL)</p>
+<p>- 2.4 Tailwind CSS & Responsive User Interface</p>
+<p>- 2.5 Pengolahan Berkas Spreadsheet / Excel Data Parsing</p>
+<p>- <b>BAB III PELAKSANAAN KERJA PRAKTIK<b></p>
+<p>- 3.1 Deskripsi Umum Tugas Magang</p>
+<p>- 3.2 Penjelasan Aktivitas Magang (Log Book)</p>
+<p>- 3.3 Hasil Pengerjaan Tugas Magang (Aplikasi DIGIPER)</p>
+<p>- <b>BAB IV HASIL PEMBELAJARAN<b></p>
+<p>- 4.1 Manfaat Magang yang Didapat</p>
+<p>- 4.2 Penerapan Ilmu Dalam Magang</p>
+<p>- <b>BAB V KESIMPULAN DAN SARAN TEKNIS<b></p>
+<p>- 5.1 Kesimpulan</p>
+<p>- 5.2 Saran Teknis</p>
+<p>- <b>DAFTAR PUSTAKA<b></p>
+<p>- <b>LAMPIRAN<b></p>
+<p>- 1. Daftar Hadir Magang</p>
+<p>- 2. Laporan Kegiatan Magang Logbook</p>
+<p>- 3. Penilaian Magang Mahasiswa</p>
+<p>- 4. Profil Perusahaan / Instansi (Mahkamah Agung RI)</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>DAFTAR TABEL</h2>
+<p>- <b>Tabel 1.<b> Rangkuman Log Book Aktivitas Magang per Pekan</p>
+<p>- <b>Tabel 2.<b> Daftar Fitur Utama Sistem Rekapitulasi DIGIPER yang Telah Diterapkan</p>
+<p>- <b>Tabel 3.<b> Pemecahan Komponen Biaya Perkara Standar</p>
+<p>- <b>Tabel 4.<b> Skema Distribusi Honor per Role & Majelis Hakim</p>
+<p>- <b>Tabel 5.<b> Matriks Penerapan Ilmu Perkuliahan dalam Kegiatan Magang</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h2>DAFTAR GAMBAR</h2>
+<p>- <b>Gambar 1.<b> Alur Tahapan Metode Pengembangan Software Prototyping</p>
+<p>- <b>Gambar 2.<b> High-Level Architecture Sistem DIGIPER (Laravel 12 + Tailwind CSS + MySQL)</p>
+<p>- <b>Gambar 3.<b> Entity Relationship Diagram (ERD) Sistem DIGIPER</p>
+<p>- <b>Gambar 4.<b> Tampilan Halaman Utama / Upload Data Excel Perkara (Drag & Drop)</p>
+<p>- <b>Gambar 5.<b> Tampilan Dashboard Preview Data & Filtering Status Biaya (Threshold 90 Hari)</p>
+<p>- <b>Gambar 6.<b> Tampilan Detail Breakdown Biaya Perkara & Distribusi Honor Hakim</p>
+<p>- <b>Gambar 7.<b> Tampilan Rekapitulasi Total & Split Export Laporan (Lembar Kepaniteraan & Pimpinan)</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>BAB I: PENDAHULUAN</h1>
+<h3>1.1 Latar Belakang</h3>
+<p>Mahkamah Agung Republik Indonesia mengelola volume perkara yang sangat besar dalam berbagai bidang yurisdiksi, meliputi Perdata, Peninjauan Kembali (PK), Kasasi, Tata Usaha Negara (TUN), Agama, Pajak, dan Perdata Khusus. Dalam setiap penanganan perkara putus, terdapat kewajiban akuntabilitas keuangan terkait pengelolaan dan pemecahan biaya perkara, yang mencakup biaya materai, redaksi, Alat Tulis Kantor (ATK), biaya sidang, operasional, hingga pengalokasian honorarium bagi Majelis Hakim, Panitera Pengganti (PP), Operator, dan Hakim Pemilah.</p>
+<p>Sebelumnya, pengolahan data rekapitulasi biaya perkara dan pendistribusian honorarium dilakukan secara parsial dengan spreadsheet berkala yang membutuhkan proses input manual, *vlookup* manual, serta verifikasi kelayakan usia perkara secara mandiri. Hal ini berpotensi menimbulkan kendala seperti tingginya kerentanan kesalahan hitung (*human error*), ketidaksinkronan data antar-unit, serta kelambatan dalam penyusunan laporan keuangan untuk keperluan audit Laporan Keuangan (LK) Badan Pemeriksa Keuangan (BPK).</p>
+<p>Untuk mengatasinya, dikembangkan <b>Sistem Terintegrasi Rekapitulasi Biaya Perkara (DIGIPER)<b> berbasis web. Sistem ini dirancang untuk mengotomatisasi proses import data berkas Excel Mahkamah Agung, melakukan validasi usia perkara otomatis (threshold $\ge 90$ hari), mengaplikasikan tarif default per jenis perkara, memecah komponen biaya, hingga mendistribusikan honorarium berdasarkan tingkat senioritas Hakim Agung secara presisi, akurat, dan transparan. Melalui kegiatan magang di Mahkamah Agung, peserta magang berkontribusi dalam membangun dan mengimplementasikan fitur-fitur utama pada sistem DIGIPER.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>1.2 Perumusan Masalah</h3>
+<p>Berdasarkan latar belakang di atas, perumusan masalah dalam kegiatan magang ini adalah:</p>
+<p>1. Bagaimana merancang dan mengimplementasikan modul import berkas Excel dengan fitur *drag and drop* serta validasi kolom otomatis pada aplikasi DIGIPER?</p>
+<p>2. Bagaimana membangun logika filter otomatis untuk memverifikasi kelayakan usia perkara berdasarkan ambang batas 90 hari?</p>
+<p>3. Bagaimana mengotomatisasi skema pengelompokan jenis perkara, pengaplikasian tarif default, serta pemecahan komponen biaya secara presisi?</p>
+<p>4. Bagaimana menghitung dan mendistribusikan honorarium untuk Majelis Hakim (P1, P2, P3), Panitera Pengganti, Operator, dan Hakim Pemilah sesuai hierarki senioritas?</p>
+<p>5. Bagaimana menghasilkan laporan rekapitulasi terintegrasi yang dapat dipisah (*split worksheet*) untuk kebutuhan Majelis/Kepaniteraan dan Pimpinan?</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>1.3 Tujuan Magang</h3>
+<p>Tujuan dari kegiatan magang ini adalah:</p>
+<p>1. Membangun aplikasi web DIGIPER menggunakan framework Laravel 12, PHP 8.4, Tailwind CSS, dan database MySQL.</p>
+<p>2. Mengimplementasikan fitur otomatisasi import data Excel, pemecahan komponen biaya, dan perhitungan distribusi honor secara presisi.</p>
+<p>3. Menyediakan dashboard interaktif untuk memonitor status biaya perkara, statistik pengelompokan jenis perkara, serta rekapitulasi honorarium.</p>
+<p>4. Menerapkan disiplin ilmu Rekayasa Perangkat Lunak, Pemrograman Web, Pemrograman Berorientasi Objek, dan Basadata yang diperoleh di bangku kuliah pada dunia kerja nyata.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>1.4 Batasan Masalah</h3>
+<p>Agar pembahasan laporan magang ini terfokus, maka diberikan batasan masalah sebagai berikut:</p>
+<p>1. Sistem dikembangkan berbasis web menggunakan framework <b>Laravel 12<b>, <b>PHP 8.4<b>, dan styling <b>Tailwind CSS v4<b>.</p>
+<p>2. Sumber data utama yang diolah berupa berkas data transaksi / info perkara berformat Excel (`.xlsx`, `.xls`).</p>
+<p>3. Kriteria filter kelayakan biaya perkara berfokus pada usia perkara $\ge 90$ hari (selisih tanggal putus dikurangi tanggal masuk perkara).</p>
+<p>4. Pengelompokan jenis perkara mencakup 8 kategori utama: Kasasi, Peninjauan Kembali (PK), TUN, Perdata, Agama, Pajak, Hukum/Lingkungan (Hum), dan Perdata Khusus.</p>
+<p>5. Pembagian honorarium berorientasi pada aturan struktur internal Mahkamah Agung untuk Hakim Agung (Ketua Majelis, Anggota 1/2/3), Panitera Pengganti, Operator, dan Hakim Pemilah.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>1.5 Sistematika Penulisan</h3>
+<p>Sistematika penulisan laporan magang ini dibagi menjadi lima bab sebagai berikut:</p>
+<p>- <b>BAB I PENDAHULUAN<b>: Berisi latar belakang, perumusan masalah, tujuan magang, batasan masalah, sistematika penulisan, serta waktu pelaksanaan magang.</p>
+<p>- <b>BAB II LANDASAN TEORI<b>: Menjelaskan konsep dan teknologi pendukung seperti metode Prototyping, Framework Laravel, Database MySQL, Tailwind CSS, serta Excel Parsing.</p>
+<p>- <b>BAB III PELAKSANAAN KERJA PRAKTIK<b>: Menjelaskan deskripsi tugas magang, logbook kegiatan mingguan, arsitektur sistem, serta hasil pengerjaan fitur aplikasi DIGIPER.</p>
+<p>- <b>BAB IV HASIL PEMBELAJARAN<b>: Menguraikan manfaat magang yang diperoleh serta relevansi penerapan ilmu perkuliahan dalam penyelesaian tugas magang.</p>
+<p>- <b>BAB V KESIMPULAN DAN SARAN TEKNIS<b>: Menyajikan kesimpulan akhir hasil magang serta saran teknis pengembangan sistem di masa mendatang.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>1.6 Waktu Pelaksanaan Magang</h3>
+<p>Kegiatan magang dilaksanakan pada:</p>
+<p>- <b>Tanggal/Periode<b>: [Tanggal Mulai] s.d. [Tanggal Selesai] 2026 (Durasi: $\pm 3-5$ Bulan)</p>
+<p>- <b>Lokasi<b>: Mahkamah Agung Republik Indonesia, Jakarta Central.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>BAB II: LANDASAN TEORI</h1>
+<h3>2.1 Metode Pengembangan Software (Prototyping)</h3>
+<p>Metode pengembangan perangkat lunak yang diterapkan dalam pembuatan sistem DIGIPER adalah metode <b>Prototyping<b>. Metode ini berfokus pada siklus berulang (*iterative development*) di mana prototipe antarmuka dan alur logika dipresentasikan kepada pengguna sejak tahap awal untuk mendapatkan umpan balik langsung.</p>
+<p>Tahapan Prototyping meliputi:</p>
+<p>1. <b>Pengumpulan Kebutuhan<b>: Mengidentifikasi struktur data Excel Mahkamah Agung dan aturan bisnis perhitungan biaya perkara.</p>
+<p>2. <b>Membangun Prototyping<b>: Merancang UI/UX dashboard, modal import drag-and-drop, serta tabel breakdown biaya.</p>
+<p>3. <b>Evaluasi Prototipe<b>: Melakukan tinjauan bersama pembimbing lapangan dan calon pengguna (admin/kepaniteraan).</p>
+<p>4. <b>Pengodean Sistem<b>: Membangun modul backend Laravel, Eloquent ORM, serta pustaka pengolahan Excel.</p>
+<p>5. <b>Pengujian & Evaluasi Sistem<b>: Melakukan pengujian fungsi perhitungan dan validasi data.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>2.2 Framework Web Laravel & PHP 8.4</h3>
+<p>Laravel adalah framework web berbasis PHP yang menggunakan arsitektur *Model-View-Controller* (MVC). Pada sistem DIGIPER, Laravel 12 dan PHP 8.4 dimanfaatkan karena menyediakan fitur unggulan:</p>
+<p>- <b>Routing & Middleware<b>: Mengatur hak akses role Admin, Kepaniteraan, dan Pimpinan.</p>
+<p>- <b>Eloquent ORM<b>: Mempermudah manipulasi relasi antartabel database (`Perkara`, `Hakim`, `DetailBiayaPerkara`, `DistribusiHonor`).</p>
+<p>- <b>Maatwebsite / FastExcel Integration<b>: Memungkinkan pembacaan (*parsing*) dan pemrosesan ribuan baris data Excel secara cepat dan efisien.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>2.3 Database Management System (MySQL)</h3>
+<p>MySQL digunakan sebagai sistem manajemen basis data relasional (*RDBMS*). Struktur data dirancang menggunakan konsep normalisasi untuk memastikan integritas data keuangan dan menghindari redundansi, seperti pemisahan master data Hakim Agung, Master Pejabat, Master Komponen Biaya, serta data Perkara.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>2.4 Tailwind CSS & Responsive User Interface</h3>
+<p>Tailwind CSS v4 digunakan untuk membangun antarmuka pengguna yang modern, bersih, presisi, dan responsif. Penggunaan utilitas CSS memfasilitasi pembuatan tema terang (*light mode*) dan tema gelap (*dark mode*), visualisasi statistik berbasis kartu (*summary cards*), badge status berwarna, serta tabel data dengan pembacaan yang nyaman.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>2.5 Pengolahan Berkas Spreadsheet / Excel Data Parsing</h3>
+<p>Proses bisnis utama DIGIPER bergantung pada otomatisasi pengolahan berkas Excel. Algoritma pencocokan data (*Fuzzy Matching & Lookup*) diterapkan untuk memetakan kolom dari file Excel hasil unduhan Mahkamah Agung secara otomatis ke skema tabel basis data tanpa memerlukan konversi manual.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>BAB III: PELAKSANAAN KERJA PRAKTIK</h1>
+<h3>3.1 Deskripsi Umum Tugas Magang</h3>
+<p>Selama pelaksanaan magang di Mahkamah Agung, peserta magang bergabung dalam tim pengembang perangkat lunak untuk membangun <b>Sistem DIGIPER<b>. Tugas utama yang diamanahkan meliputi:</p>
+<p>1. Merancang antarmuka antarmuka pengguna (*User Interface*) untuk halaman upload modal dan dashboard rekapitulasi data.</p>
+<p>2. Mengembangkan alur logika otomatisasi import data berkas Excel perkara.</p>
+<p>3. Membangun logika kalkulasi usia perkara, penentuan status biaya (ambang batas 90 hari), serta penerapan tarif default.</p>
+<p>4. Membangun modul pemecahan biaya perkara ke dalam komponen pecahan (Materai, Redaksi, ATK, Sidang, Operasional) dan distribusi honor (Hakim Agung P1/P2/P3, PP, Operator, Hakim Pemilah).</p>
+<p>5. Mengimplementasikan ekspor laporan keuangan terpisah (*split worksheet*) untuk Kepaniteraan dan Pimpinan.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>3.2 Penjelasan Aktivitas Magang (Log Book)</h3>
+<p><b>Tabel 1. Rangkuman Log Book Aktivitas Magang per Pekan<b></p>
+<table>
+  <tr>
+    <th>Pekan</th>
+    <th>Rentang Tanggal</th>
+    <th>Aktivitas / Kegiatan Magang</th>
+  </tr>
+  <tr>
+    <td class='center'>1</td>
+    <td class='center'>Minggu Ke-1</td>
+    <td>• Orientasi lingkungan kerja Mahkamah Agung.<br>• Analisis kebutuhan sistem DIGIPER & pengumpulan sampel format Excel perkara.<br>• Penyusunan dokumen arsitektur dan skema database.</td>
+  </tr>
+  <tr>
+    <td class='center'>2</td>
+    <td class='center'>Minggu Ke-2</td>
+    <td>• Inisialisasi proyek Laravel 12, PHP 8.4, Tailwind CSS v4, dan MySQL.<br>• Pembuatan struktur tabel database (perkaras, hakims, komponen_biayas, distribusi_honors).</td>
+  </tr>
+  <tr>
+    <td class='center'>3</td>
+    <td class='center'>Minggu Ke-3</td>
+    <td>• Pengembangan halaman utama & modal import Excel *Drag and Drop*.<br>• Pengintegrasian library pengolahan Excel (Maatwebsite Excel).</td>
+  </tr>
+  <tr>
+    <td class='center'>4</td>
+    <td class='center'>Minggu Ke-4</td>
+    <td>• Implementasi algoritma perhitungan usia perkara ($\text{Usia} =</td>
+    <td>\text{Tgl Putus} - \text{Tgl Masuk}</td>
+    <td>$).<br>• Penerapan logic filter status biaya (Status "Kena Biaya" jika $\ge 90$ hari).</td>
+  </tr>
+  <tr>
+    <td class='center'>5</td>
+    <td class='center'>Minggu Ke-5</td>
+    <td>• Pengembangan modul klasifikasi 8 jenis perkara dan penerapan tarif default per jenis.<br>• Implementasi pemecahan biaya ke komponen fixed (Materai, Redaksi) dan persentase (ATK, Sidang).</td>
+  </tr>
+  <tr>
+    <td class='center'>6</td>
+    <td class='center'>Minggu Ke-6</td>
+    <td>• Pengembangan modul distribusi honorarium ke Majelis Hakim (P1, P2, P3), PP, dan Operator.<br>• Pengintegrasian data Hakim Pemilah secara opsional/terpisah.</td>
+  </tr>
+  <tr>
+    <td class='center'>7</td>
+    <td class='center'>Minggu Ke-7</td>
+    <td>• Pembuatan Master Data Hakim Agung dengan dukungan *Urutan Senioritas* (Ketua, Wakil, Ketua Kamar, Hakim Agung).<br>• Implementasi Master Data Pejabat Kepaniteraan.</td>
+  </tr>
+  <tr>
+    <td class='center'>8</td>
+    <td class='center'>Minggu Ke-8</td>
+    <td>• Pembuatan Dashboard Rekap Total secara *real-time* (Auto-Sync data).<br>• Pengembangan fitur pencarian (*fuzzy matching*) nama Hakim.</td>
+  </tr>
+  <tr>
+    <td class='center'>9</td>
+    <td class='center'>Minggu Ke-9</td>
+    <td>• Implementasi fitur *Split Laporan* ekspor Excel & PDF (Lembar Majelis/Kepaniteraan & Lembar Pimpinan).<br>• Pengaturan fitur *Auto-Hide Zero Values* untuk kerapian laporan.</td>
+  </tr>
+  <tr>
+    <td class='center'>10</td>
+    <td class='center'>Minggu Ke-10</td>
+    <td>• Uji coba integrasi sistem (System Integration Testing) & Perbaikan bug.<br>• Penyusunan dokumentasi teknis sistem dan panduan pengguna (User Guide).</td>
+  </tr>
+</table>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>3.3 Hasil Pengerjaan Tugas Magang (Aplikasi DIGIPER)</h3>
+<p>Hasil dari pengerjaan tugas magang adalah aplikasi web <b>DIGIPER<b> yang siap digunakan untuk otomatisasi rekapitulasi biaya perkara.</p>
+<p><b>Tabel 2. Daftar Fitur Utama Sistem Rekapitulasi DIGIPER yang Telah Diterapkan<b></p>
+<table>
+  <tr>
+    <th>No</th>
+    <th>Nama Fitur</th>
+    <th>Deskripsi & Fungsi</th>
+    <th>Status</th>
+  </tr>
+  <tr>
+    <td class='center'>1</td>
+    <td class='center'>Import Excel Drag & Drop</td>
+    <td>Mengunggah berkas Excel (.xlsx/.xls) info perkara dengan visual indikator progres dan auto-mapping kolom.</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>2</td>
+    <td class='center'>Auto-Filter Usia Perkara (90 Hari)</td>
+    <td>Menghitung otomatis usia perkara ($\ge 90$ hari = Kena Biaya, $< 90$ hari = Belum Kena Biaya).</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>3</td>
+    <td class='center'>Filter & Grouping Jenis Perkara</td>
+    <td>Mengelompokkan perkara ke dalam 8 kategori (Kasasi, PK, TUN, Perdata, Agama, Pajak, Hum, Perdata Khusus).</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>4</td>
+    <td class='center'>Auto Tarif Default & Breakdown Biaya</td>
+    <td>Menerapkan tarif default per jenis dan memecah nominal ke komponen Materai, Redaksi, ATK, Sidang, dll.</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>5</td>
+    <td class='center'>Distribusi Honor Per Role</td>
+    <td>Membagi jatah honorarium ke Majelis Hakim (Ketua, Anggota 1, Anggota 2), Panitera Pengganti, dan Operator.</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>6</td>
+    <td class='center'>Calculated Honor Per Hakim Agung</td>
+    <td>Menghitung total akumulasi jatah honor setiap Hakim Agung berdasarkan volume perkara yang ditangani.</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>7</td>
+    <td class='center'>Master Data Hakim & Senioritas</td>
+    <td>Mengelola daftar Hakim Agung beserta urutan senioritas (Ketua, Wakil, Ketua Kamar, Hakim Agung).</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>8</td>
+    <td class='center'>Hakim Pemilah (Terpisah)</td>
+    <td>Mencatat dan mengalokasikan honor untuk Hakim Pemilah secara proporsional dan terpisah.</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>9</td>
+    <td class='center'>Split Export Laporan (2 Lembar)</td>
+    <td>Menghasilkan ekspor Excel/PDF terpisah untuk Kepaniteraan/Majelis (detail) dan Pimpinan (rekap ringkas).</td>
+    <td>Selesai</td>
+  </tr>
+  <tr>
+    <td class='center'>10</td>
+    <td class='center'>Auto-Sync & Proteksi Formula</td>
+    <td>Mengunci rumus perhitungan serta melakukan sinkronisasi otomatis seluruh data rekapitulasi.</td>
+    <td>Selesai</td>
+  </tr>
+</table>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>BAB IV: HASIL PEMBELAJARAN</h1>
+<h3>4.1 Manfaat Magang yang Didapat</h3>
+<p>Melalui kegiatan magang di Mahkamah Agung dalam pembuatan sistem DIGIPER, manfaat yang diperoleh peserta magang meliputi:</p>
+<p>1. <b>Pengalaman Kerja Profesional<b>: Memahami alur kerja nyata di lingkungan instansi pemerintahan tinggi Mahkamah Agung RI, khususnya di bidang kepaniteraan dan pengolahan data perkara.</p>
+<p>2. <b>Peningkatan Kemampuan Teknis (Hard Skills)<b>:</p>
+<p>- Menguasai pengembangan aplikasi web berbasis Laravel 12 dan PHP 8.4.</p>
+<p>- Memahami teknik manipulasi dan parsing data Excel berukuran besar (*large dataset processing*).</p>
+<p>- Mampu merancang skema basis data relasional yang scalable dan efisien.</p>
+<p>- Menguasai pembuatan antarmuka modern dengan Tailwind CSS v4.</p>
+<p>3. <b>Peningkatan Kemampuan Non-Teknis (Soft Skills)<b>:</p>
+<p>- Kemampuan komunikasi teknis dengan pembimbing lapangan dan jajaran staf.</p>
+<p>- Kemampuan manajemen waktu dan pencapaian target dalam skema pengembangan Prototyping.</p>
+<p>- Kemampuan *problem-solving* dan analisis akar masalah (*root cause analysis*) dalam menangani bug aplikasi.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>4.2 Penerapan Ilmu Dalam Magang</h3>
+<p>Materi perkuliahan yang diperoleh pada Program Studi S-1 Teknik Informatika Universitas Yarsi dapat diimplementasikan secara langsung dalam kegiatan magang ini.</p>
+<p><b>Tabel 5. Matriks Penerapan Ilmu Perkuliahan dalam Kegiatan Magang<b></p>
+<table>
+  <tr>
+    <th>No</th>
+    <th>Mata Kuliah / Konsep</th>
+    <th>Bentuk Penerapan dalam Kegiatan Magang</th>
+  </tr>
+  <tr>
+    <td class='center'>1</td>
+    <td class='center'>Pemrograman Berorientasi Objek (PBO)</td>
+    <td>Menerapkan konsep *Class*, *Object*, *Inheritance*, dan *Encapsulation* pada struktur Model Eloquent Laravel (Model Perkara, Hakim, DistribusiHonor).</td>
+  </tr>
+  <tr>
+    <td class='center'>2</td>
+    <td class='center'>Rekayasa Perangkat Lunak (RPL)</td>
+    <td>Menggunakan metode *Prototyping*, penyusunan *User Stories*, perancangan *Use Case*, dan perancangan *Entity Relationship Diagram* (ERD).</td>
+  </tr>
+  <tr>
+    <td class='center'>3</td>
+    <td class='center'>Basis Data & Pemrograman Web</td>
+    <td>Merancang skema tabel MySQL, query agregasi (SUM, GROUP BY, JOIN), pembuatan API Endpoint, serta manipulasi tampilan Blade + Tailwind CSS.</td>
+  </tr>
+  <tr>
+    <td class='center'>4</td>
+    <td class='center'>Algoritma & Struktur Data</td>
+    <td>Menerapkan algoritma pencocokan string (*Fuzzy Matching*) untuk verifikasi nama Hakim Agung dari berkas Excel ke database master.</td>
+  </tr>
+  <tr>
+    <td class='center'>5</td>
+    <td class='center'>Keamanan Informasi & Sistem</td>
+    <td>Menerapkan proteksi data keuangan, *Formula Hashing*, Enkripsi konfigurasi sensitif, serta validasi hak akses berbasis peran (*Role-Based Access Control*).</td>
+  </tr>
+</table>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>BAB V: KESIMPULAN DAN SARAN TEKNIS</h1>
+<h3>5.1 Kesimpulan</h3>
+<p>Berdasarkan kegiatan magang yang telah dilaksanakan di Mahkamah Agung dalam pengembangan Sistem Rekapitulasi Biaya Perkara (DIGIPER), diperoleh kesimpulan sebagai berikut:</p>
+<p>1. <b>Sistem DIGIPER<b> berhasil dibangun berbasis web dengan memanfaatkan framework Laravel 12, PHP 8.4, Tailwind CSS v4, dan MySQL untuk menggantikan proses rekapitulasi manual.</p>
+<p>2. Fitur <b>Import Excel Drag and Drop<b> serta <b>Auto-Filter Usia Perkara ($\ge 90$ Hari)<b> mampu mempercepat validasi berkas perkara secara otomatis, akurat, dan meminimalkan kesalahan input (*human error*).</p>
+<p>3. Pemecahan komponen biaya perkara dan distribusi honorarium kepada Majelis Hakim, Panitera Pengganti, Operator, serta Hakim Pemilah dapat dihitung secara presisi sesuai urutan senioritas Hakim Agung.</p>
+<p>4. Fitur <b>Split Export Laporan<b> (Lembar Kepaniteraan dan Lembar Pimpinan) serta <b>Dashboard Rekap Total<b> berhasil menyediakan dokumen keuangan yang transparan dan akuntabel untuk audit LK BPK.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h3>5.2 Saran Teknis</h3>
+<p>Untuk pengembangan Sistem DIGIPER lebih lanjut di masa depan, disarankan beberapa poin perbaikan teknis berikut:</p>
+<p>1. <b>Antrean Pemrosesan Background (Queue Jobs)<b>: Mengimplementasikan fitur *Laravel Queue & Redis* untuk pemrosesan file Excel berukuran sangat besar ($> 50.000$ baris) agar tidak membebani memori server saat diakses bersamaan.</p>
+<p>2. <b>Autentikasi Dua Faktor (2FA) & Single Sign-On (SSO)<b>: Mengintegrasikan sistem login DIGIPER dengan SSO Mahkamah Agung untuk meningkatkan keamanan akses user.</p>
+<p>3. <b>Penyimpanan Log Audit Detail (Audit Trail)<b>: Menambahkan fitur perekaman aktivitas pengguna secara mendalam (*activity log*) untuk mencatat setiap aksi penambahan, perubahan tarif, maupun penghapusan data master demi menjaga transparansi audit.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>DAFTAR PUSTAKA</h1>
+<p>1. Otwell, T. (2026). *Laravel Documentation: The PHP Framework for Web Artisans*. Available at: https://laravel.com/docs</p>
+<p>2. Pressman, R. S., & Maxim, B. R. (2020). *Software Engineering: A Practitioner's Approach* (9th ed.). McGraw-Hill Education.</p>
+<p>3. Welling, L., & Thomson, L. (2017). *PHP and MySQL Web Development* (5th ed.). Addison-Wesley Professional.</p>
+<p>4. Tailwind Labs. (2026). *Tailwind CSS Documentation (v4.0)*. Available at: https://tailwindcss.com/docs</p>
+<p>5. Mahkamah Agung Republik Indonesia. (2024). *Pedoman Pengelolaan Biaya Perkara dan Kepaniteraan Mahkamah Agung RI*. Jakarta.</p>
+<hr style='border: none; border-top: 1px solid #ccc; margin: 20px 0;'>
+<h1>LAMPIRAN</h1>
+<p>1. <b>Daftar Hadir Magang<b></p>
+<p>2. <b>Laporan Kegiatan Magang (Logbook)<b></p>
+<p>3. <b>Lembar Penilaian Magang Mahasiswa<b></p>
+<p>4. <b>Profil Instansi (Mahkamah Agung Republik Indonesia)<b></p>
+<p>- <b>Sejarah & Profil Perusahaan/Instansi<b>: Mahkamah Agung RI merupakan lembaga tinggi negara dalam sistem ketatanegaraan Indonesia yang memegang kekuasaan kehakiman di samping Mahkamah Konstitusi.</p>
+<p>- <b>Visi<b>: *"Terwujudnya Badan Peradilan Indonesia yang Agung"*.</p>
+<p>- <b>Misi<b>:</p>
+<p>1. Menjaga kemandirian badan peradilan.</p>
+<p>2. Memberikan pelayanan hukum yang berkeadilan kepada pencari keadilan.</p>
+<p>3. Meningkatkan kualitas kepemimpinan badan peradilan.</p>
+<p>4. Kredibilitas dan transparansi badan peradilan.</p>
+<p>- <b>Struktur Organisasi & Departemen TI<b>: Kepaniteraan Mahkamah Agung & Tim Pengembangan Teknologi Informasi.</p>
+</div>
+</body>
+</html>

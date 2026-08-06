@@ -26,6 +26,9 @@
                     <option value="{{ route('data-print') }}">🖨️&nbsp; Data Print</option>
                     <option value="{{ route('sheet-cek') }}">📋&nbsp; Lihat Sheet Cek</option>
                     <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                    <option value="{{ route('rekap-kepaniteraan-tim') }}">📋&nbsp; Rekap Kepaniteraan &amp; Tim</option>
+                    <option value="{{ route('rekap-panitera-muda') }}">📋&nbsp; Rekap Panitera Muda</option>
+                    <option value="{{ route('rekap-all-panitera-muda') }}">📊&nbsp; Rekap All Panitera Muda</option>
                     <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-600 dark:text-emerald-400">

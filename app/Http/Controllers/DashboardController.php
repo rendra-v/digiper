@@ -170,10 +170,10 @@ class DashboardController extends Controller
             Session::put('excel_file_path', $filePath);
             Session::put('excel_sheets', $sheetNames);
             Session::put('excel_period', $excelFile->period);
-            Session::put('excel_laporan_periode',        $periodeData['laporan_periode']);
-            Session::put('excel_tgl_data_laporan',       $periodeData['tgl_data_laporan']);
-            Session::put('excel_tgl_rekap_keseluruhan',  $periodeData['tgl_rekap_keseluruhan']);
-            Session::put('excel_tgl_kwitansi',           $periodeData['tgl_kwitansi']);
+            Session::put('excel_laporan_periode', $periodeData['laporan_periode']);
+            Session::put('excel_tgl_data_laporan', $periodeData['tgl_data_laporan']);
+            Session::put('excel_tgl_rekap_keseluruhan', $periodeData['tgl_rekap_keseluruhan']);
+            Session::put('excel_tgl_kwitansi', $periodeData['tgl_kwitansi']);
 
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
@@ -191,10 +191,10 @@ class DashboardController extends Controller
     private function parsePeriodeLaporan($spreadsheet): array
     {
         $result = [
-            'laporan_periode'       => '',
-            'tgl_data_laporan'      => '',
+            'laporan_periode' => '',
+            'tgl_data_laporan' => '',
             'tgl_rekap_keseluruhan' => '',
-            'tgl_kwitansi'          => '',
+            'tgl_kwitansi' => '',
         ];
 
         // Search for sheet named "Periode Laporan" case-insensitively
@@ -208,7 +208,7 @@ class DashboardController extends Controller
             }
         }
 
-        if (!$targetSheet) {
+        if (! $targetSheet) {
             return $result;
         }
 
@@ -217,7 +217,9 @@ class DashboardController extends Controller
             // Scan columns A to E for labels
             for ($colIdx = 1; $colIdx <= 5; $colIdx++) {
                 $cellVal = strtoupper(trim((string) $targetSheet->getCell([$colIdx, $row])->getValue()));
-                if ($cellVal === '') continue;
+                if ($cellVal === '') {
+                    continue;
+                }
 
                 $targetKey = null;
                 if (stripos($cellVal, 'LAPORAN PERIODE') !== false || ($cellVal === 'PERIODE' && empty($result['laporan_periode']))) {
@@ -244,6 +246,7 @@ class DashboardController extends Controller
         }
 
         \Log::info('parsePeriodeLaporan() parsed:', $result);
+
         return $result;
     }
 
@@ -385,10 +388,10 @@ class DashboardController extends Controller
             Session::put('excel_file_name', $file->getClientOriginalName());
             Session::put('excel_file_path', $fullPath);
             Session::put('excel_period', $periodeData['laporan_periode']);
-            Session::put('excel_laporan_periode',        $periodeData['laporan_periode']);
-            Session::put('excel_tgl_data_laporan',       $periodeData['tgl_data_laporan']);
-            Session::put('excel_tgl_rekap_keseluruhan',  $periodeData['tgl_rekap_keseluruhan']);
-            Session::put('excel_tgl_kwitansi',           $periodeData['tgl_kwitansi']);
+            Session::put('excel_laporan_periode', $periodeData['laporan_periode']);
+            Session::put('excel_tgl_data_laporan', $periodeData['tgl_data_laporan']);
+            Session::put('excel_tgl_rekap_keseluruhan', $periodeData['tgl_rekap_keseluruhan']);
+            Session::put('excel_tgl_kwitansi', $periodeData['tgl_kwitansi']);
 
             // Cleanup
             $spreadsheet->disconnectWorksheets();
@@ -576,11 +579,11 @@ class DashboardController extends Controller
         if ($catFilter !== null && $catFilter !== '') {
             $filtered = [];
             foreach ($categories as $k => $catItem) {
-                if ((string)$k === (string)$catFilter || ($catItem['id'] ?? '') === (string)$catFilter) {
+                if ((string) $k === (string) $catFilter || ($catItem['id'] ?? '') === (string) $catFilter) {
                     $filtered[$k] = $catItem;
                 }
             }
-            if (!empty($filtered)) {
+            if (! empty($filtered)) {
                 $categories = $filtered;
             }
         }
@@ -829,17 +832,18 @@ class DashboardController extends Controller
         $subKlasifikasi = ['PHI', 'HKI', 'KEPAILITAN', 'ARBITRASE', 'PARPOL', 'KPPU', 'BPSK', 'KIP'];
 
         $aliasMap = [
-            'HAKI'           => 'HKI',
-            'PAILIT'         => 'KEPAILITAN',
-            'PKPU'           => 'KEPAILITAN',
+            'HAKI' => 'HKI',
+            'PAILIT' => 'KEPAILITAN',
+            'PKPU' => 'KEPAILITAN',
             'PDT-SUS-PAILIT' => 'KEPAILITAN',
-            'PDT-SUS-PKPU'   => 'KEPAILITAN',
+            'PDT-SUS-PKPU' => 'KEPAILITAN',
         ];
 
         $resolveKlas = function (array $row) use ($aliasMap): string {
             $klas = strtoupper(trim(
                 $row['KLASIFIKASI'] ?? $row['klasifikasi'] ?? $row['Klasifikasi'] ?? ''
             ));
+
             return $aliasMap[$klas] ?? $klas;
         };
 
@@ -852,26 +856,28 @@ class DashboardController extends Controller
         // [parent_id => title_prefix]
         $pairs = [
             'kasasi-pdt-khusus' => 'DATA PERKARA KASASI PERDATA KHUSUS',
-            'pk-pdt-khusus'     => 'DATA PERKARA PENINJAUAN KEMBALI PERDATA KHUSUS',
+            'pk-pdt-khusus' => 'DATA PERKARA PENINJAUAN KEMBALI PERDATA KHUSUS',
         ];
 
         $insertions = [];
         foreach ($pairs as $parentId => $titlePrefix) {
-            if (!isset($byId[$parentId])) continue;
+            if (! isset($byId[$parentId])) {
+                continue;
+            }
             $parent = $byId[$parentId];
-            $subs   = [];
+            $subs = [];
             foreach ($subKlasifikasi as $klas) {
                 $rows = array_values(array_filter($parent['data'], function ($row) use ($klas, $resolveKlas) {
                     return $resolveKlas($row) === $klas;
                 }));
-                $cnt    = count($rows);
+                $cnt = count($rows);
                 $subs[] = [
-                    'id'       => "{$parentId}-{$klas}",
-                    'title'    => "{$titlePrefix} ({$klas})",
-                    'data'     => $rows,
-                    'count'    => $cnt,
-                    'columns'  => $parent['columns'],
-                    'total'    => $cnt > 0 ? $cnt : null,
+                    'id' => "{$parentId}-{$klas}",
+                    'title' => "{$titlePrefix} ({$klas})",
+                    'data' => $rows,
+                    'count' => $cnt,
+                    'columns' => $parent['columns'],
+                    'total' => $cnt > 0 ? $cnt : null,
                     'ttd_name' => $parent['ttd_name'] ?? '',
                 ];
             }
@@ -929,6 +935,7 @@ class DashboardController extends Controller
                 if (is_string($raw) && strpos($raw, '=') === 0 && ($val === null || $val === '')) {
                     return null;
                 }
+
                 return $val !== '' ? $val : null;
             } catch (\Throwable $e) {
                 // Fallback ke getValue()
@@ -936,6 +943,7 @@ class DashboardController extends Controller
                 if (is_string($raw) && strpos($raw, '=') === 0) {
                     return null;
                 }
+
                 return $raw;
             }
         };
@@ -944,11 +952,12 @@ class DashboardController extends Controller
         $excelDateToStr = function ($val) {
             if (is_numeric($val) && $val > 20000 && $val < 100000) {
                 try {
-                    return ExcelDate::excelToDateTimeObject((float)$val)->format('d/m/Y');
+                    return ExcelDate::excelToDateTimeObject((float) $val)->format('d/m/Y');
                 } catch (\Throwable $e) {
                     // biarkan nilai asli
                 }
             }
+
             return $val;
         };
 
@@ -1070,7 +1079,7 @@ class DashboardController extends Controller
                 }
                 // Post-process: konversi date serial untuk kolom yang mengandung 'Tanggal'
                 foreach ($rowData as $key => $value) {
-                    if (stripos((string)$key, 'Tanggal') !== false && is_numeric($value) && $value > 20000 && $value < 100000) {
+                    if (stripos((string) $key, 'Tanggal') !== false && is_numeric($value) && $value > 20000 && $value < 100000) {
                         $rowData[$key] = $excelDateToStr($value);
                     }
                 }
@@ -1115,12 +1124,12 @@ class DashboardController extends Controller
                         if ($cVal === '') {
                             $cVal = trim((string) ($cell->getFormattedValue() ?? ''));
                         }
-                        if ($cVal !== '' && !str_starts_with($cVal, '=')) {
+                        if ($cVal !== '' && ! str_starts_with($cVal, '=')) {
                             $rowTexts[] = $cVal;
                         }
                     }
 
-                    if (!empty($rowTexts)) {
+                    if (! empty($rowTexts)) {
                         $joinedText = implode(' ', $rowTexts);
                         if (
                             stripos($joinedText, 'Mengetahui') !== false ||
@@ -1331,27 +1340,27 @@ class DashboardController extends Controller
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('rekap-keseluruhan', [
-                    'fileName'    => null,
-                    'groups'      => [],
+                    'fileName' => null,
+                    'groups' => [],
                     'final_total' => null,
-                    'recapDate'   => '',
-                    'error'       => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'recapDate' => '',
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
             // Cache session
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v3');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhan() - loaded from session cache');
 
                 return view('rekap-keseluruhan', [
-                    'fileName'    => $fileName,
-                    'groups'      => $cached['groups'],
+                    'fileName' => $fileName,
+                    'groups' => $cached['groups'],
                     'final_total' => $cached['final_total'],
-                    'recapDate'   => $cached['recapDate'],
-                    'error'       => null,
+                    'recapDate' => $cached['recapDate'],
+                    'error' => null,
                 ]);
             }
 
@@ -1363,45 +1372,45 @@ class DashboardController extends Controller
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan', [
-                    'fileName'    => $fileName,
-                    'groups'      => [],
+                    'fileName' => $fileName,
+                    'groups' => [],
                     'final_total' => null,
-                    'recapDate'   => '',
-                    'error'       => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'recapDate' => '',
+                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]);
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $result     = $calculator->computeRekapKeseluruhan($categories);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $result = $calculator->computeRekapKeseluruhan($categories);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             Session::put($cacheKey, [
-                'groups'      => $result['groups'],
+                'groups' => $result['groups'],
                 'final_total' => $result['final_total'],
-                'recapDate'   => $recapDate,
+                'recapDate' => $recapDate,
             ]);
 
             return view('rekap-keseluruhan', [
-                'fileName'    => $fileName,
-                'groups'      => $result['groups'],
+                'fileName' => $fileName,
+                'groups' => $result['groups'],
                 'final_total' => $result['final_total'],
-                'recapDate'   => $recapDate,
-                'error'       => null,
+                'recapDate' => $recapDate,
+                'error' => null,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhan', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
 
             return view('rekap-keseluruhan', [
-                'fileName'    => Session::get('excel_file_name'),
-                'groups'      => [],
+                'fileName' => Session::get('excel_file_name'),
+                'groups' => [],
                 'final_total' => null,
-                'recapDate'   => '',
-                'error'       => 'Error: '.$e->getMessage(),
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -1417,27 +1426,27 @@ class DashboardController extends Controller
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('rekap-keseluruhan-print', [
-                    'fileName'    => null,
-                    'groups'      => [],
+                    'fileName' => null,
+                    'groups' => [],
                     'final_total' => null,
-                    'recapDate'   => '',
-                    'error'       => 'File tidak ditemukan.',
+                    'recapDate' => '',
+                    'error' => 'File tidak ditemukan.',
                 ]);
             }
 
             // Reuse cache dari rekapKeseluruhan
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_v3');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhanPrint() - loaded from session cache');
 
                 return view('rekap-keseluruhan-print', [
-                    'fileName'    => $fileName,
-                    'groups'      => $cached['groups'],
+                    'fileName' => $fileName,
+                    'groups' => $cached['groups'],
                     'final_total' => $cached['final_total'],
-                    'recapDate'   => $cached['recapDate'],
-                    'error'       => null,
+                    'recapDate' => $cached['recapDate'],
+                    'error' => null,
                 ]);
             }
 
@@ -1449,45 +1458,45 @@ class DashboardController extends Controller
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan-print', [
-                    'fileName'    => $fileName,
-                    'groups'      => [],
+                    'fileName' => $fileName,
+                    'groups' => [],
                     'final_total' => null,
-                    'recapDate'   => '',
-                    'error'       => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'recapDate' => '',
+                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]);
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $result     = $calculator->computeRekapKeseluruhan($categories);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $result = $calculator->computeRekapKeseluruhan($categories);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             Session::put($cacheKey, [
-                'groups'      => $result['groups'],
+                'groups' => $result['groups'],
                 'final_total' => $result['final_total'],
-                'recapDate'   => $recapDate,
+                'recapDate' => $recapDate,
             ]);
 
             return view('rekap-keseluruhan-print', [
-                'fileName'    => $fileName,
-                'groups'      => $result['groups'],
+                'fileName' => $fileName,
+                'groups' => $result['groups'],
                 'final_total' => $result['final_total'],
-                'recapDate'   => $recapDate,
-                'error'       => null,
+                'recapDate' => $recapDate,
+                'error' => null,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhanPrint', ['error' => $e->getMessage()]);
 
             return view('rekap-keseluruhan-print', [
-                'fileName'    => Session::get('excel_file_name'),
-                'groups'      => [],
+                'fileName' => Session::get('excel_file_name'),
+                'groups' => [],
                 'final_total' => null,
-                'recapDate'   => '',
-                'error'       => 'Error: '.$e->getMessage(),
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -1503,26 +1512,26 @@ class DashboardController extends Controller
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('rekap-keseluruhan-2', [
-                    'fileName'    => null,
-                    'columns'     => [],
-                    'rows'        => [],
-                    'cells'       => [],
-                    'row_totals'  => [],
+                    'fileName' => null,
+                    'columns' => [],
+                    'rows' => [],
+                    'cells' => [],
+                    'row_totals' => [],
                     'grand_total' => 0,
-                    'recapDate'   => '',
-                    'error'       => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'recapDate' => '',
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_2_v3');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhan2() - loaded from session cache');
 
                 return view('rekap-keseluruhan-2', array_merge($cached, [
                     'fileName' => $fileName,
-                    'error'    => null,
+                    'error' => null,
                 ]));
             }
 
@@ -1534,52 +1543,52 @@ class DashboardController extends Controller
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan-2', [
-                    'fileName'    => $fileName,
-                    'columns'     => [],
-                    'rows'        => [],
-                    'cells'       => [],
-                    'row_totals'  => [],
+                    'fileName' => $fileName,
+                    'columns' => [],
+                    'rows' => [],
+                    'cells' => [],
+                    'row_totals' => [],
                     'grand_total' => 0,
-                    'recapDate'   => '',
-                    'error'       => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'recapDate' => '',
+                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]);
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $result     = $calculator->computeRekapKeseluruhan2($categories);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $result = $calculator->computeRekapKeseluruhan2($categories);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             $payload = [
-                'columns'     => $result['columns'],
-                'rows'        => $result['rows'],
-                'cells'       => $result['cells'],
-                'row_totals'  => $result['row_totals'],
+                'columns' => $result['columns'],
+                'rows' => $result['rows'],
+                'cells' => $result['cells'],
+                'row_totals' => $result['row_totals'],
                 'grand_total' => $result['grand_total'],
-                'recapDate'   => $recapDate,
+                'recapDate' => $recapDate,
             ];
             Session::put($cacheKey, $payload);
 
             return view('rekap-keseluruhan-2', array_merge($payload, [
                 'fileName' => $fileName,
-                'error'    => null,
+                'error' => null,
             ]));
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhan2', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
 
             return view('rekap-keseluruhan-2', [
-                'fileName'    => Session::get('excel_file_name'),
-                'columns'     => [],
-                'rows'        => [],
-                'cells'       => [],
-                'row_totals'  => [],
+                'fileName' => Session::get('excel_file_name'),
+                'columns' => [],
+                'rows' => [],
+                'cells' => [],
+                'row_totals' => [],
                 'grand_total' => 0,
-                'recapDate'   => '',
-                'error'       => 'Error: '.$e->getMessage(),
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -1595,26 +1604,26 @@ class DashboardController extends Controller
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('rekap-keseluruhan-2-print', [
-                    'fileName'    => null,
-                    'columns'     => [],
-                    'rows'        => [],
-                    'cells'       => [],
-                    'row_totals'  => [],
+                    'fileName' => null,
+                    'columns' => [],
+                    'rows' => [],
+                    'cells' => [],
+                    'row_totals' => [],
                     'grand_total' => 0,
-                    'recapDate'   => '',
-                    'error'       => 'File tidak ditemukan.',
+                    'recapDate' => '',
+                    'error' => 'File tidak ditemukan.',
                 ]);
             }
 
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_2_v3');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhan2Print() - loaded from session cache');
 
                 return view('rekap-keseluruhan-2-print', array_merge($cached, [
                     'fileName' => $fileName,
-                    'error'    => null,
+                    'error' => null,
                 ]));
             }
 
@@ -1626,52 +1635,52 @@ class DashboardController extends Controller
 
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan-2-print', [
-                    'fileName'    => $fileName,
-                    'columns'     => [],
-                    'rows'        => [],
-                    'cells'       => [],
-                    'row_totals'  => [],
+                    'fileName' => $fileName,
+                    'columns' => [],
+                    'rows' => [],
+                    'cells' => [],
+                    'row_totals' => [],
                     'grand_total' => 0,
-                    'recapDate'   => '',
-                    'error'       => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'recapDate' => '',
+                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]);
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $result     = $calculator->computeRekapKeseluruhan2($categories);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $result = $calculator->computeRekapKeseluruhan2($categories);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             $payload = [
-                'columns'     => $result['columns'],
-                'rows'        => $result['rows'],
-                'cells'       => $result['cells'],
-                'row_totals'  => $result['row_totals'],
+                'columns' => $result['columns'],
+                'rows' => $result['rows'],
+                'cells' => $result['cells'],
+                'row_totals' => $result['row_totals'],
                 'grand_total' => $result['grand_total'],
-                'recapDate'   => $recapDate,
+                'recapDate' => $recapDate,
             ];
             Session::put($cacheKey, $payload);
 
             return view('rekap-keseluruhan-2-print', array_merge($payload, [
                 'fileName' => $fileName,
-                'error'    => null,
+                'error' => null,
             ]));
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhan2Print', ['error' => $e->getMessage()]);
 
             return view('rekap-keseluruhan-2-print', [
-                'fileName'    => Session::get('excel_file_name'),
-                'columns'     => [],
-                'rows'        => [],
-                'cells'       => [],
-                'row_totals'  => [],
+                'fileName' => Session::get('excel_file_name'),
+                'columns' => [],
+                'rows' => [],
+                'cells' => [],
+                'row_totals' => [],
                 'grand_total' => 0,
-                'recapDate'   => '',
-                'error'       => 'Error: '.$e->getMessage(),
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -1787,13 +1796,13 @@ class DashboardController extends Controller
     public function honorariumDebug()
     {
         $filePath = Session::get('excel_file_path');
-        if (!$filePath || !file_exists($filePath)) {
+        if (! $filePath || ! file_exists($filePath)) {
             return response()->json(['error' => 'No file in session']);
         }
 
         $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar_v2');
-        $cached   = Session::get($cacheKey);
-        $sheets   = $cached['sheets'] ?? [];
+        $cached = Session::get($cacheKey);
+        $sheets = $cached['sheets'] ?? [];
 
         // Jika cache kosong, parse ulang
         if (empty($sheets)) {
@@ -1803,9 +1812,13 @@ class DashboardController extends Controller
             $spreadsheet = $reader->load($filePath);
             foreach (['OP - STAF'] as $sheetName) {
                 $ws = $spreadsheet->getSheetByName($sheetName);
-                if (!$ws) continue;
+                if (! $ws) {
+                    continue;
+                }
                 $blocks = $this->parseHonorariumKamarSheet($ws, $sheetName);
-                if (!empty($blocks)) $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+                if (! empty($blocks)) {
+                    $sheets[] = ['sheetName' => $sheetName, 'blocks' => $blocks];
+                }
             }
             $spreadsheet->disconnectWorksheets();
         }
@@ -1815,10 +1828,10 @@ class DashboardController extends Controller
             if (stripos($sh['sheetName'] ?? '', 'OP') !== false && stripos($sh['sheetName'] ?? '', 'STAF') !== false) {
                 foreach ($sh['blocks'] ?? [] as $blk) {
                     $result[] = [
-                        'title1'        => $blk['title1'] ?? '',
-                        'right_name'    => $blk['footerInfo']['right_name'] ?? '',
+                        'title1' => $blk['title1'] ?? '',
+                        'right_name' => $blk['footerInfo']['right_name'] ?? '',
                         'right_jabatan' => $blk['footerInfo']['right_jabatan'] ?? '',
-                        'clean_key'     => strtoupper(trim(preg_replace('/^HONORARIUM BIAYA PENYELESAIAN PERKARA\s*/i', '', $blk['title1'] ?? ''))),
+                        'clean_key' => strtoupper(trim(preg_replace('/^HONORARIUM BIAYA PENYELESAIAN PERKARA\s*/i', '', $blk['title1'] ?? ''))),
                     ];
                 }
             }
@@ -1826,7 +1839,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'op_staf_blocks' => $result,
-            'opSignatures'   => $this->getOpSignatures($sheets),
+            'opSignatures' => $this->getOpSignatures($sheets),
         ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
@@ -1837,11 +1850,13 @@ class DashboardController extends Controller
     {
         try {
             $cacheKey = $this->getCacheKey($filePath, 'op_staf_honorarium_v6');
-            $cached   = Session::get($cacheKey);
-            if ($cached !== null) return $cached;
+            $cached = Session::get($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
 
             $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print'));
-            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+            if ($dataPrintCache !== null && ! empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
                 $reader = IOFactory::createReaderForFile($filePath);
@@ -1851,19 +1866,27 @@ class DashboardController extends Controller
                 }
                 $spreadsheet = $reader->load($filePath);
                 $ws = $spreadsheet->getSheetByName('Data Print');
-                if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
+                if (! $ws) {
+                    $spreadsheet->disconnectWorksheets();
+
+                    return [];
+                }
                 $categories = $this->expandPerdataKhusus($this->parseDataPrintSheet($ws));
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
-                if (empty($categories)) return [];
+                if (empty($categories)) {
+                    return [];
+                }
             }
 
-            $calculator = new \App\Services\HonorariumCalculator();
-            $blocks     = $calculator->computeOpStafBlocks($categories);
+            $calculator = new HonorariumCalculator;
+            $blocks = $calculator->computeOpStafBlocks($categories);
             Session::put($cacheKey, $blocks);
+
             return $blocks;
         } catch (\Throwable $e) {
             \Log::error('computeOpStafData error', ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -1875,12 +1898,14 @@ class DashboardController extends Controller
     {
         try {
             $cacheKey = $this->getCacheKey($filePath, 'kepaniteraan_honorarium_v5');
-            $cached   = Session::get($cacheKey);
-            if ($cached !== null) return $cached;
+            $cached = Session::get($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
 
             // Gunakan data_print_v4 cache yang sudah di-expand (konsisten dengan computeTimData)
             $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v5'));
-            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+            if ($dataPrintCache !== null && ! empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
                 $reader = IOFactory::createReaderForFile($filePath);
@@ -1890,7 +1915,7 @@ class DashboardController extends Controller
                 }
                 $spreadsheet = $reader->load($filePath);
                 $ws = $spreadsheet->getSheetByName('Data Print');
-                if (!$ws) {
+                if (! $ws) {
                     foreach ($spreadsheet->getAllSheets() as $sheet) {
                         $lower = strtolower($sheet->getTitle());
                         if (str_contains($lower, 'data') && str_contains($lower, 'print')) {
@@ -1899,20 +1924,28 @@ class DashboardController extends Controller
                         }
                     }
                 }
-                if (!$ws) { $spreadsheet->disconnectWorksheets(); return []; }
+                if (! $ws) {
+                    $spreadsheet->disconnectWorksheets();
+
+                    return [];
+                }
                 // expandPerdataKhusus agar ID sub-klasifikasi tersedia
                 $categories = $this->expandPerdataKhusus($this->parseDataPrintSheet($ws));
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
-                if (empty($categories)) return [];
+                if (empty($categories)) {
+                    return [];
+                }
             }
 
-            $calculator = new \App\Services\HonorariumCalculator();
-            $blocks     = $calculator->computeKepaniteraanBlocks($categories);
+            $calculator = new HonorariumCalculator;
+            $blocks = $calculator->computeKepaniteraanBlocks($categories);
             Session::put($cacheKey, $blocks);
+
             return $blocks;
         } catch (\Throwable $e) {
             \Log::error('computeKepaniteraanData error', ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -1924,14 +1957,14 @@ class DashboardController extends Controller
     {
         try {
             $cacheKey = $this->getCacheKey($filePath, 'tim_honorarium_v17');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
             if ($cached !== null) {
                 return $cached;
             }
 
             // Gunakan data_print cache jika ada (supaya jumlah perkara konsisten dengan halaman data-print)
             $dataPrintCache = Session::get($this->getCacheKey($filePath, 'data_print_v5'));
-            if ($dataPrintCache !== null && !empty($dataPrintCache['categories'])) {
+            if ($dataPrintCache !== null && ! empty($dataPrintCache['categories'])) {
                 $categories = $dataPrintCache['categories'];
             } else {
                 // Fallback: parse ulang dari file
@@ -1956,6 +1989,7 @@ class DashboardController extends Controller
 
                 if (! $ws) {
                     $spreadsheet->disconnectWorksheets();
+
                     return [];
                 }
 
@@ -1968,14 +2002,16 @@ class DashboardController extends Controller
                 }
             }
 
-            $calculator = new \App\Services\HonorariumCalculator();
-            $blocks     = $calculator->computeTimHonorariumBlocks($categories, $opSignatures);
+            $calculator = new HonorariumCalculator;
+            $blocks = $calculator->computeTimHonorariumBlocks($categories, $opSignatures);
 
             Session::put($cacheKey, $blocks);
+
             return $blocks;
 
         } catch (\Throwable $e) {
             \Log::error('computeTimData error', ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -1993,15 +2029,15 @@ class DashboardController extends Controller
             if (! $filePath || ! file_exists($filePath)) {
                 return view('honorarium', [
                     'fileName' => null,
-                    'sheets'   => [],
-                    'timData'  => [],
-                    'error'    => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                    'sheets' => [],
+                    'timData' => [],
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
                 ]);
             }
 
             // Cek cache (sama dengan honorariumPrint agar shared)
             $cacheKey = $this->getCacheKey($filePath, 'honorarium_kamar_v2');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             $sheets = [];
             if ($cached !== null) {
@@ -2033,59 +2069,62 @@ class DashboardController extends Controller
             $opSignatures = $this->getOpSignatures($sheets);
 
             // Compute TIM, Kepaniteraan & OP STAF honorarium dari Data Print
-            $timData          = $this->computeTimData($filePath, $opSignatures);
+            $timData = $this->computeTimData($filePath, $opSignatures);
             $kepaniteraanData = $this->computeKepaniteraanData($filePath);
-            $opStafData       = $this->computeOpStafData($filePath);
+            $opStafData = $this->computeOpStafData($filePath);
 
             // Map: UPPERCASE label → numeric index dalam opStafData
             // Dipakai view TIM agar OPERATOR/PENGETIK membaca dari key localStorage
             // yang SAMA dengan tanda tangan OP-STAF (ttd_op_N)
             $opStafIdxMap = [];
-            $opNamaList   = [];
+            $opNamaList = [];
             foreach ($opStafData as $oi => $opBlock) {
                 $opStafIdxMap[strtoupper(trim($opBlock['title'] ?? ''))] = $oi;
-                if (!empty($opBlock['op_nama'])) {
+                if (! empty($opBlock['op_nama'])) {
                     $opNamaList[] = $opBlock['op_nama'];
                 }
             }
             // Tambahkan juga dari config agar dropdown selalu punya pilihan meski opStafData kosong
             foreach (config('tarif.operator_kamar', []) as $entry) {
-                if (!empty($entry['nama'])) $opNamaList[] = $entry['nama'];
+                if (! empty($entry['nama'])) {
+                    $opNamaList[] = $entry['nama'];
+                }
             }
             // Daftar tambahan khusus dropdown (config tarif.operator_names)
             foreach (config('tarif.operator_names', []) as $n) {
-                if (!empty($n)) $opNamaList[] = $n;
+                if (! empty($n)) {
+                    $opNamaList[] = $n;
+                }
             }
             $opNamaList = array_values(array_unique($opNamaList));
             sort($opNamaList);
 
             return view('honorarium', [
-                'fileName'         => $fileName,
-                'sheets'           => $sheets,
-                'timData'          => $timData,
+                'fileName' => $fileName,
+                'sheets' => $sheets,
+                'timData' => $timData,
                 'kepaniteraanData' => $kepaniteraanData,
-                'opStafData'       => $opStafData,
-                'opStafIdxMap'     => $opStafIdxMap,
-                'opNamaList'       => $opNamaList,
-                'error'            => null,
+                'opStafData' => $opStafData,
+                'opStafIdxMap' => $opStafIdxMap,
+                'opNamaList' => $opNamaList,
+                'error' => null,
             ]);
 
         } catch (\Throwable $e) {
             \Log::error('Error in honorarium', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
 
             return view('honorarium', [
-                'fileName'         => Session::get('excel_file_name'),
-                'sheets'           => [],
-                'timData'          => [],
+                'fileName' => Session::get('excel_file_name'),
+                'sheets' => [],
+                'timData' => [],
                 'kepaniteraanData' => [],
-                'opStafData'       => [],
-                'opStafIdxMap'     => [],
-                'opNamaList'       => [],
-                'error'            => 'Error: '.$e->getMessage(),
+                'opStafData' => [],
+                'opStafIdxMap' => [],
+                'opNamaList' => [],
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
-
 
     public function honorariumPrint(Request $request)
     {
@@ -2097,18 +2136,18 @@ class DashboardController extends Controller
             $computedType = $request->query('computed'); // 'kepaniteraan', 'tim', 'op-staf'
             $sheetIdx = $request->query('sheet');   // integer index or null
             $blockIdx = $request->query('block');   // integer index or 'all' or null
-            $catIdx   = $request->query('cat');     // category index filter
+            $catIdx = $request->query('cat');     // category index filter
 
             if (! $filePath || ! file_exists($filePath)) {
                 return view('honorarium-print', [
-                    'fileName'         => null,
-                    'sheets'           => [],
-                    'error'            => 'File tidak ditemukan.',
-                    'timData'          => [],
+                    'fileName' => null,
+                    'sheets' => [],
+                    'error' => 'File tidak ditemukan.',
+                    'timData' => [],
                     'kepaniteraanData' => [],
-                    'opStafData'       => [],
-                    'opStafIdxMap'     => [],
-                    'computedType'     => null
+                    'opStafData' => [],
+                    'opStafIdxMap' => [],
+                    'computedType' => null,
                 ]);
             }
 
@@ -2198,27 +2237,27 @@ class DashboardController extends Controller
             $sheets = $applyFilter($sheets);
 
             return view('honorarium-print', [
-                'fileName'         => $fileName,
-                'sheets'           => $sheets,
-                'error'            => null,
-                'timData'          => $timData,
+                'fileName' => $fileName,
+                'sheets' => $sheets,
+                'error' => null,
+                'timData' => $timData,
                 'kepaniteraanData' => $kepaniteraanData,
-                'opStafData'       => $opStafData,
-                'opStafIdxMap'     => $opStafIdxMap,
-                'computedType'     => $computedType
+                'opStafData' => $opStafData,
+                'opStafIdxMap' => $opStafIdxMap,
+                'computedType' => $computedType,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error in honorariumPrint', ['error' => $e->getMessage()]);
 
             return view('honorarium-print', [
-                'fileName'         => $fileName,
-                'sheets'           => [],
-                'error'            => 'Error: '.$e->getMessage(),
-                'timData'          => [],
+                'fileName' => $fileName,
+                'sheets' => [],
+                'error' => 'Error: '.$e->getMessage(),
+                'timData' => [],
                 'kepaniteraanData' => [],
-                'opStafData'       => [],
-                'opStafIdxMap'     => [],
-                'computedType'     => null
+                'opStafData' => [],
+                'opStafIdxMap' => [],
+                'computedType' => null,
             ]);
         }
     }
@@ -2238,13 +2277,14 @@ class DashboardController extends Controller
                     $name = $blk['footerInfo']['right_name'] ?? '';
                     if ($cleanLabel !== '' && $name !== '') {
                         // Tulis hanya jika belum ada — blok pertama (induk/parent) yang menang
-                        if (!isset($opSignatures[$cleanLabel])) {
+                        if (! isset($opSignatures[$cleanLabel])) {
                             $opSignatures[$cleanLabel] = $name;
                         }
                     }
                 }
             }
         }
+
         return $opSignatures;
     }
 
@@ -2618,15 +2658,15 @@ class DashboardController extends Controller
             $fileName = Session::get('excel_file_name');
 
             $empty = [
-                'fileName'        => null,
-                'columns'         => [],
-                'rows'            => [],
+                'fileName' => null,
+                'columns' => [],
+                'rows' => [],
                 'col_grand_total' => [],
-                'grand_bruto'     => 0,
-                'grand_pph15'     => 0,
-                'grand_pph5'      => 0,
-                'grand_netto'     => 0,
-                'recapDate'       => '',
+                'grand_bruto' => 0,
+                'grand_pph15' => 0,
+                'grand_pph5' => 0,
+                'grand_netto' => 0,
+                'recapDate' => '',
             ];
 
             if (! $filePath || ! file_exists($filePath)) {
@@ -2636,13 +2676,14 @@ class DashboardController extends Controller
             }
 
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_3_v1');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhan3() - loaded from session cache');
+
                 return view('rekap-keseluruhan-3', array_merge($cached, [
                     'fileName' => $fileName,
-                    'error'    => null,
+                    'error' => null,
                 ]));
             }
 
@@ -2655,41 +2696,41 @@ class DashboardController extends Controller
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan-3', array_merge($empty, [
                     'fileName' => $fileName,
-                    'error'    => 'Sheet "Data Print" tidak ditemukan dalam file.',
+                    'error' => 'Sheet "Data Print" tidak ditemukan dalam file.',
                 ]));
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $rekap2     = $calculator->computeRekapKeseluruhan2($categories);
-            $rekap3     = $calculator->computeRekapKeseluruhan3($rekap2);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $rekap2 = $calculator->computeRekapKeseluruhan2($categories);
+            $rekap3 = $calculator->computeRekapKeseluruhan3($rekap2);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             $payload = array_merge($rekap3, ['recapDate' => $recapDate]);
             Session::put($cacheKey, $payload);
 
             return view('rekap-keseluruhan-3', array_merge($payload, [
                 'fileName' => $fileName,
-                'error'    => null,
+                'error' => null,
             ]));
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhan3', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
 
             return view('rekap-keseluruhan-3', [
-                'fileName'        => Session::get('excel_file_name'),
-                'columns'         => [],
-                'rows'            => [],
+                'fileName' => Session::get('excel_file_name'),
+                'columns' => [],
+                'rows' => [],
                 'col_grand_total' => [],
-                'grand_bruto'     => 0,
-                'grand_pph15'     => 0,
-                'grand_pph5'      => 0,
-                'grand_netto'     => 0,
-                'recapDate'       => '',
-                'error'           => 'Error: '.$e->getMessage(),
+                'grand_bruto' => 0,
+                'grand_pph15' => 0,
+                'grand_pph5' => 0,
+                'grand_netto' => 0,
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -2704,15 +2745,15 @@ class DashboardController extends Controller
             $fileName = Session::get('excel_file_name');
 
             $empty = [
-                'fileName'        => null,
-                'columns'         => [],
-                'rows'            => [],
+                'fileName' => null,
+                'columns' => [],
+                'rows' => [],
                 'col_grand_total' => [],
-                'grand_bruto'     => 0,
-                'grand_pph15'     => 0,
-                'grand_pph5'      => 0,
-                'grand_netto'     => 0,
-                'recapDate'       => '',
+                'grand_bruto' => 0,
+                'grand_pph15' => 0,
+                'grand_pph5' => 0,
+                'grand_netto' => 0,
+                'recapDate' => '',
             ];
 
             if (! $filePath || ! file_exists($filePath)) {
@@ -2720,13 +2761,14 @@ class DashboardController extends Controller
             }
 
             $cacheKey = $this->getCacheKey($filePath, 'rekap_keseluruhan_3_v1');
-            $cached   = Session::get($cacheKey);
+            $cached = Session::get($cacheKey);
 
             if ($cached !== null) {
                 \Log::info('rekapKeseluruhan3Print() - loaded from session cache');
+
                 return view('rekap-keseluruhan-3-print', array_merge($cached, [
                     'fileName' => $fileName,
-                    'error'    => null,
+                    'error' => null,
                 ]));
             }
 
@@ -2738,45 +2780,44 @@ class DashboardController extends Controller
             if (! $spreadsheet->sheetNameExists('Data Print')) {
                 return view('rekap-keseluruhan-3-print', array_merge($empty, [
                     'fileName' => $fileName,
-                    'error'    => 'Sheet "Data Print" tidak ditemukan.',
+                    'error' => 'Sheet "Data Print" tidak ditemukan.',
                 ]));
             }
 
-            $worksheet  = $spreadsheet->getSheetByName('Data Print');
+            $worksheet = $spreadsheet->getSheetByName('Data Print');
             $categories = $this->parseDataPrintSheet($worksheet);
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
 
             $calculator = new HonorariumCalculator;
-            $rekap2     = $calculator->computeRekapKeseluruhan2($categories);
-            $rekap3     = $calculator->computeRekapKeseluruhan3($rekap2);
-            $recapDate  = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, ' . date('d') . ' ' . ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][(int)date('m')] . ' ' . date('Y'));
+            $rekap2 = $calculator->computeRekapKeseluruhan2($categories);
+            $rekap3 = $calculator->computeRekapKeseluruhan3($rekap2);
+            $recapDate = Session::get('excel_tgl_rekap_keseluruhan') ?: ('Jakarta, '.date('d').' '.['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][(int) date('m')].' '.date('Y'));
 
             $payload = array_merge($rekap3, ['recapDate' => $recapDate]);
             Session::put($cacheKey, $payload);
 
             return view('rekap-keseluruhan-3-print', array_merge($payload, [
                 'fileName' => $fileName,
-                'error'    => null,
+                'error' => null,
             ]));
         } catch (\Throwable $e) {
             \Log::error('Error in rekapKeseluruhan3Print', ['error' => $e->getMessage()]);
 
             return view('rekap-keseluruhan-3-print', [
-                'fileName'        => Session::get('excel_file_name'),
-                'columns'         => [],
-                'rows'            => [],
+                'fileName' => Session::get('excel_file_name'),
+                'columns' => [],
+                'rows' => [],
                 'col_grand_total' => [],
-                'grand_bruto'     => 0,
-                'grand_pph15'     => 0,
-                'grand_pph5'      => 0,
-                'grand_netto'     => 0,
-                'recapDate'       => '',
-                'error'           => 'Error: '.$e->getMessage(),
+                'grand_bruto' => 0,
+                'grand_pph15' => 0,
+                'grand_pph5' => 0,
+                'grand_netto' => 0,
+                'recapDate' => '',
+                'error' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
-
 
     /**
      * Baca tabel honorarium perkara dari sheet Rekap Keseluruhan.
@@ -3303,31 +3344,30 @@ class DashboardController extends Controller
         return $blocks;
     }
 
-
     public function periodeLaporan()
     {
         return view('periode-laporan', [
-            'laporan_periode'       => Session::get('excel_laporan_periode', ''),
-            'tgl_data_laporan'      => Session::get('excel_tgl_data_laporan', ''),
+            'laporan_periode' => Session::get('excel_laporan_periode', ''),
+            'tgl_data_laporan' => Session::get('excel_tgl_data_laporan', ''),
             'tgl_rekap_keseluruhan' => Session::get('excel_tgl_rekap_keseluruhan', ''),
-            'tgl_kwitansi'          => Session::get('excel_tgl_kwitansi', ''),
-            'hasFile'               => (bool) Session::get('excel_file_path'),
+            'tgl_kwitansi' => Session::get('excel_tgl_kwitansi', ''),
+            'hasFile' => (bool) Session::get('excel_file_path'),
         ]);
     }
 
     public function updatePeriodeLaporan(Request $request)
     {
         $request->validate([
-            'laporan_periode'       => 'nullable|string|max:200',
-            'tgl_data_laporan'      => 'nullable|string|max:100',
+            'laporan_periode' => 'nullable|string|max:200',
+            'tgl_data_laporan' => 'nullable|string|max:100',
             'tgl_rekap_keseluruhan' => 'nullable|string|max:100',
-            'tgl_kwitansi'          => 'nullable|string|max:100',
+            'tgl_kwitansi' => 'nullable|string|max:100',
         ]);
 
-        Session::put('excel_laporan_periode',        $request->input('laporan_periode', ''));
-        Session::put('excel_tgl_data_laporan',       $request->input('tgl_data_laporan', ''));
-        Session::put('excel_tgl_rekap_keseluruhan',  $request->input('tgl_rekap_keseluruhan', ''));
-        Session::put('excel_tgl_kwitansi',           $request->input('tgl_kwitansi', ''));
+        Session::put('excel_laporan_periode', $request->input('laporan_periode', ''));
+        Session::put('excel_tgl_data_laporan', $request->input('tgl_data_laporan', ''));
+        Session::put('excel_tgl_rekap_keseluruhan', $request->input('tgl_rekap_keseluruhan', ''));
+        Session::put('excel_tgl_kwitansi', $request->input('tgl_kwitansi', ''));
 
         // Invalidate all view caches so prints use the new dates
         $this->invalidateSessionCache();
@@ -3337,7 +3377,6 @@ class DashboardController extends Controller
     }
 
     public function deleteFile($id)
-
     {
         try {
             $excelFile = ExcelFile::findOrFail($id);
@@ -3396,5 +3435,255 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 400);
         }
+    }
+
+    /** ── Rekap Kepaniteraan & Tim ─────────────────────────────────────────── */
+    public function rekapKepaniteraanTim()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '300');
+            set_time_limit(300);
+
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-kepaniteraan-tim', [
+                    'blocks' => [],
+                    'period' => '',
+                    'fileName' => null,
+                    'pejabat' => config('tarif.pejabat'),
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            // Reuse Data Print cache jika tersedia
+            $dpCacheKey = $this->getCacheKey($filePath, 'data_print_v5');
+            $dpCached = Session::get($dpCacheKey);
+
+            if ($dpCached !== null) {
+                $categories = $dpCached['categories'];
+            } else {
+                $reader = IOFactory::createReaderForFile($filePath);
+                $reader->setReadDataOnly(false);
+                if (method_exists($reader, 'setLoadSheetsOnly')) {
+                    $reader->setLoadSheetsOnly(['Data Print']);
+                }
+                $spreadsheet = $reader->load($filePath);
+                if (! $spreadsheet->sheetNameExists('Data Print')) {
+                    return view('rekap-kepaniteraan-tim', [
+                        'blocks' => [],
+                        'period' => '',
+                        'fileName' => $fileName,
+                        'pejabat' => config('tarif.pejabat'),
+                        'error' => 'Sheet "Data Print" tidak ditemukan.',
+                    ]);
+                }
+                $worksheet = $spreadsheet->getSheetByName('Data Print');
+                $categories = $this->parseDataPrintSheet($worksheet);
+                $categories = $this->expandPerdataKhusus($categories);
+                $spreadsheet->disconnectWorksheets();
+                Session::put($dpCacheKey, compact('categories'));
+            }
+
+            $period = Session::get('excel_tgl_data_laporan') ?: Session::get('excel_laporan_periode') ?: '';
+            $calculator = new HonorariumCalculator;
+            $result = $calculator->computeRekapKepaniteraanTim($categories, $period);
+
+            return view('rekap-kepaniteraan-tim', [
+                'blocks' => $result['blocks'],
+                'period' => $result['period'],
+                'fileName' => $fileName,
+                'pejabat' => config('tarif.pejabat'),
+                'error' => null,
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('rekapKepaniteraanTim error', ['error' => $e->getMessage(), 'line' => $e->getLine()]);
+
+            return view('rekap-kepaniteraan-tim', [
+                'blocks' => [],
+                'period' => '',
+                'fileName' => Session::get('excel_file_name'),
+                'pejabat' => config('tarif.pejabat'),
+                'error' => 'Error: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    public function rekapKepaniteraanTimPrint(Request $request)
+    {
+        $response = $this->rekapKepaniteraanTim();
+        $viewData = (array) $response->getData();
+        $blockFilter = $request->query('block');
+
+        if ($blockFilter !== null && isset($viewData['blocks'][(int) $blockFilter])) {
+            $viewData['blocks'] = [$viewData['blocks'][(int) $blockFilter]];
+        }
+
+        return view('rekap-kepaniteraan-tim-print', $viewData);
+    }
+
+    /** ── Rekap Panitera Muda ──────────────────────────────────────────────── */
+    public function rekapPaniteraMuda()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-panitera-muda', [
+                    'tables' => [],
+                    'period' => '',
+                    'fileName' => null,
+                    'pejabat' => config('tarif.pejabat'),
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            $dpCacheKey = $this->getCacheKey($filePath, 'data_print_v5');
+            $dpCached = Session::get($dpCacheKey);
+            $categories = $dpCached !== null ? $dpCached['categories'] : [];
+            if (empty($categories)) {
+                $reader = IOFactory::createReaderForFile($filePath);
+                $spreadsheet = $reader->load($filePath);
+                $worksheet = $spreadsheet->getSheetByName('Data Print');
+                $categories = $this->parseDataPrintSheet($worksheet);
+                $categories = $this->expandPerdataKhusus($categories);
+                $spreadsheet->disconnectWorksheets();
+                Session::put($dpCacheKey, compact('categories'));
+            }
+
+            $period = Session::get('excel_tgl_data_laporan') ?: Session::get('excel_laporan_periode') ?: '';
+            $calculator = new HonorariumCalculator;
+            $result = $calculator->computeRekapPaniteraMuda($categories, $period);
+
+            return view('rekap-panitera-muda', [
+                'tables' => $result['tables'],
+                'period' => $result['period'],
+                'fileName' => $fileName,
+                'pejabat' => config('tarif.pejabat'),
+                'error' => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('rekapPaniteraMuda error', ['error' => $e->getMessage()]);
+
+            return view('rekap-panitera-muda', [
+                'tables' => [],
+                'period' => '',
+                'fileName' => Session::get('excel_file_name'),
+                'pejabat' => config('tarif.pejabat'),
+                'error' => 'Error: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    public function rekapPaniteraMudaPrint(Request $request)
+    {
+        $response = $this->rekapPaniteraMuda();
+        $viewData = (array) $response->getData();
+
+        $kamarFilter = $request->query('kamar');
+        $blockFilter = $request->query('block');
+
+        // If a kamar filter is provided, keep only that kamar's tables
+        if ($kamarFilter !== null && isset($viewData['tables'][$kamarFilter])) {
+            // If a block filter is also provided, keep only that specific table index within the kamar
+            if ($blockFilter !== null && isset($viewData['tables'][$kamarFilter][(int) $blockFilter])) {
+                $viewData['tables'] = [
+                    $kamarFilter => [
+                        $viewData['tables'][$kamarFilter][(int) $blockFilter],
+                    ],
+                ];
+            } else {
+                $viewData['tables'] = [
+                    $kamarFilter => $viewData['tables'][$kamarFilter],
+                ];
+            }
+        } elseif ($blockFilter !== null) {
+            // If only block filter is provided (e.g. legacy/index based across all tables flattened)
+            $flat = [];
+            foreach ($viewData['tables'] as $k => $tbls) {
+                foreach ($tbls as $t) {
+                    $flat[] = ['kamar' => $k, 'table' => $t];
+                }
+            }
+            if (isset($flat[(int) $blockFilter])) {
+                $item = $flat[(int) $blockFilter];
+                $viewData['tables'] = [
+                    $item['kamar'] => [$item['table']],
+                ];
+            }
+        }
+
+        return view('rekap-panitera-muda-print', $viewData);
+    }
+
+    /** ── Rekap All Panitera Muda ──────────────────────────────────────────── */
+    public function rekapAllPaniteraMuda()
+    {
+        try {
+            ini_set('memory_limit', '1024M');
+            $filePath = Session::get('excel_file_path');
+            $fileName = Session::get('excel_file_name');
+
+            if (! $filePath || ! file_exists($filePath)) {
+                return view('rekap-all-panitera-muda', [
+                    'rows' => [],
+                    'total' => [],
+                    'period' => '',
+                    'fileName' => null,
+                    'pejabat' => config('tarif.pejabat'),
+                    'error' => 'File tidak ditemukan. Silakan upload file terlebih dahulu.',
+                ]);
+            }
+
+            $dpCacheKey = $this->getCacheKey($filePath, 'data_print_v5');
+            $dpCached = Session::get($dpCacheKey);
+            $categories = $dpCached !== null ? $dpCached['categories'] : [];
+            if (empty($categories)) {
+                $reader = IOFactory::createReaderForFile($filePath);
+                $spreadsheet = $reader->load($filePath);
+                $worksheet = $spreadsheet->getSheetByName('Data Print');
+                $categories = $this->parseDataPrintSheet($worksheet);
+                $categories = $this->expandPerdataKhusus($categories);
+                $spreadsheet->disconnectWorksheets();
+                Session::put($dpCacheKey, compact('categories'));
+            }
+
+            $period = Session::get('excel_tgl_data_laporan') ?: Session::get('excel_laporan_periode') ?: '';
+            $calculator = new HonorariumCalculator;
+            $result = $calculator->computeRekapAllPaniteraMuda($categories, $period);
+
+            return view('rekap-all-panitera-muda', [
+                'rows' => $result['rows'],
+                'total' => $result['total'],
+                'period' => $result['period'],
+                'fileName' => $fileName,
+                'pejabat' => config('tarif.pejabat'),
+                'error' => null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('rekapAllPaniteraMuda error', ['error' => $e->getMessage()]);
+
+            return view('rekap-all-panitera-muda', [
+                'rows' => [],
+                'total' => [],
+                'period' => '',
+                'fileName' => Session::get('excel_file_name'),
+                'pejabat' => config('tarif.pejabat'),
+                'error' => 'Error: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    public function rekapAllPaniteraMudaPrint()
+    {
+        $response = $this->rekapAllPaniteraMuda();
+        $viewData = (array) $response->getData();
+
+        return view('rekap-all-panitera-muda-print', $viewData);
     }
 }

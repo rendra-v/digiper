@@ -25,6 +25,9 @@
                             <option value="" disabled selected>Pilih halaman</option>
                             <option value="{{ route('data-print') }}">📄&nbsp; Data Print Perkara</option>
                             <option value="{{ route('rekap-keseluruhan') }}">📊&nbsp; Rekap Keseluruhan</option>
+                            <option value="{{ route('rekap-kepaniteraan-tim') }}">📋&nbsp; Rekap Kepaniteraan &amp; Tim</option>
+                            <option value="{{ route('rekap-panitera-muda') }}">📋&nbsp; Rekap Panitera Muda</option>
+                            <option value="{{ route('rekap-all-panitera-muda') }}">📊&nbsp; Rekap All Panitera Muda</option>
                             <option value="{{ route('rekap-keseluruhan-2') }}">📈&nbsp; Rekap Keseluruhan 2</option>
                             <option value="{{ route('honorarium') }}">💰&nbsp; Honorarium Biaya</option>
                             <option value="{{ route('periode-laporan') }}">📅&nbsp; Periode Laporan</option>

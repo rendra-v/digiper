@@ -28,6 +28,9 @@
                             <option value="{{ route('sheet-cek') }}">📋 Sheet Cek</option>
                             <option value="{{ route('rekap-keseluruhan') }}">📊 Rekap 1</option>
                             <option value="{{ route('rekap-keseluruhan-3') }}">📋 Rekap 3</option>
+                            <option value="{{ route('rekap-kepaniteraan-tim') }}">📋 Rekap Kep & Tim</option>
+                            <option value="{{ route('rekap-panitera-muda') }}">📋 Rekap Panmud</option>
+                            <option value="{{ route('rekap-all-panitera-muda') }}">📊 Rekap All Panmud</option>
                             <option value="{{ route('honorarium') }}">💰 Honorarium</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-emerald-600">
